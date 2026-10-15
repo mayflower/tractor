@@ -13,7 +13,8 @@ uv run --no-sync python scripts/package-release.py
 
 Packaging creates standalone source and model archives in `dist/`, with SHA-256
 manifests. Source packaging uses an explicit allowlist and excludes Git history,
-local reports, datasets, checkpoints and secrets. The model archive contains only
+local reports, training datasets, checkpoints and secrets. The frozen synthetic
+comparison sample and sanitized benchmark results are included for reproducibility. The model archive contains only
 the current weights, tokenizer, configuration, normalization policy, source lock,
 model card and evaluation metrics. Packaging does not upload anything.
 

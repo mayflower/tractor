@@ -1,0 +1,8 @@
+{
+  "source_acceptance_requests": 2048,
+  "source_sha256": "8d9db25946942978772b3bd97c84dd32821eedfc4d7e96b0f328b22d9c91e3c4",
+  "selected_requests": 680,
+  "selected_sha256": "fe57650ddbe7c986224080da2aaedf0fc8faa9221f9b1f62d62b1f5ca22ced12",
+  "method": "scenario/language round robin, SHA256(source ID) order; public IDs assigned after selection",
+  "selection_uses_predictions": false
+}

@@ -1,0 +1,7 @@
+{
+  "tractor_device": "cpu",
+  "precision": "fp32",
+  "threads": 2,
+  "cpu": "AMD Ryzen Threadripper PRO 3975WX",
+  "shared_host": true
+}

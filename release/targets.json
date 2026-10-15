@@ -8,6 +8,7 @@
   "local_bundle": "models/tractor",
   "weights_sha256": "209a62ad03f559d7fd21fca9e44c4daad597825b1b6520df72545823bbc9c61b",
   "license": null,
-  "publication_status": "private_source_published_model_pending",
-  "metrics": "release/metrics.json"
+  "publication_status": "private_source_and_model_published",
+  "metrics": "release/metrics.json",
+  "huggingface_revision": "fdf9c08be809226b9e5e254aed273c1c66fad38b"
 }

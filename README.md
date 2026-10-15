@@ -32,6 +32,21 @@ normalizes quantities. That focused path makes tractor a practical alternative t
 calling Haiku 5.5 or GPT-6 Luna for repeated, well-defined extraction tasks.
 See the [evaluation results and supported scope](docs/benchmarks.md).
 
+## Specialized extraction, measured
+
+**94.41% complete-response accuracy. 330 ms median response time on CPU.**
+
+On 680 identical synthetic extraction requests, tractor was **4.3× faster
+than Haiku 5.5** and **5.7× faster than GPT-6 Luna** by median HTTP response
+time, with higher complete-response accuracy than both prompt-only baselines.
+
+![Extraction accuracy and median response times](docs/brand/comparison.svg)
+
+CPU loopback versus remote cloud APIs, reasoning disabled, no retries or answer
+repair. Results apply to this extraction contract and synthetic workload; they
+include network overhead and do not measure optimized LLM pipelines.
+[Full results, rounding-tolerant scores and reproducible evidence](docs/benchmarks.md).
+
 ## From supplier text to application data
 
 A supplier writes **“Die Breite beträgt 12,5 cm.”** Your system needs millimeters.
@@ -46,12 +61,14 @@ text/schema budget; validate your own workload before automating decisions.
 
 ## Start the API
 
-Use the Nix flake development environment and place the model bundle in
-`models/tractor`:
+Use the Nix flake development environment. Authenticate with `hf auth login`
+using an account with access to the private model repository, then download the
+bundle and start the API:
 
 ```sh
 nix develop
 just setup
+uv run --no-sync hf download mayflowergmbh/tractor --local-dir models/tractor
 tractor serve --model models/tractor --device cuda
 ```
 
@@ -100,8 +117,8 @@ different distributions; see [methodology and limitations](docs/benchmarks.md).
 
 Real-world accuracy is unmeasured. Long record lists, wide schemas and competing
 values can still fail. The joint text/schema budget is 512 tokens. Unsupported or
-ambiguous values are rejected rather than guessed. No validated latency figure is
-published for this bundle.
+ambiguous values are rejected rather than guessed. CPU response times and the cloud API comparison are
+reported above; GPU latency has not been measured for this bundle.
 
 ## Development
 
@@ -128,5 +145,6 @@ docker run --rm --user "$(id -u):$(id -g)" -p 127.0.0.1:8000:8000 \
 The container defaults to CPU. GPU serving requires NVIDIA Container Toolkit;
 add `--gpus all` and append `--model /model --device cuda --host 0.0.0.0`.
 
-Source: `mayflower/tractor`. Model: `mayflowergmbh/tractor`. Both repositories are
+Source: [mayflower/tractor](https://github.com/mayflower/tractor).
+Model: [mayflowergmbh/tractor](https://huggingface.co/mayflowergmbh/tractor). Both repositories are
 private during release preparation. Release licensing is not yet selected.
