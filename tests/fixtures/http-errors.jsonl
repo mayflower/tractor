@@ -1,0 +1,10 @@
+{"id":"h001","request":{"text":"Breite 12 cm.","fields":{}},"expected_status":422}
+{"id":"h002","request":{"text":"","fields":{"width":{"type":"quantity","description":"Breite","unit":"mm"}}},"expected_status":422}
+{"id":"h003","request":{"text":"Breite 12 cm.","fields":{"width":{"type":"quantity","description":"Breite"}}},"expected_status":422}
+{"id":"h004","request":{"text":"Temperatur 20 °C.","fields":{"temperature":{"type":"quantity","description":"Temperatur","unit":"degC"}}},"expected_status":422}
+{"id":"h005","request":{"text":"Breite 12 cm.","fields":{"width":{"type":"quantity","description":"Breite","unit":"mm"}},"many":true},"expected_status":422}
+{"id":"h006","request":{"text":"Breite 12 cm.","fields":{"width":{"type":"quantity","description":"Breite","unit":"mm"}},"many":true,"anchor":"width"},"expected_status":422}
+{"id":"h007","request":{"text":"Breite 12 cm.","fields":{"width":{"type":"quantity","description":"Breite","unit":"mm"}},"locale":"invalid-locale"},"expected_status":422}
+{"id":"h008","request":{"text":"Breite 12 cm.","fields":{"width":{"type":"quantity","description":"Breite","unit":"mm"}},"prompt":"please generate json"},"expected_status":422}
+{"id":"h009","raw_body":"{\"text\":\"Breite 12 cm.\",\"text\":\"Breite 99 cm.\",\"fields\":{\"width\":{\"type\":\"quantity\",\"description\":\"Breite\",\"unit\":\"mm\"}}}","expected_status":422}
+{"id":"h010","request":{"text":"Produkt Atlas.","fields":{"product":{"type":"text","description":"Produkt","unit":"mm"}}},"expected_status":422}

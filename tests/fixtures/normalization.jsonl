@@ -1,0 +1,64 @@
+{"id":"n001","text":"10 miles","span":{"text":"10 miles","start":0,"end":8},"target_unit":"km","locale":"en-US","expected":{"value_decimal":"16.09344","unit":"km"},"oracle":{"input_decimal":"10","factor_decimal":"1.609344"}}
+{"id":"n002","text":"12,5 cm","span":{"text":"12,5 cm","start":0,"end":7},"target_unit":"mm","locale":"de-DE","expected":{"value_decimal":"125","unit":"mm"},"oracle":{"input_decimal":"12.5","factor_decimal":"10"}}
+{"id":"n003","text":"12.5 cm","span":{"text":"12.5 cm","start":0,"end":7},"target_unit":"mm","locale":"en-US","expected":{"value_decimal":"125","unit":"mm"},"oracle":{"input_decimal":"12.5","factor_decimal":"10"}}
+{"id":"n004","text":"2 inches","span":{"text":"2 inches","start":0,"end":8},"target_unit":"mm","locale":null,"expected":{"value_decimal":"50.8","unit":"mm"},"oracle":{"input_decimal":"2","factor_decimal":"25.4"}}
+{"id":"n005","text":"3 ft","span":{"text":"3 ft","start":0,"end":4},"target_unit":"cm","locale":null,"expected":{"value_decimal":"91.44","unit":"cm"},"oracle":{"input_decimal":"3","factor_decimal":"30.48"}}
+{"id":"n006","text":"1 yd","span":{"text":"1 yd","start":0,"end":4},"target_unit":"m","locale":null,"expected":{"value_decimal":"0.9144","unit":"m"},"oracle":{"input_decimal":"1","factor_decimal":"0.9144"}}
+{"id":"n007","text":"10 Meilen","span":{"text":"10 Meilen","start":0,"end":9},"target_unit":"km","locale":"de-DE","expected":{"value_decimal":"16.09344","unit":"km"},"oracle":{"input_decimal":"10","factor_decimal":"1.609344"}}
+{"id":"n008","text":"10 Seemeilen","span":{"text":"10 Seemeilen","start":0,"end":12},"target_unit":"km","locale":"de-DE","expected":{"value_decimal":"18.52","unit":"km"},"oracle":{"input_decimal":"10","factor_decimal":"1.852"}}
+{"id":"n009","text":"10 nautical miles","span":{"text":"10 nautical miles","start":0,"end":17},"target_unit":"km","locale":"en-US","expected":{"value_decimal":"18.52","unit":"km"},"oracle":{"input_decimal":"10","factor_decimal":"1.852"}}
+{"id":"n010","text":"1 nmi","span":{"text":"1 nmi","start":0,"end":5},"target_unit":"m","locale":null,"expected":{"value_decimal":"1852","unit":"m"},"oracle":{"input_decimal":"1","factor_decimal":"1852"}}
+{"id":"n011","text":"1,234 miles","span":{"text":"1,234 miles","start":0,"end":11},"target_unit":"km","locale":null,"expected":{"issue":"ambiguous_number_format"}}
+{"id":"n012","text":"1.234 miles","span":{"text":"1.234 miles","start":0,"end":11},"target_unit":"km","locale":null,"expected":{"issue":"ambiguous_number_format"}}
+{"id":"n013","text":"1,234 miles","span":{"text":"1,234 miles","start":0,"end":11},"target_unit":"km","locale":"de-DE","expected":{"value_decimal":"1.985930496","unit":"km"},"oracle":{"input_decimal":"1.234","factor_decimal":"1.609344"}}
+{"id":"n014","text":"1,234 miles","span":{"text":"1,234 miles","start":0,"end":11},"target_unit":"km","locale":"en-US","expected":{"value_decimal":"1985.930496","unit":"km"},"oracle":{"input_decimal":"1234","factor_decimal":"1.609344"}}
+{"id":"n015","text":"1.234,5 cm","span":{"text":"1.234,5 cm","start":0,"end":10},"target_unit":"mm","locale":"de-DE","expected":{"value_decimal":"12345","unit":"mm"},"oracle":{"input_decimal":"1234.5","factor_decimal":"10"}}
+{"id":"n016","text":"1,234.5 cm","span":{"text":"1,234.5 cm","start":0,"end":10},"target_unit":"mm","locale":"en-US","expected":{"value_decimal":"12345","unit":"mm"},"oracle":{"input_decimal":"1234.5","factor_decimal":"10"}}
+{"id":"n017","text":"12.5 cm","span":{"text":"12.5 cm","start":0,"end":7},"target_unit":"mm","locale":"de-DE","expected":{"issue":"invalid_number_format"}}
+{"id":"n018","text":"12,5 cm","span":{"text":"12,5 cm","start":0,"end":7},"target_unit":"mm","locale":null,"expected":{"value_decimal":"125","unit":"mm"},"oracle":{"input_decimal":"12.5","factor_decimal":"10"}}
+{"id":"n019","text":"12.5 cm","span":{"text":"12.5 cm","start":0,"end":7},"target_unit":"mm","locale":null,"expected":{"value_decimal":"125","unit":"mm"},"oracle":{"input_decimal":"12.5","factor_decimal":"10"}}
+{"id":"n020","text":"1 234,5 cm","span":{"text":"1 234,5 cm","start":0,"end":10},"target_unit":"mm","locale":"de-DE","expected":{"value_decimal":"12345","unit":"mm"},"oracle":{"input_decimal":"1234.5","factor_decimal":"10"}}
+{"id":"n021","text":"1 234,5 cm","span":{"text":"1 234,5 cm","start":0,"end":10},"target_unit":"mm","locale":"de-DE","expected":{"value_decimal":"12345","unit":"mm"},"oracle":{"input_decimal":"1234.5","factor_decimal":"10"}}
+{"id":"n022","text":"12 34,5 cm","span":{"text":"12 34,5 cm","start":0,"end":10},"target_unit":"mm","locale":"de-DE","expected":{"issue":"invalid_number_format"}}
+{"id":"n023","text":"−2 cm","span":{"text":"−2 cm","start":0,"end":5},"target_unit":"mm","locale":null,"expected":{"value_decimal":"-20","unit":"mm"},"oracle":{"input_decimal":"-2","factor_decimal":"10"}}
+{"id":"n024","text":"-2 cm","span":{"text":"-2 cm","start":0,"end":5},"target_unit":"mm","locale":null,"expected":{"value_decimal":"-20","unit":"mm"},"oracle":{"input_decimal":"-2","factor_decimal":"10"}}
+{"id":"n025","text":"0 cm","span":{"text":"0 cm","start":0,"end":4},"target_unit":"mm","locale":null,"expected":{"value_decimal":"0","unit":"mm"},"oracle":{"input_decimal":"0","factor_decimal":"10"}}
+{"id":"n026","text":"1e3 mm","span":{"text":"1e3 mm","start":0,"end":6},"target_unit":"m","locale":null,"expected":{"value_decimal":"1","unit":"m"},"oracle":{"input_decimal":"1000","factor_decimal":"0.001"}}
+{"id":"n027","text":"1,2e3 cm","span":{"text":"1,2e3 cm","start":0,"end":8},"target_unit":"mm","locale":"de-DE","expected":{"value_decimal":"12000","unit":"mm"},"oracle":{"input_decimal":"1200","factor_decimal":"10"}}
+{"id":"n028","text":"1e101 cm","span":{"text":"1e101 cm","start":0,"end":8},"target_unit":"mm","locale":null,"expected":{"issue":"numeric_out_of_range"}}
+{"id":"n029","text":"1234567890123456789012345 cm","span":{"text":"1234567890123456789012345 cm","start":0,"end":28},"target_unit":"mm","locale":null,"expected":{"issue":"numeric_out_of_range"}}
+{"id":"n030","text":"NaN cm","span":{"text":"NaN cm","start":0,"end":6},"target_unit":"mm","locale":null,"expected":{"issue":"invalid_number_format"}}
+{"id":"n031","text":"Infinity cm","span":{"text":"Infinity cm","start":0,"end":11},"target_unit":"mm","locale":null,"expected":{"issue":"invalid_number_format"}}
+{"id":"n032","text":"12","span":{"text":"12","start":0,"end":2},"target_unit":"mm","locale":null,"expected":{"issue":"missing_unit"}}
+{"id":"n033","text":"3 gal","span":{"text":"3 gal","start":0,"end":5},"target_unit":"L","locale":null,"expected":{"issue":"ambiguous_unit"}}
+{"id":"n034","text":"2 Pfund","span":{"text":"2 Pfund","start":0,"end":7},"target_unit":"kg","locale":null,"expected":{"issue":"ambiguous_unit"}}
+{"id":"n035","text":"5 nm","span":{"text":"5 nm","start":0,"end":4},"target_unit":"m","locale":null,"expected":{"issue":"unsupported_unit"}}
+{"id":"n036","text":"5 M","span":{"text":"5 M","start":0,"end":3},"target_unit":"m","locale":null,"expected":{"issue":"unsupported_unit"}}
+{"id":"n037","text":"20 °C","span":{"text":"20 °C","start":0,"end":5},"target_unit":"m","locale":null,"expected":{"issue":"unsupported_unit"}}
+{"id":"n038","text":"2 kg","span":{"text":"2 kg","start":0,"end":4},"target_unit":"mm","locale":null,"expected":{"issue":"incompatible_dimension"}}
+{"id":"n039","text":"10–12 cm","span":{"text":"10–12 cm","start":0,"end":8},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n040","text":"10-12 cm","span":{"text":"10-12 cm","start":0,"end":8},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n041","text":"10 bis 12 cm","span":{"text":"10 bis 12 cm","start":0,"end":12},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n042","text":"bis zu 10 cm","span":{"text":"bis zu 10 cm","start":0,"end":12},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n043","text":"mindestens 10 cm","span":{"text":"mindestens 10 cm","start":0,"end":16},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n044","text":"ca. 12 cm","span":{"text":"ca. 12 cm","start":0,"end":9},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n045","text":"10 cm ± 1 cm","span":{"text":"10 cm ± 1 cm","start":0,"end":12},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n046","text":"20 × 30 cm","span":{"text":"20 × 30 cm","start":0,"end":10},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n047","text":"5 ft 6 in","span":{"text":"5 ft 6 in","start":0,"end":9},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n048","text":"drei cm","span":{"text":"drei cm","start":0,"end":7},"target_unit":"mm","locale":null,"expected":{"issue":"unsupported_number_format"}}
+{"id":"n049","text":"1/2 inch","span":{"text":"1/2 inch","start":0,"end":8},"target_unit":"mm","locale":null,"expected":{"issue":"unsupported_number_format"}}
+{"id":"n050","text":"Die Breite beträgt bis zu 10 cm.","span":{"text":"10 cm","start":26,"end":31},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n051","text":"Die Breite beträgt nicht 10 cm, sondern 12 cm.","span":{"text":"12 cm","start":40,"end":45},"target_unit":"mm","locale":null,"expected":{"value_decimal":"120","unit":"mm"},"oracle":{"input_decimal":"12","factor_decimal":"10"}}
+{"id":"n052","text":"Die Breite beträgt 10 cm ± 1 cm.","span":{"text":"10 cm","start":19,"end":24},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
+{"id":"n053","text":"1,5 kg","span":{"text":"1,5 kg","start":0,"end":6},"target_unit":"g","locale":"de-DE","expected":{"value_decimal":"1500","unit":"g"},"oracle":{"input_decimal":"1.5","factor_decimal":"1000"}}
+{"id":"n054","text":"2 lb","span":{"text":"2 lb","start":0,"end":4},"target_unit":"kg","locale":null,"expected":{"value_decimal":"0.90718474","unit":"kg"},"oracle":{"input_decimal":"2","factor_decimal":"0.45359237"}}
+{"id":"n055","text":"1500 ms","span":{"text":"1500 ms","start":0,"end":7},"target_unit":"s","locale":null,"expected":{"value_decimal":"1.5","unit":"s"},"oracle":{"input_decimal":"1500","factor_decimal":"0.001"}}
+{"id":"n056","text":"2 hours","span":{"text":"2 hours","start":0,"end":7},"target_unit":"min","locale":"en-US","expected":{"value_decimal":"120","unit":"min"},"oracle":{"input_decimal":"2","factor_decimal":"60"}}
+{"id":"n057","text":"1,5 L","span":{"text":"1,5 L","start":0,"end":5},"target_unit":"mL","locale":"de-DE","expected":{"value_decimal":"1500","unit":"mL"},"oracle":{"input_decimal":"1.5","factor_decimal":"1000"}}
+{"id":"n058","text":"3 m3","span":{"text":"3 m3","start":0,"end":4},"target_unit":"L","locale":null,"expected":{"value_decimal":"3000","unit":"L"},"oracle":{"input_decimal":"3","factor_decimal":"1000"}}
+{"id":"n059","text":"12 cm2","span":{"text":"12 cm2","start":0,"end":6},"target_unit":"mm2","locale":null,"expected":{"value_decimal":"1200","unit":"mm2"},"oracle":{"input_decimal":"12","factor_decimal":"100"}}
+{"id":"n060","text":"12 cm²","span":{"text":"12 cm²","start":0,"end":6},"target_unit":"mm2","locale":null,"expected":{"value_decimal":"1200","unit":"mm2"},"oracle":{"input_decimal":"12","factor_decimal":"100"}}
+{"id":"n061","text":"72 km/h","span":{"text":"72 km/h","start":0,"end":7},"target_unit":"m/s","locale":null,"expected":{"value_decimal":"20","unit":"m/s"}}
+{"id":"n062","text":"1 km/h","span":{"text":"1 km/h","start":0,"end":6},"target_unit":"m/s","locale":null,"expected":{"value_decimal":"0.2777777777777777777777777777777778","unit":"m/s","absolute_tolerance":"1e-33"}}
+{"id":"n063","text":"10 mph","span":{"text":"10 mph","start":0,"end":6},"target_unit":"km/h","locale":null,"expected":{"value_decimal":"16.09344","unit":"km/h"},"oracle":{"input_decimal":"10","factor_decimal":"1.609344"}}
+{"id":"n064","text":"125 mm","span":{"text":"125 mm","start":0,"end":6},"target_unit":"mm","locale":null,"expected":{"value_decimal":"125","unit":"mm"},"oracle":{"input_decimal":"125","factor_decimal":"1"}}

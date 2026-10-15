@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+<title id="title">tractor — System One Extraction Model</title>
+<desc id="desc">A mint extraction mark connects source lines to a structured value on a dark navy background.</desc>
+<rect width="1200" height="360" rx="24" fill="#101c2b"/>
+<g fill="none" stroke-linecap="round" stroke-width="10">
+<path d="M82 118h90M82 154h65M82 190h90M82 226h65" stroke="#64788c"/>
+<path d="M187 105h-22v134h22M225 172h48m-14-14 14 14-14 14M309 105h22v134h-22" stroke="#70efbe"/>
+</g>
+<text x="395" y="168" font-family="sans-serif" font-size="92" font-weight="700" letter-spacing="-4" fill="#ffffff">tractor</text>
+<text x="399" y="223" font-family="sans-serif" font-size="31" fill="#70efbe">System One Extraction Model</text>
+<text x="399" y="280" font-family="sans-serif" font-size="20" fill="#b7c6d5">Source spans. Structured fields. Normalized quantities.</text>
+</svg>
