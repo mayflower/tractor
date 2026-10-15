@@ -1,0 +1,13 @@
+services:
+  tractor:
+    build:
+      context: ../..
+    user: "${TRACTOR_UID:-10001}:${TRACTOR_GID:-10001}"
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - "../../models/tractor:/model:ro"
+    environment:
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+    restart: unless-stopped

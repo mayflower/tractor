@@ -51,6 +51,13 @@ no tools, retries or answer repair. It includes network overhead and covers a
 specialized synthetic task, not optimized LLM pipelines or general capabilities.
 [Results, tolerant scoring and reproducible evidence](https://github.com/mayflower/tractor/blob/main/docs/benchmarks.md).
 
+## User manual
+
+The [full user manual](https://github.com/mayflower/tractor/blob/main/docs/manual/index.md)
+includes step-by-step tutorials, integration recipes, API/SDK reference, and design
+explanations. Start with [your first extraction](https://github.com/mayflower/tractor/blob/main/docs/manual/tutorials/first-extraction.md),
+then use the runnable Python, JavaScript, async, batch, database, and deployment examples.
+
 ## Use
 
 In the [source checkout](https://github.com/mayflower/tractor), authenticate with

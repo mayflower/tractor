@@ -1,5 +1,8 @@
 # Extraction API
 
+See the [user manual](manual/index.md) for tutorials and integration guides, and
+the [complete HTTP reference](manual/reference/http.md) for the exact contract.
+
 Start `tractor serve --model models/tractor --device cpu` and send JSON requests
 to `POST /v1/extract`. The default address is `http://127.0.0.1:8000`.
 

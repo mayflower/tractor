@@ -1,0 +1,11 @@
+{
+  "text": "Breite: 12,5 cm.",
+  "fields": {
+    "width_mm": {
+      "type": "quantity",
+      "description": "Breite",
+      "unit": "mm"
+    }
+  },
+  "locale": "de-DE"
+}

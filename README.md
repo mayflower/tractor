@@ -13,7 +13,7 @@ operational workflows, tractor combines learned language understanding with exac
 unit conversion and an explicit API contract. Run it on your own infrastructure,
 with CPU or GPU inference and an HTTP API that works with any language.
 
-[Get started](#start-the-api) · [API](docs/api.md) ·
+[User manual](docs/manual/index.md) · [Get started](#start-the-api) · [API](docs/api.md) ·
 [Benchmarks](docs/benchmarks.md) · [Model card](release/MODEL_CARD.md)
 
 ## Put extraction on the fast path

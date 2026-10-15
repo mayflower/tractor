@@ -13,6 +13,7 @@ check:
     uv lock --check
     uv run --no-sync ruff check src scripts tests examples
     uv run --no-sync python tests/fixtures/check_fixtures.py
+    uv run --no-sync python scripts/check-docs.py
     uv run --no-sync pytest -q tests
 
 doctor:

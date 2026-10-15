@@ -1,0 +1,16 @@
+{
+  "text": "Alpha ist 10 cm breit. Beta ist 2 inches breit.",
+  "fields": {
+    "product": {
+      "type": "text",
+      "description": "Produktbezeichnung"
+    },
+    "width_mm": {
+      "type": "quantity",
+      "description": "Breite",
+      "unit": "mm"
+    }
+  },
+  "many": true,
+  "anchor": "product"
+}
