@@ -2,13 +2,47 @@
 
 ![tractor — System One Extraction Model](docs/brand/tractor.svg)
 
-Extract structured fields and normalized quantities from German and English text.
-tractor runs locally, selects original source spans with GLiNER, and converts
-quantities with deterministic Decimal arithmetic. It includes an HTTP API and a
-lightweight Python SDK.
+**Text in. Structured data out. Ready for your application.**
 
-[API](docs/api.md) · [Model card](release/MODEL_CARD.md) ·
-[Evaluation](docs/benchmarks.md) · [Contributing](CONTRIBUTING.md)
+tractor is Mayflower’s **System One Extraction Model**: a specialized model and API
+for turning German and English text into product fields, separate records and
+normalized quantities. Describe the fields you need. Get JSON your code can use.
+
+Built for the extraction calls inside catalog imports, supplier integrations and
+operational workflows, tractor combines learned language understanding with exact
+unit conversion and an explicit API contract. Run it on your own infrastructure,
+with CPU or GPU inference and an HTTP API that works with any language.
+
+[Get started](#start-the-api) · [API](docs/api.md) ·
+[Benchmarks](docs/benchmarks.md) · [Model card](release/MODEL_CARD.md)
+
+## Put extraction on the fast path
+
+| Your application needs | tractor provides |
+|---|---|
+| Fields from messy text | Source-span extraction with field descriptions in plain language |
+| Consistent measurements | Locale-aware parsing and deterministic Decimal unit conversion |
+| Multiple products in one request | Anchored records with values associated with each product |
+| Traceable answers | Original source offsets, explicit missing-value and ambiguity issues |
+| Control over deployment | Local, offline serving with CPU or GPU support |
+| A small integration surface | One HTTP endpoint and a lightweight Python SDK |
+
+A single encoder pass finds the relevant spans. Code assembles the response and
+normalizes quantities. That focused path makes tractor a practical alternative to
+calling Haiku 5.5 or GPT-6 Luna for repeated, well-defined extraction tasks.
+See the [evaluation results and supported scope](docs/benchmarks.md).
+
+## From supplier text to application data
+
+A supplier writes **“Die Breite beträgt 12,5 cm.”** Your system needs millimeters.
+tractor returns **`125`** under your field name. For multiple products, it returns
+separate records. Source details let your application show where a value came from;
+structured issues let it route missing or ambiguous values for review.
+
+Use it to populate catalog attributes, normalize dimensions from short technical
+specifications, or provide an extraction step inside a larger agent workflow.
+The supported scope is short German/English text within a 512-token joint
+text/schema budget; validate your own workload before automating decisions.
 
 ## Start the API
 

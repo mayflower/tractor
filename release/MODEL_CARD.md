@@ -11,10 +11,21 @@ tags:
 ---
 # tractor · System One Extraction Model
 
-tractor extracts structured fields and scalar quantities from German and English
-text. A single GLiNER encoder pass selects original source spans; deterministic
-Decimal arithmetic converts quantities to requested units. The HTTP API and Python
-SDK support document fields, anchored records, explicit issues and source offsets.
+**Text in. Structured data out. Ready for your application.**
+
+tractor is Mayflower’s **System One Extraction Model**, built for the repeated
+extraction tasks inside catalog imports, supplier integrations and operational
+software. Describe your fields; receive source-grounded text, separate product
+records and quantities converted to the units your application needs.
+
+One GLiNER encoder pass selects source spans. Deterministic Decimal arithmetic
+normalizes quantities, and code assembles the JSON response. The local HTTP API
+and lightweight Python SDK provide original offsets and explicit issues for
+missing or ambiguous values. Run the model offline on your own CPU or GPU.
+
+tractor is a specialized alternative to Haiku 5.5 and GPT-6 Luna for this extraction
+contract. [Evaluation methodology and results](https://github.com/mayflower/tractor/blob/main/docs/benchmarks.md)
+describe the measured workload and deployment conditions.
 
 ## Use
 
