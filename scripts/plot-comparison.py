@@ -47,3 +47,7 @@ fig.text(.04, .035, 'CPU loopback vs remote cloud APIs; timings include network 
          fontsize=9, color='#96abc3')
 fig.subplots_adjust(left=.16, right=.96, top=.73, bottom=.24)
 fig.savefig(ROOT/'docs/brand/comparison.svg', facecolor=fig.get_facecolor())
+
+# Keep the generated SVG clean in Git diffs without changing its geometry.
+svg = ROOT/"docs/brand/comparison.svg"
+svg.write_text("\n".join(line.rstrip() for line in svg.read_text().splitlines())+"\n")

@@ -10,5 +10,5 @@
   "license": null,
   "publication_status": "private_source_and_model_published",
   "metrics": "release/metrics.json",
-  "huggingface_revision": "fdf9c08be809226b9e5e254aed273c1c66fad38b"
+  "huggingface_revision": "6649dc7f1fead9c34286760d7000985b51ba64e2"
 }
