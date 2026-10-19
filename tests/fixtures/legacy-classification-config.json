@@ -1,0 +1,357 @@
+{
+  "seed": 907,
+  "train_per_axis": 2000,
+  "evaluation_per_axis": 200,
+  "axes": {
+    "approval": {
+      "description": "Current approval state of the request",
+      "classes": [
+        {
+          "id": "approved",
+          "description": "Approval has been granted",
+          "train": {
+            "de": "Die zust\u00e4ndige Stelle hat den Antrag genehmigt.",
+            "en": "The responsible team has approved the request."
+          },
+          "heldout": {
+            "de": "Die Freigabe liegt nun verbindlich vor.",
+            "en": "Authorization has now been granted."
+          }
+        },
+        {
+          "id": "rejected",
+          "description": "Approval was explicitly refused",
+          "train": {
+            "de": "Die zust\u00e4ndige Stelle hat den Antrag abgelehnt.",
+            "en": "The responsible team has rejected the request."
+          },
+          "heldout": {
+            "de": "Die Freigabe wurde ausdr\u00fccklich verweigert.",
+            "en": "Authorization was explicitly refused."
+          }
+        },
+        {
+          "id": "pending",
+          "description": "A decision is still pending",
+          "train": {
+            "de": "\u00dcber den Antrag wurde noch nicht entschieden.",
+            "en": "No decision has been made on the request yet."
+          },
+          "heldout": {
+            "de": "Die Pr\u00fcfung l\u00e4uft; das Ergebnis steht noch aus.",
+            "en": "Review is ongoing and the outcome is pending."
+          }
+        },
+        {
+          "id": "unknown",
+          "description": "No approval state is stated",
+          "train": {
+            "de": "Diese Notiz nennt keinen Bearbeitungsstand des Antrags.",
+            "en": "This note gives no approval status for the request."
+          },
+          "heldout": {
+            "de": "Ob eine Freigabe vorliegt, geht aus dem Text nicht hervor.",
+            "en": "The text does not say whether authorization exists."
+          }
+        }
+      ]
+    },
+    "routing": {
+      "description": "Team responsible for the issue described",
+      "classes": [
+        {
+          "id": "billing",
+          "description": "Invoice, payment or billing issue",
+          "train": {
+            "de": "Bitte kl\u00e4ren Sie die doppelte Abbuchung auf meiner Rechnung.",
+            "en": "Please resolve the duplicate charge on my invoice."
+          },
+          "heldout": {
+            "de": "Mir wurde derselbe Betrag zweimal berechnet; ich bitte um Korrektur.",
+            "en": "I was billed twice for the same item and need a correction."
+          }
+        },
+        {
+          "id": "technical",
+          "description": "Software or technical service failure",
+          "train": {
+            "de": "Die Anwendung st\u00fcrzt beim \u00d6ffnen ab und l\u00e4sst sich nicht nutzen.",
+            "en": "The application crashes on opening and cannot be used."
+          },
+          "heldout": {
+            "de": "Seit dem Update beendet sich das Programm bei jedem Start.",
+            "en": "Since the update, the program exits every time it starts."
+          }
+        },
+        {
+          "id": "personnel",
+          "description": "Employment, leave or personnel administration",
+          "train": {
+            "de": "Ich m\u00f6chte meine verbleibenden Urlaubstage mit der Personalabteilung kl\u00e4ren.",
+            "en": "I want to check my remaining leave days with human resources."
+          },
+          "heldout": {
+            "de": "Wie viel Jahresurlaub steht mir als Mitarbeiter noch zu?",
+            "en": "How much annual leave do I still have as an employee?"
+          }
+        },
+        {
+          "id": "other",
+          "description": "None of billing, technical support or personnel",
+          "train": {
+            "de": "Bitte nennen Sie die \u00d6ffnungszeiten des Museums.",
+            "en": "Please tell me the opening hours of the museum."
+          },
+          "heldout": {
+            "de": "Wann schlie\u00dft die Ausstellung am Wochenende?",
+            "en": "At what time does the exhibition close on weekends?"
+          }
+        }
+      ]
+    },
+    "urgency": {
+      "description": "Explicitly stated required response time, without guessing from topic",
+      "classes": [
+        {
+          "id": "immediate",
+          "description": "Action is explicitly required immediately",
+          "train": {
+            "de": "Die Bearbeitung muss sofort erfolgen, ohne Wartezeit.",
+            "en": "This must be handled immediately, without delay."
+          },
+          "heldout": {
+            "de": "Ein Aufschub ist ausgeschlossen; handeln Sie jetzt.",
+            "en": "Deferral is ruled out; action is required right now."
+          }
+        },
+        {
+          "id": "scheduled",
+          "description": "A specific future appointment for action is stated",
+          "train": {
+            "de": "Bitte bearbeiten Sie dies erst am kommenden Montag.",
+            "en": "Please handle this only on the coming Monday."
+          },
+          "heldout": {
+            "de": "F\u00fcr die Bearbeitung ist der n\u00e4chste Dienstag fest vereinbart.",
+            "en": "The work is booked for next Tuesday."
+          }
+        },
+        {
+          "id": "routine",
+          "description": "Explicitly no urgency; ordinary queue is acceptable",
+          "train": {
+            "de": "Es besteht keine Eile; die normale Warteschlange reicht aus.",
+            "en": "There is no urgency; the normal queue is fine."
+          },
+          "heldout": {
+            "de": "Ein gew\u00f6hnlicher Bearbeitungszeitraum ist ausdr\u00fccklich ausreichend.",
+            "en": "An ordinary processing timeframe is explicitly sufficient."
+          }
+        },
+        {
+          "id": "unspecified",
+          "description": "No timing or urgency is provided",
+          "train": {
+            "de": "Zum gew\u00fcnschten Bearbeitungszeitpunkt gibt es keine Angabe.",
+            "en": "No requested handling time is given."
+          },
+          "heldout": {
+            "de": "Die Nachricht enth\u00e4lt weder Frist noch Priorit\u00e4tsangabe.",
+            "en": "The message contains neither a deadline nor a priority."
+          }
+        }
+      ]
+    },
+    "sentiment": {
+      "description": "Overall explicitly expressed evaluation, including mixed opinions",
+      "classes": [
+        {
+          "id": "positive",
+          "description": "Only favorable evaluation is expressed",
+          "train": {
+            "de": "Ich bin sehr zufrieden; der Ablauf war ausgezeichnet.",
+            "en": "I am very satisfied; the process was excellent."
+          },
+          "heldout": {
+            "de": "Das Ergebnis begeistert mich und ich empfehle den Service.",
+            "en": "I am delighted with the result and recommend the service."
+          }
+        },
+        {
+          "id": "negative",
+          "description": "Only unfavorable evaluation is expressed",
+          "train": {
+            "de": "Ich bin sehr entt\u00e4uscht; der Ablauf war miserabel.",
+            "en": "I am very disappointed; the process was awful."
+          },
+          "heldout": {
+            "de": "Das Ergebnis \u00e4rgert mich und ich rate vom Service ab.",
+            "en": "The result upsets me and I advise against the service."
+          }
+        },
+        {
+          "id": "mixed",
+          "description": "Both favorable and unfavorable evaluations are expressed",
+          "train": {
+            "de": "Die Beratung war hervorragend, aber die Ausf\u00fchrung war schlecht.",
+            "en": "The advice was excellent, but execution was poor."
+          },
+          "heldout": {
+            "de": "Ich sch\u00e4tze die Qualit\u00e4t, bin jedoch \u00fcber die Wartezeit ver\u00e4rgert.",
+            "en": "I appreciate the quality but am upset about the waiting time."
+          }
+        },
+        {
+          "id": "neutral",
+          "description": "No favorable or unfavorable opinion is expressed",
+          "train": {
+            "de": "Der Vorgang wurde am Mittwoch um zehn Uhr erfasst.",
+            "en": "The case was recorded at ten oclock on Wednesday."
+          },
+          "heldout": {
+            "de": "Die Nachricht enth\u00e4lt ausschlie\u00dflich die Vorgangsnummer und das Datum.",
+            "en": "The message contains only the case number and the date."
+          }
+        }
+      ]
+    },
+    "document_kind": {
+      "description": "Purpose of this document from its content",
+      "classes": [
+        {
+          "id": "invoice",
+          "description": "A demand for payment for supplied goods or services",
+          "train": {
+            "de": "F\u00fcr die erbrachte Leistung sind 240 Euro bis Monatsende zu zahlen.",
+            "en": "For the service provided, 240 euros are payable by month end."
+          },
+          "heldout": {
+            "de": "Wir stellen die ausgef\u00fchrte Arbeit mit 315 Euro in Rechnung.",
+            "en": "We bill 315 euros for the completed work."
+          }
+        },
+        {
+          "id": "minutes",
+          "description": "A record of a meeting that already occurred",
+          "train": {
+            "de": "In der gestrigen Sitzung wurden drei Beschl\u00fcsse gefasst und protokolliert.",
+            "en": "Three resolutions were passed and recorded at yesterdays meeting."
+          },
+          "heldout": {
+            "de": "Das Protokoll h\u00e4lt die besprochenen Punkte der vergangenen Sitzung fest.",
+            "en": "These minutes record the topics discussed at the previous session."
+          }
+        },
+        {
+          "id": "invitation",
+          "description": "An invitation to a future event",
+          "train": {
+            "de": "Wir laden Sie zur kommenden Fachtagung ein und bitten um Anmeldung.",
+            "en": "We invite you to the upcoming conference and ask you to register."
+          },
+          "heldout": {
+            "de": "Sie sind herzlich zum n\u00e4chsten Empfang eingeladen; bitte sagen Sie zu.",
+            "en": "You are warmly invited to the next reception; please confirm attendance."
+          }
+        },
+        {
+          "id": "other",
+          "description": "Neither a bill, meeting minutes nor an invitation",
+          "train": {
+            "de": "Die Bedienungsanleitung erkl\u00e4rt den Austausch des Filters in f\u00fcnf Schritten.",
+            "en": "The manual explains filter replacement in five steps."
+          },
+          "heldout": {
+            "de": "Diese Anleitung beschreibt die Reinigung des Ger\u00e4ts nach Gebrauch.",
+            "en": "These instructions describe cleaning the device after use."
+          }
+        }
+      ]
+    },
+    "request_type": {
+      "description": "Communicative purpose of the message",
+      "classes": [
+        {
+          "id": "question",
+          "description": "A request for information, not an instruction to perform work",
+          "train": {
+            "de": "Welche Unterlagen sind f\u00fcr diesen Vorgang erforderlich?",
+            "en": "Which documents are required for this case?"
+          },
+          "heldout": {
+            "de": "K\u00f6nnen Sie mir sagen, welche Nachweise ich brauche?",
+            "en": "Can you tell me which supporting records I need?"
+          }
+        },
+        {
+          "id": "action",
+          "description": "An explicit instruction to perform an action",
+          "train": {
+            "de": "Bitte \u00e4ndern Sie die hinterlegte Lieferadresse.",
+            "en": "Please change the delivery address on file."
+          },
+          "heldout": {
+            "de": "Tragen Sie die neue Anschrift in das System ein.",
+            "en": "Enter the new address into the system."
+          }
+        },
+        {
+          "id": "complaint",
+          "description": "An explicit expression of dissatisfaction without an action request",
+          "train": {
+            "de": "Ich beschwere mich \u00fcber die wiederholte Verz\u00f6gerung.",
+            "en": "I am complaining about the repeated delay."
+          },
+          "heldout": {
+            "de": "Mit der mehrfach vers\u00e4umten Frist bin ich nicht einverstanden.",
+            "en": "I am dissatisfied with the repeatedly missed deadline."
+          }
+        },
+        {
+          "id": "information",
+          "description": "A factual notification with no question or action request",
+          "train": {
+            "de": "Zur Information: Die Unterlagen sind gestern eingegangen.",
+            "en": "For your information, the documents arrived yesterday."
+          },
+          "heldout": {
+            "de": "Hiermit teile ich mit, dass die Akte vollst\u00e4ndig vorliegt.",
+            "en": "This is to notify you that the file is complete."
+          }
+        }
+      ]
+    }
+  },
+  "source": {
+    "repo": "AmazonScience/massive",
+    "revision": "ed58ac423a2f4121720918bf5301577edce4ffd3",
+    "license": "cc-by-4.0",
+    "locales": [
+      "de-DE",
+      "en-US"
+    ],
+    "root": "data/generalist-sources/massive",
+    "files": {
+      "en-US/validation/0000.parquet": "cf22bf142963c86ee164c5bb1fe22c67c1261df5c52dfd7217ea87b977c7bb43",
+      "en-US/train/0000.parquet": "9c8b3ce8a96ec3b0d4aee104d8778d9f6bacdbd18f2cea232f6d8333d24401b1",
+      "en-US/test/0000.parquet": "c418da9a5f3a7425b5cf44941bcea032a31040dbda2da85e0dd9323785c7731e",
+      "de-DE/test/0000.parquet": "3f15d6dcac758a56b4528a06b002252846208ebb8101f6159bc16ed836c55982",
+      "de-DE/train/0000.parquet": "49ae57c8c2ee50f5d14df0fbbb275b3c2429ba71ec0e823ee975d40ed6c6bbdc",
+      "de-DE/validation/0000.parquet": "42797d430834f891c85413b8b421bcbd852d9ccbb082f203b33ac821c3a7c583"
+    }
+  },
+  "protected_episodes": [
+    "data/generalist-expanded/dev.episodes.jsonl",
+    "data/generalist-expanded/calibration.episodes.jsonl",
+    "data/generalist-expanded/test.episodes.jsonl",
+    "data/generalist-frozen/calibration.episodes.jsonl",
+    "data/generalist-frozen/test.episodes.jsonl",
+    "data/generalist-extraction-integrated/dev.episodes.jsonl",
+    "data/synthetic-coverage-role-evaluation/dev.episodes.jsonl",
+    "data/synthetic-coverage-role-evaluation/calibration.episodes.jsonl",
+    "data/synthetic-coverage-role-evaluation/test.episodes.jsonl",
+    "data/generalist-extraction-combined/dev.episodes.jsonl",
+    "data/generalist-extraction-combined/calibration.episodes.jsonl",
+    "data/generalist-extraction-combined/test.episodes.jsonl"
+  ]
+}

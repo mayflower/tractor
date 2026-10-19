@@ -35,6 +35,11 @@ def create_app(
 ):
     @asynccontextmanager
     async def lifespan(app):
+        from .address_normalization import parsed_parts
+
+        # Address parsing is part of the public contract. Load its local model
+        # before readiness rather than failing on the first address request.
+        await asyncio.to_thread(parsed_parts, 'London', 'GB')
         if extractor is not None:
             app.state.extractor = extractor
         else:
@@ -109,17 +114,18 @@ def create_app(
     schema["$defs"] = schema.get("$defs", {})
 
     # Inline definitions for a standalone OpenAPI request schema.
-    def inline(value):
+    def inline(value, definitions=None):
+        definitions = schema["$defs"] if definitions is None else definitions
         if isinstance(value, dict):
             if "$ref" in value:
-                return inline(schema["$defs"][value["$ref"].split("/")[-1]])
-            return {k: inline(v) for k, v in value.items() if k not in {"$defs", "discriminator"}}
+                return inline(definitions[value["$ref"].split("/")[-1]], definitions)
+            return {k: inline(v, definitions) for k, v in value.items() if k not in {"$defs", "discriminator"}}
         if isinstance(value, list):
-            return [inline(v) for v in value]
+            return [inline(v, definitions) for v in value]
         return value
 
     scalar = {"anyOf": [{"type": "number"}, {"type": "string"}, {"type": "null"}]}
-    record = {"type": "object", "additionalProperties": scalar}
+    record = {"type": "object", "additionalProperties": {"anyOf": [scalar, {"type": "array", "items": scalar}]}}
 
     @app.post(
         "/v1/extract",
@@ -140,7 +146,6 @@ def create_app(
                                 "properties": {
                                     "data": {"anyOf": [record, {"type": "array", "items": record}]},
                                     "issues": {"type": "array", "items": {"type": "object"}},
-                                    "details": {"anyOf": [{"type": "object"}, {"type": "array"}]},
                                 },
                             }
                         }

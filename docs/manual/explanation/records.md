@@ -27,8 +27,15 @@ This conservatism helps avoid silently making an association the system cannot
 resolve under its contract.
 
 Null expresses an unresolved value. Zero expresses a successfully normalized zero.
-Issues explain the former; source details can support review. Applications can
+Issues explain the former. Applications can
 choose different policies for optional attributes and required measurements, but
 should keep that choice explicit and observable.
 
 [Manual home](../index.md)
+
+## Scope boundary
+
+Record extraction groups values explicitly described together in readable text.
+It does not reconstruct table rows, align separate columns, or recover invoice
+positions from PDF/OCR layout. Use a separate table parser for those inputs.
+Missing explicitly stated values in a text record remain extraction errors.

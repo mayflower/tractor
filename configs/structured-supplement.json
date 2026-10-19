@@ -1,0 +1,37 @@
+{
+  "base": "data/public-extraction-200k",
+  "sources": [
+    {
+      "source": "text_json",
+      "repo": "suneeldk/text-json",
+      "revision": "d0474144541e250edffa3d25676798028e8f6bb3",
+      "file": "dataset.jsonl",
+      "license": "apache-2.0",
+      "path": "data/generalist-sources/text-json/dataset.jsonl",
+      "sha256": "b439561eb8438dfaaa654fc835d3e69946360207396f25e2cc8e9b0922aac121",
+      "annotation": "silver",
+      "text_origin": "unknown",
+      "label_origin": "unknown"
+    },
+    {
+      "source": "resume_json",
+      "repo": "sandeeppanem/resume-json-extraction-5k",
+      "revision": "d40b68e4e18108d2a54c8bf075e016f708f36b62",
+      "file": "data/train-00000-of-00001.parquet",
+      "license": "apache-2.0",
+      "path": "data/generalist-sources/resume-json/data/train-00000-of-00001.parquet",
+      "sha256": "e59ae2b64cbc61ad17d98d6ab46057ca84e9033bbfe389e12fa97a814ee65188",
+      "annotation": "silver",
+      "text_origin": "real",
+      "label_origin": "teacher"
+    }
+  ],
+  "protected_episodes": [
+    "data/generalist-expanded/dev.episodes.jsonl",
+    "data/generalist-expanded/calibration.episodes.jsonl",
+    "data/generalist-expanded/test.episodes.jsonl",
+    "data/generalist-frozen/calibration.episodes.jsonl",
+    "data/generalist-frozen/test.episodes.jsonl"
+  ],
+  "note": "Keep the verified human public corpus intact; add only evidence-grounded projected fields as a separately labelled supplement. Source origin unknown is never counted toward the real/human minimum."
+}

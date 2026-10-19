@@ -23,10 +23,8 @@ with tempfile.TemporaryDirectory(prefix="tractor-empty-hf-") as cache:
         extractor.thresholds = loads(Path(args.selection).read_text())["thresholds"]
     results = []
     for row in read_rows("tests/fixtures/api-cases.jsonl"):
-        request = ExtractRequest.model_validate(row["request"]).model_copy(
-            update={"include_details": True}
-        )
-        result = extract(extractor, request)
+        request = ExtractRequest.model_validate(row["request"])
+        result = extract(extractor, request, _diagnostics=True)
         details = result["details"] if isinstance(result["details"], list) else [result["details"]]
         for record in details:
             for source in record.values():

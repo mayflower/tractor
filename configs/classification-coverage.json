@@ -1,0 +1,21 @@
+{
+  "seed": 907,
+  "train_per_axis": 2000,
+  "evaluation_per_axis": 200,
+  "axes": {},
+  "protected_episodes": [
+    "data/generalist-expanded/dev.episodes.jsonl",
+    "data/generalist-expanded/calibration.episodes.jsonl",
+    "data/generalist-expanded/test.episodes.jsonl",
+    "data/generalist-frozen/calibration.episodes.jsonl",
+    "data/generalist-frozen/test.episodes.jsonl",
+    "data/generalist-extraction-integrated/dev.episodes.jsonl",
+    "data/synthetic-coverage-role-evaluation/dev.episodes.jsonl",
+    "data/synthetic-coverage-role-evaluation/calibration.episodes.jsonl",
+    "data/synthetic-coverage-role-evaluation/test.episodes.jsonl",
+    "data/generalist-extraction-combined/dev.episodes.jsonl",
+    "data/generalist-extraction-combined/calibration.episodes.jsonl",
+    "data/generalist-extraction-combined/test.episodes.jsonl"
+  ],
+  "retired": true
+}

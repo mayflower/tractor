@@ -3,7 +3,10 @@
 The package requires Python `>=3.12,<3.13`. The public imports are:
 
 ```python
-from tractor import Client, Quantity, Result, Text, TractorError
+from tractor import (Address, Client, Date, Datetime, Duration, Email, Iban,
+                     Identifier, Interval, List, Money, Number, Organization,
+                     Percent, Person, Phone, Place, Postcode, Quantity, Result,
+                     Text, Time, TractorError, Url)
 ```
 
 ## Installation
@@ -33,7 +36,11 @@ weights, PyTorch, or GPU.
 `Text(description: str)` declares a source-text field. `Quantity(description: str,
 *, unit: str)` declares a quantity. These are frozen, strict Pydantic models.
 Unknown constructor properties and unsupported units raise `ValidationError`.
-Descriptions are 1–240 characters. See [request constraints](http.md).
+Also available are `Date`, `Number`, `Money`, `Address`, `Identifier`, `List`,
+`Person`, `Organization`, `Place`, `Phone`, `Email`, `Postcode`, `Time`,
+`Datetime`, `Duration`, `Interval`, `Percent`, `Iban`, and `Url`.
+Their [type-specific parameters](../how-to/document-processing.md) select processing
+without a separate normalizer configuration. Descriptions are 1–240 characters. See [request constraints](http.md).
 
 ## Client
 
@@ -41,10 +48,10 @@ Descriptions are 1–240 characters. See [request constraints](http.md).
 httpx client. Use a context manager or call `close()`.
 
 ```text
-client.extract(text, fields, *, locale=None, many=False, anchor=None, include_details=False)
+client.extract(text, fields, *, locale=None, many=False, anchor=None)
 ```
 
-`fields` can contain `Text`/`Quantity` objects or equivalent field dictionaries.
+`fields` contains typed field objects or equivalent field dictionaries.
 The SDK validates the complete request before HTTP. There are no retry, streaming,
 async, auth-header, or model-loading methods on this client. Use a custom HTTP client
 for an authenticated gateway or async application.
@@ -55,7 +62,6 @@ for an authenticated gateway or async application.
 |---|---|
 | `data` | Dict or list of dicts; text, numeric, and null field values. |
 | `issues` | List of issue dictionaries. |
-| `details` | Dict/list when requested; otherwise None. |
 
 JSON numbers with a decimal point or exponent decode to `decimal.Decimal`,
 integer literals to `int`,

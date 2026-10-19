@@ -24,6 +24,15 @@ with localcontext(CONTEXT):
     TARGETS = {key: REGISTRY.Unit(value) for key, value in PINT_UNITS.items()}
 ALIASES = {u: u for u in UNITS}
 for unit, aliases in {
+    "nm": "Nanometer nanometer nanometers",
+    "um": "µm μm Mikrometer micrometer micrometers",
+    "ug": "µg μg Mikrogramm microgram micrograms",
+    "Pa": "Pascal pascal pascals",
+    "kPa": "Kilopascal kilopascal kilopascals",
+    "MPa": "Megapascal megapascal megapascals",
+    "K": "Kelvin kelvin",
+    "degC": "°C Celsius",
+    "degF": "°F Fahrenheit",
     "mm": "Millimeter millimeter millimeters",
     "cm": "Zentimeter zentimeter centimeter centimeters",
     "m": "Meter meter meters",
@@ -103,6 +112,9 @@ def normalize(text, span, target_unit, locale=None):
         return Normalized(issue="invalid_span")
     source = span["text"].strip()
     prefix, suffix = text[:start], text[end:]
+    # A closing markup delimiter is not a greater-than qualifier. This only
+    # checks the evidence boundary; it does not interpret rows or HTML layout.
+    prefix = re.sub(r"(?:</?[A-Za-z][^<>]*>\s*)+$", "", prefix)
     if (
         re.search(QUALIFIER, source, re.I)
         or re.search(QUALIFIER + r"\s*$", prefix, re.I)
@@ -142,3 +154,16 @@ def normalize(text, span, target_unit, locale=None):
         if not converted.is_finite():
             return Normalized(issue="numeric_out_of_range")
         return Normalized(value=converted, source_unit=source_unit)
+
+
+def compatible_policy(policy):
+    """A pinned bundle's declared conversions must keep exactly their meaning.
+
+    Additional supported units/aliases do not invalidate existing weights.
+    Removal or reinterpretation of any declared conversion still fails closed.
+    """
+    return (policy.get("contract") == "tractor-v1"
+            and isinstance(policy.get("aliases"), dict) and bool(policy["aliases"])
+            and isinstance(policy.get("units"), dict) and bool(policy["units"])
+            and all(ALIASES.get(k) == v for k, v in policy["aliases"].items())
+            and all(PINT_UNITS.get(k) == v for k, v in policy["units"].items()))

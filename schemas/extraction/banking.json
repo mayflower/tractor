@@ -1,0 +1,225 @@
+{
+  "domain": "banking",
+  "weight": 10,
+  "document": "Bank statement, KYC form or loan application",
+  "header": {
+    "customer": {
+      "description": "Account holder name",
+      "examples": [
+        "Nora Seidel",
+        "Jamie Parker"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "address": {
+      "description": "Customer address",
+      "examples": [
+        "Lindenweg 7, 53111 Bonn",
+        "7 Linden Road, York YO1 8RT"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "account": {
+      "description": "Account identifier as printed",
+      "examples": [
+        "DE89 3704 0044 0532 0130 00",
+        "GB82 WEST 1234 5698 7654 32"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "statement": {
+      "description": "Statement number",
+      "examples": [
+        "KA-2026-10",
+        "ST-2026-10"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "period": {
+      "description": "Statement period",
+      "examples": [
+        "01.10.2026 bis 31.10.2026",
+        "1–31 October 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "employer": {
+      "description": "Employer explicitly named",
+      "examples": [
+        "Nordhafen Messtechnik GmbH",
+        "Cedar Instruments Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "income": {
+      "description": "Stated monthly income",
+      "examples": [
+        "3.250,00 EUR",
+        "GBP 3,250.00"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "identity": {
+      "description": "Printed identity document number",
+      "examples": [
+        "T22000129",
+        "P70002684"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "counterparty": {
+      "description": "Transaction counterparty",
+      "examples": [
+        "Stadtwerke Bonn",
+        "Willow Energy"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "booking_date": {
+      "description": "Transaction booking date",
+      "examples": [
+        "14.10.2026",
+        "14 October 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "amount": {
+      "description": "Printed signed transaction amount",
+      "examples": [
+        "-82,40 EUR",
+        "GBP -82.40"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "reference": {
+      "description": "Transaction reference",
+      "examples": [
+        "Abschlag Oktober K-4281",
+        "October payment AC-4281"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "counterparty",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Bank statement, KYC form or loan application",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "customer": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Account holder name"
+      },
+      "address": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Customer address"
+      },
+      "account": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Account identifier as printed"
+      },
+      "statement": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Statement number"
+      },
+      "period": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Statement period"
+      },
+      "employer": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Employer explicitly named"
+      },
+      "income": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Stated monthly income"
+      },
+      "identity": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed identity document number"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "counterparty": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Transaction counterparty"
+            },
+            "booking_date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Transaction booking date"
+            },
+            "amount": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed signed transaction amount"
+            },
+            "reference": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Transaction reference"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

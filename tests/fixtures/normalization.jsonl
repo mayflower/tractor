@@ -32,9 +32,9 @@
 {"id":"n032","text":"12","span":{"text":"12","start":0,"end":2},"target_unit":"mm","locale":null,"expected":{"issue":"missing_unit"}}
 {"id":"n033","text":"3 gal","span":{"text":"3 gal","start":0,"end":5},"target_unit":"L","locale":null,"expected":{"issue":"ambiguous_unit"}}
 {"id":"n034","text":"2 Pfund","span":{"text":"2 Pfund","start":0,"end":7},"target_unit":"kg","locale":null,"expected":{"issue":"ambiguous_unit"}}
-{"id":"n035","text":"5 nm","span":{"text":"5 nm","start":0,"end":4},"target_unit":"m","locale":null,"expected":{"issue":"unsupported_unit"}}
+{"id":"n035","text":"5 nm","span":{"text":"5 nm","start":0,"end":4},"target_unit":"m","locale":null,"expected":{"value_decimal":"0.000000005","unit":"m"},"oracle":{"input_decimal":"5","factor_decimal":"0.000000001"}}
 {"id":"n036","text":"5 M","span":{"text":"5 M","start":0,"end":3},"target_unit":"m","locale":null,"expected":{"issue":"unsupported_unit"}}
-{"id":"n037","text":"20 °C","span":{"text":"20 °C","start":0,"end":5},"target_unit":"m","locale":null,"expected":{"issue":"unsupported_unit"}}
+{"id":"n037","text":"20 °C","span":{"text":"20 °C","start":0,"end":5},"target_unit":"m","locale":null,"expected":{"issue":"incompatible_dimension"}}
 {"id":"n038","text":"2 kg","span":{"text":"2 kg","start":0,"end":4},"target_unit":"mm","locale":null,"expected":{"issue":"incompatible_dimension"}}
 {"id":"n039","text":"10–12 cm","span":{"text":"10–12 cm","start":0,"end":8},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}
 {"id":"n040","text":"10-12 cm","span":{"text":"10-12 cm","start":0,"end":8},"target_unit":"mm","locale":null,"expected":{"issue":"non_scalar_quantity"}}

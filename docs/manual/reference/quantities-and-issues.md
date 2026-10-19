@@ -4,18 +4,22 @@
 
 | Dimension | Accepted target identifiers |
 |---|---|
-| Length | `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mile`, `nmi` |
-| Mass | `mg`, `g`, `kg`, `lb` |
+| Length | `nm`, `um`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mile`, `nmi` |
+| Mass | `ug`, `mg`, `g`, `kg`, `lb` |
 | Time | `ms`, `s`, `min`, `h` |
 | Volume | `mL`, `L`, `m3` |
 | Area | `mm2`, `cm2`, `m2` |
 | Speed | `m/s`, `km/h`, `mph` |
+| Pressure | `Pa`, `kPa`, `MPa` |
+| Temperature | `K`, `degC`, `degF` |
 
 The identifiers are case sensitive. The source alias table additionally recognizes
 forms such as `Zoll`, `inch`, `inches`, `lbs`, `Liter`, `litres`, `cm²`, and `m³`.
-The exhaustive alias map is exported in the bundle's `normalization.json` and
-implemented in [normalize.py](../../../src/tractor/normalize.py). Source aliases
-are not automatically accepted as target identifiers.
+Aliases include `µm`/`μm`, `µg`/`μg`, `°C` and `°F`. Temperature conversion
+uses offsets as well as scaling. The installed alias map is implemented in [normalize.py](../../../src/tractor/normalize.py). Source aliases
+are not automatically accepted as target identifiers. Bundle normalization
+policies pin their supported conversions. A newer implementation may add units;
+it must not remove or reinterpret any conversion declared by the bundle.
 
 ## Numeric behavior
 

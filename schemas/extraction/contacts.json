@@ -1,0 +1,177 @@
+{
+  "domain": "contacts",
+  "weight": 6,
+  "document": "Company website text, profile or email signature",
+  "header": {
+    "company": {
+      "description": "Company name",
+      "examples": [
+        "Nordhafen Messtechnik GmbH",
+        "Cedar Instruments Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "address": {
+      "description": "Company postal address",
+      "examples": [
+        "Werftstraße 12, 24143 Kiel",
+        "12 Harbour Road, Bristol BS1 4ST"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "industry": {
+      "description": "Industry verbatim if explicitly stated",
+      "examples": [
+        "industrielle Messtechnik",
+        "industrial measurement equipment"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "employees": {
+      "description": "Stated number of employees",
+      "examples": [
+        "84 Beschäftigte",
+        "84 employees"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "website": {
+      "description": "Printed website",
+      "examples": [
+        "https://nordhafen.example.org",
+        "https://cedar.example.org"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "phone": {
+      "description": "Company phone",
+      "examples": [
+        "+49 431 555 0124",
+        "+44 117 496 0124"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "name": {
+      "description": "Contact person",
+      "examples": [
+        "Mara Winter",
+        "Alex Morgan"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "role": {
+      "description": "Job title as written",
+      "examples": [
+        "Leitung Einkauf",
+        "Head of Procurement"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "email": {
+      "description": "Contact email",
+      "examples": [
+        "mara.winter@example.org",
+        "alex.morgan@example.org"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "name",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Company website text, profile or email signature",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "company": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Company name"
+      },
+      "address": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Company postal address"
+      },
+      "industry": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Industry verbatim if explicitly stated"
+      },
+      "employees": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Stated number of employees"
+      },
+      "website": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed website"
+      },
+      "phone": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Company phone"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Contact person"
+            },
+            "role": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Job title as written"
+            },
+            "email": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Contact email"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

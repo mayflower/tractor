@@ -1,0 +1,241 @@
+{
+  "domain": "invoices",
+  "weight": 18,
+  "document": "Invoice, receipt or purchase order",
+  "header": {
+    "supplier": {
+      "description": "Supplier company",
+      "examples": [
+        "Nordhafen Messtechnik GmbH",
+        "Cedar Instruments Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "customer": {
+      "description": "Customer company",
+      "examples": [
+        "Elbwiese Labortechnik GmbH",
+        "Willow Research Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "number": {
+      "description": "Invoice or order number",
+      "examples": [
+        "RE-2026-00481",
+        "INV-26-00937"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "date": {
+      "description": "Document date",
+      "examples": [
+        "17. Oktober 2026",
+        "October 17, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "due": {
+      "description": "Payment due date",
+      "examples": [
+        "31. Oktober 2026",
+        "October 31, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "net": {
+      "description": "Printed net total",
+      "examples": [
+        "1.248,50 EUR",
+        "EUR 1,248.50"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "tax": {
+      "description": "Printed tax amount",
+      "examples": [
+        "237,22 EUR",
+        "EUR 237.22"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "gross": {
+      "description": "Printed gross total",
+      "examples": [
+        "1.485,72 EUR",
+        "EUR 1,485.72"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "iban": {
+      "description": "Supplier IBAN printed in document",
+      "examples": [
+        "DE89 3704 0044 0532 0130 00",
+        "GB82 WEST 1234 5698 7654 32"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "item": {
+      "description": "Item description",
+      "examples": [
+        "geschirmtes Sensorkabel, 3 m",
+        "shielded sensor cable, 3 m"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "code": {
+      "description": "Printed item code",
+      "examples": [
+        "SK-300-B",
+        "AD-48-C"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "quantity": {
+      "description": "Quantity as written",
+      "examples": [
+        "12 Stück",
+        "8 units"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "unit_price": {
+      "description": "Printed price per unit",
+      "examples": [
+        "14,90 EUR",
+        "EUR 24.50"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "item",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Invoice, receipt or purchase order",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "supplier": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Supplier company"
+      },
+      "customer": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Customer company"
+      },
+      "number": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Invoice or order number"
+      },
+      "date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Document date"
+      },
+      "due": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Payment due date"
+      },
+      "net": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed net total"
+      },
+      "tax": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed tax amount"
+      },
+      "gross": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed gross total"
+      },
+      "iban": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Supplier IBAN printed in document"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "item": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Item description"
+            },
+            "code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed item code"
+            },
+            "quantity": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Quantity as written"
+            },
+            "unit_price": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed price per unit"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

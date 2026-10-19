@@ -1,0 +1,18 @@
+{
+  "text": "Anna works at Acme. Bob works at Beta. The meeting is cancelled.",
+  "tasks": [
+    {
+      "id": "employment",
+      "kind": "records",
+      "description": "Employment relationships",
+      "anchor": "person",
+      "fields": {"person": "Employee name", "company": "Employer of this person"}
+    },
+    {
+      "id": "status",
+      "kind": "classification",
+      "description": "Current status of the meeting",
+      "labels": {"confirmed": "The meeting is confirmed", "cancelled": "The meeting is cancelled"}
+    }
+  ]
+}

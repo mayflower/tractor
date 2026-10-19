@@ -1,0 +1,209 @@
+{
+  "domain": "contracts",
+  "weight": 12,
+  "document": "Commercial contract or lease",
+  "header": {
+    "party_a": {
+      "description": "First contracting party",
+      "examples": [
+        "Elbwiese Hausverwaltung GmbH",
+        "Cedar Facilities Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "party_b": {
+      "description": "Second contracting party",
+      "examples": [
+        "Mara Winter",
+        "Alex Morgan"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "address": {
+      "description": "Contract property or service address",
+      "examples": [
+        "Hafenstraße 18, 24103 Kiel",
+        "18 Willow Lane, Bristol BS1 4ST"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "reference": {
+      "description": "Contract reference",
+      "examples": [
+        "MV-2026-194",
+        "SA-26-084"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "start": {
+      "description": "Contract start date",
+      "examples": [
+        "1. November 2026",
+        "November 1, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "end": {
+      "description": "Explicit contract end date",
+      "examples": [
+        "31. Oktober 2027",
+        "October 31, 2027"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "notice": {
+      "description": "Notice period verbatim",
+      "examples": [
+        "drei Monate zum Monatsende",
+        "three months before expiry"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "fee": {
+      "description": "Contractual amount as printed",
+      "examples": [
+        "980,00 EUR monatlich",
+        "GBP 980.00 per month"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "service": {
+      "description": "Service or leased item",
+      "examples": [
+        "Wartung der Lüftungsanlage",
+        "ventilation maintenance"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "interval": {
+      "description": "Service interval",
+      "examples": [
+        "vierteljährlich",
+        "quarterly"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "amount": {
+      "description": "Printed service fee",
+      "examples": [
+        "125,00 EUR",
+        "GBP 125.00"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "service",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Commercial contract or lease",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "party_a": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "First contracting party"
+      },
+      "party_b": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Second contracting party"
+      },
+      "address": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Contract property or service address"
+      },
+      "reference": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Contract reference"
+      },
+      "start": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Contract start date"
+      },
+      "end": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Explicit contract end date"
+      },
+      "notice": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Notice period verbatim"
+      },
+      "fee": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Contractual amount as printed"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "service": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Service or leased item"
+            },
+            "interval": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Service interval"
+            },
+            "amount": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed service fee"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

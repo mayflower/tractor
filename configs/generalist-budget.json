@@ -1,0 +1,35 @@
+{
+  "max_external_cost_usd": 500,
+  "cloud_compute": false,
+  "gpu_latency_benchmark": false,
+  "teacher_max_requests": 1000000,
+  "teacher_max_input_tokens": 2000000000,
+  "teacher_max_output_tokens": 500000000,
+  "teacher_max_retries": 2,
+  "pilot_max_updates_per_arm": 1000,
+  "pilot_max_hours_per_arm": 2,
+  "pilot_seeds": [
+    42
+  ],
+  "scale_requires_dev_improvement": true,
+  "document_teacher_pricing": {
+    "model": "claude-haiku-5-5",
+    "input_usd_per_million": 0.1,
+    "output_usd_per_million": 0.5,
+    "max_input_tokens": 100000,
+    "verified_on": "2026-10-17",
+    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+    "reservation": "UTF-8 input byte bound plus 4096 framing tokens, full output limit, global USD ledger preserved"
+  },
+  "independent_reviewer_pricing": {
+    "model": "gpt-6-luna",
+    "input_usd_per_million": 0.1,
+    "output_usd_per_million": 0.5,
+    "max_input_tokens": 100000,
+    "verified_on": "2026-10-17",
+    "source": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+    "reasoning": "low",
+    "max_output_tokens": 4096
+  },
+  "usage_settlement": "Successful provider usage releases unused reservation exactly once; failed/unknown usage remains fully reserved. Shared USD 500 ceiling unchanged."
+}

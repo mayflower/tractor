@@ -17,6 +17,15 @@
         system:
         let
           pkgs = import nixpkgs { inherit system; };
+          postal = (pkgs.libpostal.override { withData = true; }).overrideAttrs {
+            version = "1.1.4";
+            src = pkgs.fetchFromGitHub {
+              owner = "openvenues";
+              repo = "libpostal";
+              rev = "ffafa3fcd687631955453df70906c53d5677ce9a";
+              hash = "sha256-L7t/z5mBrV7RxRrkYDRyKhjQRS1p5EOE01f2eEOUxfI=";
+            };
+          };
         in
         {
           default = pkgs.mkShell {
@@ -30,11 +39,13 @@
               just
               pkg-config
               stdenv.cc
+              postal
             ];
             # Binary Python wheels need these shared libraries on NixOS.
             LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
               pkgs.stdenv.cc.cc.lib
               pkgs.zlib
+              postal
             ];
             UV_PYTHON = "${pkgs.python312}/bin/python3.12";
             UV_PYTHON_DOWNLOADS = "never";
@@ -47,6 +58,8 @@
               # CUDA runtime comes from the locked wheels; use the host driver.
               if [ -d /run/opengl-driver/lib ]; then
                 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/run/opengl-driver/lib"
+                # Triton otherwise invokes /sbin/ldconfig, absent on NixOS.
+                export TRITON_LIBCUDA_PATH=/run/opengl-driver/lib
               fi
               export PATH="$PWD/.venv/bin:$PATH"
             '';

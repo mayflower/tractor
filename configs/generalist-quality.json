@@ -1,0 +1,16 @@
+{
+  "minimum_exclusive": 0.7,
+  "bucket_metric": "field_f1",
+  "classification_metric": "request_exact",
+  "scope": "Strict extraction scope in reqs.md. No classification, QA, relations or normalization. Legacy family diagnostics only; domain release gates require the new extraction policy.",
+  "required_buckets": [
+    "entities",
+    "records",
+    "events",
+    "document_fields",
+    "role_contrasts",
+    "cross_section"
+  ],
+  "required_classification_tasks": [],
+  "qualification": "Every required general bucket and classification subtask must exceed 70%; an average or product score cannot compensate. Missing or nonfinite metrics fail. Dev eligibility alone does not authorize a release or replace frozen final evaluation."
+}

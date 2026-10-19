@@ -15,14 +15,12 @@ with Client("http://127.0.0.1:8000", timeout=30) as client:
             "width_mm": Quantity("Breite", unit="mm"),
         },
         locale="de-DE",
-        include_details=True,
     )
     records = client.extract(
         "Alpha: Breite 10 cm. Beta: Breite 12 cm.",
         {"product": Text("Produktbezeichnung"), "width_mm": Quantity("Breite", unit="mm")},
         many=True,
         anchor="product",
-        include_details=True,
     )
     assert all(v is None or isinstance(v, (str, int, Decimal)) for v in example.data.values())
     assert example.data == {"product": "Rover-X", "range_km": Decimal("16.09344"), "width_mm": 125}
@@ -35,7 +33,7 @@ with Client("http://127.0.0.1:8000", timeout=30) as client:
     for result in [example, records]:
         print(
             dumps(
-                {"data": result.data, "issues": result.issues, "details": result.details},
+                {"data": result.data, "issues": result.issues},
             )
         )
 assert urllib.request.urlopen("http://127.0.0.1:8000/readyz").status == 200

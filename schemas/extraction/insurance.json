@@ -1,0 +1,209 @@
+{
+  "domain": "insurance",
+  "weight": 7,
+  "document": "Insurance policy or claim notification",
+  "header": {
+    "policy": {
+      "description": "Policy number",
+      "examples": [
+        "POL-2026-73482",
+        "POL-2026-82374"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "claim": {
+      "description": "Claim number",
+      "examples": [
+        "SCH-20491",
+        "CLM-20491"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "insured": {
+      "description": "Insured name",
+      "examples": [
+        "Nora Seidel",
+        "Jamie Parker"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "date": {
+      "description": "Loss date",
+      "examples": [
+        "9. Oktober 2026",
+        "October 9, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "location": {
+      "description": "Loss location",
+      "examples": [
+        "Lindenweg 7, 53111 Bonn",
+        "7 Linden Road, York YO1 8RT"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "coverage": {
+      "description": "Printed insured amount",
+      "examples": [
+        "150.000 EUR",
+        "GBP 150,000"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "deductible": {
+      "description": "Printed deductible",
+      "examples": [
+        "250 EUR",
+        "GBP 250"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "description": {
+      "description": "Damage description verbatim",
+      "examples": [
+        "Wasserschaden am Parkett im Wohnzimmer",
+        "water damage to the living-room flooring"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "item": {
+      "description": "Damaged item",
+      "examples": [
+        "Eichenparkett",
+        "oak flooring"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "quantity": {
+      "description": "Printed quantity or area",
+      "examples": [
+        "18 m²",
+        "18 square metres"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "amount": {
+      "description": "Claimed amount",
+      "examples": [
+        "1.460,00 EUR",
+        "GBP 1,460.00"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "item",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Insurance policy or claim notification",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "policy": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Policy number"
+      },
+      "claim": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Claim number"
+      },
+      "insured": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Insured name"
+      },
+      "date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Loss date"
+      },
+      "location": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Loss location"
+      },
+      "coverage": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed insured amount"
+      },
+      "deductible": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed deductible"
+      },
+      "description": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Damage description verbatim"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "item": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Damaged item"
+            },
+            "quantity": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed quantity or area"
+            },
+            "amount": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Claimed amount"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

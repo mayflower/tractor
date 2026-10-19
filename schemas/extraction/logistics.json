@@ -1,0 +1,209 @@
+{
+  "domain": "logistics",
+  "weight": 2,
+  "document": "Packing list, consignment note or customs form",
+  "header": {
+    "sender": {
+      "description": "Consignor",
+      "examples": [
+        "Nordhafen Messtechnik GmbH",
+        "Cedar Instruments Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "recipient": {
+      "description": "Consignee",
+      "examples": [
+        "Elbwiese Labortechnik GmbH",
+        "Willow Research Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "shipment": {
+      "description": "Shipment number",
+      "examples": [
+        "SEND-2026-8371",
+        "SHIP-2026-8371"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "container": {
+      "description": "Container identifier",
+      "examples": [
+        "TGHU1234567",
+        "MSCU7654321"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "origin": {
+      "description": "Port of loading",
+      "examples": [
+        "Hamburg",
+        "Southampton"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "destination": {
+      "description": "Destination port",
+      "examples": [
+        "Rotterdam",
+        "Antwerp"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "weight": {
+      "description": "Printed total weight",
+      "examples": [
+        "842,5 kg",
+        "842.5 kg"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "goods": {
+      "description": "Goods description",
+      "examples": [
+        "Drucksensoren",
+        "pressure sensors"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "packages": {
+      "description": "Number of packages",
+      "examples": [
+        "12 Kartons",
+        "12 cartons"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "weight": {
+      "description": "Printed row weight",
+      "examples": [
+        "240 kg",
+        "180 kg"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "customs_code": {
+      "description": "Tariff code explicitly printed",
+      "examples": [
+        "9026 20 20",
+        "9026 20 80"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "goods",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Packing list, consignment note or customs form",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "sender": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Consignor"
+      },
+      "recipient": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Consignee"
+      },
+      "shipment": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Shipment number"
+      },
+      "container": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Container identifier"
+      },
+      "origin": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Port of loading"
+      },
+      "destination": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Destination port"
+      },
+      "weight": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed total weight"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "goods": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Goods description"
+            },
+            "packages": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Number of packages"
+            },
+            "weight": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed row weight"
+            },
+            "customs_code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Tariff code explicitly printed"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

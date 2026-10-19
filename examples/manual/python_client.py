@@ -10,7 +10,7 @@ fields = {"product": Text("Produktbezeichnung"), "width_mm": Quantity("Breite", 
 with Client(os.environ.get("TRACTOR_URL", "http://127.0.0.1:8000"), timeout=10) as client:
     records = client.extract(
         "Alpha ist 10 cm breit. Beta ist 2 inches breit.", fields,
-        anchor="product", many=True, include_details=True,
+        anchor="product", many=True,
     )
     assert records.data == [
         {"product": "Alpha", "width_mm": 100},
@@ -19,11 +19,9 @@ with Client(os.environ.get("TRACTOR_URL", "http://127.0.0.1:8000"), timeout=10) 
     assert not records.issues
     print(dumps({"data": records.data, "issues": records.issues}))
     text = "📦 Atlas ist 12,5 cm breit."
-    evidence = client.extract(text, fields, locale="de-DE", include_details=True)
-    source = evidence.details["width_mm"]
-    assert text[source["start"]:source["end"]] == source["text"] == "12,5 cm"
+    evidence = client.extract(text, fields, locale="de-DE")
     assert evidence.data["width_mm"] == 125
-    print(dumps({"data": evidence.data, "details": evidence.details}))
+    print(dumps({"data": evidence.data, "issues": evidence.issues}))
     missing = client.extract(
         "Modell CM125 hat keine Maßangaben.", {"width_mm": fields["width_mm"]},
     )

@@ -10,9 +10,9 @@ OUTPUT = ROOT / 'dist'
 SOURCE_FILES = (
     'README.md', 'AGENTS.md', 'CONTRIBUTING.md', 'Dockerfile', 'justfile',
     'pyproject.toml', 'uv.lock', 'flake.nix', 'flake.lock', '.envrc',
-    '.gitignore', '.dockerignore',
+    '.gitignore', '.dockerignore', 'reqs.md',
 )
-SOURCE_DIRS = ('src', 'tests', 'scripts', 'examples', 'docs', 'configs', 'release', 'benchmarks')
+SOURCE_DIRS = ('src', 'tests', 'scripts', 'examples', 'docs', 'configs', 'release', 'benchmarks', 'schemas')
 MODEL_FILES = (
     'model.safetensors', 'config.json', 'tokenizer.json', 'tokenizer_config.json',
     'thresholds.json', 'normalization.json', 'source-lock.json', 'README.md', 'metrics.json',
@@ -29,7 +29,10 @@ def files_under(directory):
     return [p for p in directory.rglob('*') if p.is_file()
             and not any(part.startswith('.') or part == '__pycache__'
                         for part in p.relative_to(directory).parts)
-            and p.suffix not in ('.pyc', '.pyo')]
+            and p.suffix not in ('.pyc', '.pyo')
+            and not (directory.name == 'configs' and (
+                any(part.isdigit() and len(part) == 8 for part in p.stem.split('-'))
+                or p.name == 'extraction-repair-pilot.json'))]
 
 
 def pack(name, base, files, mode):

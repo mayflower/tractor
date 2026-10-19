@@ -1,5 +1,6 @@
 """Offset-aware end-to-end metrics, native threshold calibration and bundle export."""
 
+import hashlib
 import itertools
 import shutil
 from collections import Counter
@@ -16,6 +17,8 @@ from .types import ExtractRequest, Quantity
 
 
 def equal(a, b):
+    if isinstance(a, bool) or isinstance(b, bool):
+        return type(a) is type(b) and a == b
     if isinstance(a, (int, float, Decimal)) and isinstance(b, (int, float, Decimal)):
         a, b = Decimal(str(a)), Decimal(str(b))
         return abs(a - b) <= max(abs(b), Decimal(1)) * Decimal("1e-32")
@@ -24,6 +27,54 @@ def equal(a, b):
     if isinstance(a, list) and isinstance(b, list):
         return len(a) == len(b) and all(equal(x, y) for x, y in zip(a, b, strict=True))
     return a == b
+
+
+def evaluate_episodes(args):
+    """Native multi-task evaluation; never silently reuse product metrics or cached predictions."""
+    from .episode_metrics import score_episode, summarize
+    from .generalist_data import read_episodes
+
+    if args.calibrate:
+        raise ValueError("Native episode calibration is separate from checkpoint evaluation")
+    destination = Path(args.output)
+    destination.mkdir(parents=True, exist_ok=False)
+    extractor = Extractor(args.model, args.device, args.precision)
+    totals, families, task_kinds, classification_tasks = Counter(), {}, {}, {}
+    with destination.joinpath("predictions.jsonl").open("x") as stream:
+        for episode in read_episodes(args.episodes):
+            if episode.split != args.split:
+                raise ValueError("Episode split does not match requested evaluation split")
+            raw, error = {}, None
+            try:
+                raw = extractor.extract_tasks(episode.text, episode.tasks)
+            except Exception as exc:
+                error = {"type": type(exc).__name__, "message": str(exc)}
+            counts = score_episode(episode, raw, error)
+            totals.update(counts)
+            families.setdefault(episode.family, Counter()).update(counts)
+            for kind in {task.kind for task in episode.tasks}:
+                tasks = [task for task in episode.tasks if task.kind == kind]
+                subset = episode.model_copy(update={'tasks': tasks, 'gold': {t.id: episode.gold[t.id] for t in tasks}})
+                task_kinds.setdefault(kind, Counter()).update(score_episode(subset, raw, error))
+            for task in episode.tasks:
+                if task.kind == 'classification':
+                    subset = episode.model_copy(update={'tasks': [task], 'gold': {task.id: episode.gold[task.id]}})
+                    key = f'{episode.family}:{task.id}:{episode.text_origin}/{episode.label_origin}'
+                    classification_tasks.setdefault(key, Counter()).update(score_episode(subset, raw, error))
+            stream.write(dumps({"id": episode.id, "source_group": episode.source_group,
+                                "family": episode.family, "prediction": raw, "error": error,
+                                "counts": dict(counts)}) + "\n")
+            stream.flush()
+    report = {"model_sha256": extractor.model_revision, "split": args.split,
+              "level": "native", "overall": summarize(totals),
+              "families": {key: summarize(value) for key, value in families.items()},
+              "task_kinds": {key: summarize(value) for key, value in task_kinds.items()},
+              "classification_tasks": {key: summarize(value) for key, value in classification_tasks.items()}}
+    f1s = [value["field_f1"] for value in report["families"].values()
+           if value["field_f1"] is not None]
+    report["macro_field_f1"] = sum(f1s) / len(f1s) if f1s else None
+    destination.joinpath("summary.json").write_text(dumps(report, indent=2))
+    print(dumps(report, indent=2))
 
 
 def record_key(record, request):
@@ -122,8 +173,10 @@ def metrics(counts):
 
 
 def evaluate(args):
-    if args.calibrate and args.split != "dev":
-        raise ValueError("Calibration is permitted only on dev")
+    if args.calibrate and args.split not in {"dev", "calibration"}:
+        raise ValueError("Threshold tuning requires dev or a separate calibration split")
+    if args.calibrate and args.split == "calibration" and not Path(args.model, "config.json").is_file():
+        raise ValueError("Final calibration requires one frozen model, not checkpoint ranking")
     rows = read_rows(
         "tests/fixtures/api-cases.jsonl"
         if args.split == "authored"
@@ -243,11 +296,23 @@ def export(run, selection_path, output):
     report = loads(evidence.read_text())
     if report["result"]["total_steps"] <= 0:
         raise ValueError("No optimizer steps recorded")
+    groups = report.get("required_learning_groups", ["encoder", "boundary_head", "record_decoder"])
+    if not groups or any(not report.get("parameters", {}).get(key, {}).get("changed")
+                         or not report.get("parameters", {}).get(key, {}).get("nonzero_finite_gradient")
+                         for key in groups):
+        raise ValueError("Required learning evidence is incomplete")
     target = Path(output)
     if target.exists():
         raise ValueError("Export destination already exists")
-    shutil.copytree(source, target)
-    from .model import BASE_MODEL, COMMIT, REVISION
+    required = ["config.json", "model.safetensors", "tokenizer.json", "tokenizer_config.json",
+                "encoder_config/config.json"]
+    if any(not source.joinpath(name).is_file() for name in required):
+        raise ValueError("Checkpoint lacks required offline inference files")
+    target.mkdir(parents=True)
+    for name in required:
+        target.joinpath(name).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source / name, target / name)
+    from .model import COMMIT
     from .normalize import ALIASES, PINT_UNITS
 
     Path(target, "normalization.json").write_text(
@@ -264,20 +329,25 @@ def export(run, selection_path, output):
         )
     )
     Path(target, "thresholds.json").write_text(dumps(selection["thresholds"], indent=2))
-    Path(target, "source-lock.json").write_text(
-        dumps(
-            {"base_model": BASE_MODEL, "base_model_revision": REVISION, "gliner_commit": COMMIT},
-            indent=2,
-        )
-    )
-    shutil.copy2(selection_path, target / "evaluation.json")
-    shutil.copy2(evidence, target / "training-evidence.json")
-    Path(target, "MODEL_CARD.md").write_text(
-        "# tractor quantity extractor\n\n"
-        "Full fine-tuning of the pinned multilingual GLiNER boundary model.\n"
-        "Training data: synthetic DE/EN templates with source spans and independent arithmetic gold.\n"
-        "Evaluation is synthetic and authored regression only, not real-world validation.\n"
-        "Field descriptions, locale and explicit units are required for reliable interpretation.\n"
-        "See evaluation.json and training-evidence.json for measured results and provenance.\n"
-        "License of base model: Apache-2.0. No JEV protocol compatibility claim.\n"
+    with source.joinpath("model.safetensors").open("rb") as stream:
+        weights_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
+    source_lock = {"weights_sha256": weights_sha256, "gliner_commit": COMMIT,
+                   "parent_weights_sha256": report.get("initial_weights_sha256")}
+    Path(target, "source-lock.json").write_text(dumps(source_lock, indent=2))
+    if selection.get("native_policy"):
+        policy = loads(Path(selection["native_policy"]).read_text())
+        if policy.get("model_sha256") != weights_sha256 or policy.get("gliner_commit") != COMMIT:
+            raise ValueError("Native calibration policy belongs to another model")
+        Path(target, "native-policy.json").write_text(dumps(policy, indent=2))
+    # Keep internal paths, optimizer state and per-example predictions outside the bundle.
+    measured = {key: selection[key] for key in ("metrics", "split", "precision_mode") if key in selection}
+    measured["weights_sha256"] = weights_sha256
+    Path(target, "metrics.json").write_text(dumps(measured, indent=2))
+    Path(target, "README.md").write_text(
+        "# tractor · System One Extraction Model\n\n"
+        "Local training candidate for evidence-based extraction.\n\n"
+        "The HTTP contract supports Text and Quantity fields. Native tasks use the local schema interface.\n"
+        "See metrics.json for available measured results and their split. Development results are not final test results.\n"
+        "This export does not promote a release or establish general-purpose reliability.\n"
+        "Source and data licensing must be resolved before publication.\n"
     )

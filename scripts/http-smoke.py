@@ -42,22 +42,12 @@ try:
             assert x.encoder_calls - before == 1
             print(dumps({"fields": n, "result": result.data, "issues": result.issues}))
         before = x.encoder_calls
-        detailed = c.extract(
-            "📦 Atlas ist 12,5 cm breit.",
-            {"p": Text("Produktbezeichnung"), "w": Quantity("Breite", unit="mm")},
-            locale="de-DE",
-            include_details=True,
-        )
         plain = c.extract(
             "📦 Atlas ist 12,5 cm breit.",
             {"p": Text("Produktbezeichnung"), "w": Quantity("Breite", unit="mm")},
             locale="de-DE",
         )
-        assert x.encoder_calls - before == 2
-        assert plain.data == detailed.data and plain.issues == detailed.issues
-        for value in detailed.details.values():
-            if value:
-                assert "📦 Atlas ist 12,5 cm breit."[value["start"] : value["end"]] == value["text"]
+        assert x.encoder_calls - before == 1
         assert all(v is None or isinstance(v, (str, int, Decimal)) for v in plain.data.values())
     with httpx.Client(base_url=url, timeout=30) as c:
         before = x.encoder_calls
@@ -75,7 +65,7 @@ try:
         assert x.encoder_calls == before
         assert c.get("/readyz").status_code == 200
         assert c.get("/openapi.json").status_code == 200
-    print("Real HTTP, SDK, Unicode details, token rejection and encoder count checks passed.")
+    print("Real HTTP, SDK, typed values, token rejection and encoder count checks passed.")
 finally:
     server.should_exit = True
     thread.join(timeout=60)

@@ -189,7 +189,7 @@ def quantity(rng, dimension, locale, scenario):
     elif scenario == "missing_unit":
         token, issue = literal, "missing_unit"
     elif scenario == "unsupported_unit":
-        token, issue = literal + " " + rng.choice(["nm", "°C", "psi", "oz"]), "unsupported_unit"
+        token, issue = literal + " " + rng.choice(["angstrom", "rad", "psi", "oz"]), "unsupported_unit"
     elif scenario == "ambiguous_unit":
         token, issue = literal + " " + rng.choice(["gal", "Pfund"]), "ambiguous_unit"
     elif scenario == "incompatible_dimension":
@@ -315,7 +315,8 @@ def make_row(rng, split, index, language, family, scenario):
                 )
                 chunk += extra
                 found.append(more["quantity"])
-                issue = "ambiguous_value"
+                if scenario == "competing":
+                    issue = "ambiguous_value"
             pieces.append((key, chunk, found))
             values[key] = None if issue or absent else converted(value, factor, target_factor)
             if issue or absent:

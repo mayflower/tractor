@@ -1,0 +1,177 @@
+{
+  "domain": "metadata",
+  "weight": 3,
+  "document": "Business letter with document metadata",
+  "header": {
+    "sender": {
+      "description": "Named sender",
+      "examples": [
+        "Elbwiese Hausverwaltung GmbH",
+        "Cedar Facilities Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "recipient": {
+      "description": "Named recipient",
+      "examples": [
+        "Mara Winter",
+        "Alex Morgan"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "date": {
+      "description": "Document date",
+      "examples": [
+        "16. Oktober 2026",
+        "October 16, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "number": {
+      "description": "Document number",
+      "examples": [
+        "BR-2026-831",
+        "LTR-2026-831"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "case": {
+      "description": "File reference",
+      "examples": [
+        "AZ-4098/26",
+        "REF-4098/26"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "subject": {
+      "description": "Subject verbatim",
+      "examples": [
+        "Abrechnung der Betriebskosten 2025",
+        "Operating cost statement 2025"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "attachment": {
+      "description": "Named attachment",
+      "examples": [
+        "Kostenaufstellung",
+        "Cost breakdown"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "reference": {
+      "description": "Attachment reference",
+      "examples": [
+        "ANL-2025-04",
+        "ATT-2025-04"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "date": {
+      "description": "Attachment date",
+      "examples": [
+        "12. Oktober 2026",
+        "October 12, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "attachment",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Business letter with document metadata",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "sender": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Named sender"
+      },
+      "recipient": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Named recipient"
+      },
+      "date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Document date"
+      },
+      "number": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Document number"
+      },
+      "case": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "File reference"
+      },
+      "subject": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Subject verbatim"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "attachment": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Named attachment"
+            },
+            "reference": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Attachment reference"
+            },
+            "date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Attachment date"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

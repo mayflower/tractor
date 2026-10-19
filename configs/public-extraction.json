@@ -1,0 +1,34 @@
+{
+  "minimum_train_examples": 200000,
+  "existing_train": [
+    "data/generalist-expanded/train.episodes.jsonl"
+  ],
+  "protected_episodes": [
+    "data/generalist-expanded/dev.episodes.jsonl",
+    "data/generalist-expanded/calibration.episodes.jsonl",
+    "data/generalist-expanded/test.episodes.jsonl",
+    "data/generalist-frozen/calibration.episodes.jsonl",
+    "data/generalist-frozen/test.episodes.jsonl"
+  ],
+  "blocked_groups": "data/generalist-expanded/near-duplicate-blocked-groups.json",
+  "new_sources": [
+    {
+      "source": "few_nerd",
+      "path": "data/generalist-sources/few-nerd/supervised/train-00000-of-00001.parquet",
+      "sha256": "6ccb192b1accd3d1754db2244d18ddf64040357fb5b9076a338ec421a72d7d61"
+    },
+    {
+      "source": "adversarial_qa",
+      "path": "data/generalist-sources/adversarial-qa/adversarialQA/train-00000-of-00001.parquet",
+      "sha256": "0010a888ffe67a4da4afb7a9cbb7e0e77daaf02aaf055ee1697c88519afb94d8"
+    }
+  ],
+  "excluded_sources": {
+    "gretel": "Synthetic text",
+    "product_replay": "Synthetic domain-specific replay",
+    "guidex": "Silver/mixed schema annotation; excluded from this human-only corpus",
+    "wikiann": "Not needed for human-only target; automatic annotations and repository license marked unknown",
+    "multinerd": "Not needed; source repository declares noncommercial license"
+  },
+  "note": "Train-only real public extraction corpus; no classifier targets, generated documents, schema-variant padding or heldout training. Existing general Dev remains separate; not included in the 200000 minimum."
+}

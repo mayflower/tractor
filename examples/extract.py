@@ -10,7 +10,6 @@ with Client() as client:
         "Der Rover-X fährt 10 miles pro Ladung und ist 12,5 cm breit.",
         fields,
         locale="de-DE",
-        include_details=True,
     )
     print(result)
     records = client.extract(

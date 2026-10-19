@@ -16,7 +16,7 @@ def valid_span(text, span):
     )
 
 
-def resolve(request, records):
+def resolve(request, records, *, _diagnostics=False):
     issues = []
     empty = dict.fromkeys(request.fields)
     if request.anchor:
@@ -35,61 +35,70 @@ def resolve(request, records):
                     {"field": None, "code": "not_found" if not records else "ambiguous_record"}
                 ],
             }
-            if request.include_details:
+            if _diagnostics:
                 result["details"] = [] if request.many else empty.copy()
             return result
-    output, details = [], []
-    for index, record in enumerate(records):
-        values, sources = {}, {}
-        for name, field in request.fields.items():
-            spans = record[name]
-            issue = None
-            value = source = None
-            if any(not valid_span(request.text, span) for span in spans):
-                issue = "invalid_span"
-            else:
+    # One typed contract compiles to the private evidence-processing engine.
+    from .document_pipeline import DocumentRequest, resolve_document
+    from .episodes import Task
+
+    task = Task(id="result", kind="records" if request.anchor else "entities",
+                description="Requested fields", fields={k: f.description for k, f in request.fields.items()},
+                anchor=request.anchor)
+    processing = {k: f.processing_rule() for k, f in request.fields.items()}
+    internal = DocumentRequest(text=request.text, tasks=[task], processing={"result": processing},
+                               locale=request.locale, include_details=True)
+    # Preserve the established maximal-overlap policy before normalization.
+    cleaned = []
+    for row in records:
+        result = {}
+        for key in request.fields:
+            spans = row.get(key, [])
+            if all(valid_span(request.text, span) for span in spans):
                 spans = list({(s["start"], s["end"]): s for s in spans}.values())
-                # Keep maximal overlapping spans, preserving qualifiers and repeated occurrences.
-                spans = [
-                    s
-                    for s in spans
-                    if not any(
-                        t["start"] <= s["start"] and s["end"] <= t["end"] and t != s for t in spans
-                    )
-                ]
-                if not spans:
-                    issue = "not_found"
-                elif len(spans) > 1:
-                    issue = "ambiguous_value"
-                else:
-                    span = spans[0]
-                    source = {k: span[k] for k in ("text", "start", "end")}
-                    if "confidence" in span:
-                        source["extraction_score"] = span["confidence"]
-                    if isinstance(field, Quantity):
-                        normalized = normalize(request.text, span, field.unit, request.locale)
-                        value, issue = normalized.value, normalized.issue
-                        source.update(source_unit=normalized.source_unit, target_unit=field.unit)
-                    else:
-                        value = span["text"]
-            if issue:
-                entry = {"field": name, "code": issue}
+                spans = [s for s in spans if not any(
+                    t["start"] <= s["start"] and s["end"] <= t["end"] and t != s for t in spans)]
+            result[key] = spans
+        cleaned.append(result)
+    raw = {"result": cleaned} if request.anchor else {"entities": cleaned[0] if cleaned else {}}
+    resolved = resolve_document(internal, raw)
+    rows = resolved["data"]["result"] if request.anchor else [resolved["data"]["result"]]
+    evidence = resolved["details"]["result"] if request.anchor else [resolved["details"]["result"]]
+    output, details = [], []
+    for index, (row, evidence_row) in enumerate(zip(rows, evidence, strict=True)):
+        values, sources = {}, {}
+        for key, field in request.fields.items():
+            multiple = field.cardinality in {"unique_list", "one_or_more"}
+            found = row[key]
+            values[key] = found if multiple else found[0] if len(found) == 1 else None
+            spans = evidence_row[key]
+            source = spans if multiple else spans[0].copy() if spans else None
+            if not multiple and len(spans) > 1:
+                source["evidence"] = spans
+            if isinstance(field, Quantity) and source and not multiple:
+                parsed = normalize(request.text, spans[0], field.unit, field.locale or request.locale)
+                source.update(source_unit=parsed.source_unit, target_unit=field.unit)
+            sources[key] = source
+            field_issues = [i for i in resolved["issues"] if i["index"] == index and i["field"] == key]
+            if not found and not field_issues:
+                field_issues = [{"code": "not_found"}]
+            for issue in field_issues:
+                entry = {"field": key, "code": issue["code"]}
                 if request.many:
                     entry["index"] = index
                 issues.append(entry)
-            values[name], sources[name] = value, source
         output.append(values)
         details.append(sources)
     result = {"data": output if request.many else output[0], "issues": issues}
-    if request.include_details:
+    if _diagnostics:
         result["details"] = details if request.many else details[0]
     return result
 
 
-def extract(extractor, request):
+def extract(extractor, request, *, _diagnostics=False):
     candidates = extractor.candidates(request)
     started = time.perf_counter()
-    result = resolve(request, candidates)
+    result = resolve(request, candidates, _diagnostics=_diagnostics)
     if hasattr(extractor, "last_timings"):
         extractor.last_timings["normalize"] = (time.perf_counter() - started) * 1000
     return result

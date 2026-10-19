@@ -1,0 +1,193 @@
+{
+  "domain": "clinical",
+  "weight": 7,
+  "document": "Fictional clinical discharge letter or laboratory report",
+  "header": {
+    "patient": {
+      "description": "Patient name",
+      "examples": [
+        "Lena Berger",
+        "Casey Taylor"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "birth_date": {
+      "description": "Patient date of birth",
+      "examples": [
+        "2. April 1971",
+        "April 2, 1971"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "reference": {
+      "description": "Patient or encounter reference",
+      "examples": [
+        "FALL-2026-0831",
+        "ENC-2026-0831"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "report_date": {
+      "description": "Report date",
+      "examples": [
+        "15. Oktober 2026",
+        "October 15, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "clinician": {
+      "description": "Named clinician",
+      "examples": [
+        "Dr. Eva Sommer",
+        "Dr. Robin Hayes"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "followup": {
+      "description": "Explicit follow-up date",
+      "examples": [
+        "29. Oktober 2026",
+        "October 29, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "medication": {
+      "description": "Medication name as written",
+      "examples": [
+        "Metformin",
+        "Ramipril"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "dose": {
+      "description": "Printed dose",
+      "examples": [
+        "500 mg",
+        "5 mg"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "frequency": {
+      "description": "Printed dosing frequency",
+      "examples": [
+        "zweimal täglich",
+        "once daily"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "route": {
+      "description": "Printed administration route",
+      "examples": [
+        "oral",
+        "oral"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "medication",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Fictional clinical discharge letter or laboratory report",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "patient": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Patient name"
+      },
+      "birth_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Patient date of birth"
+      },
+      "reference": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Patient or encounter reference"
+      },
+      "report_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Report date"
+      },
+      "clinician": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Named clinician"
+      },
+      "followup": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Explicit follow-up date"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "medication": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Medication name as written"
+            },
+            "dose": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed dose"
+            },
+            "frequency": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed dosing frequency"
+            },
+            "route": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed administration route"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

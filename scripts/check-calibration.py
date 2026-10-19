@@ -1,3 +1,4 @@
+import argparse
 import itertools
 import time
 from pathlib import Path
@@ -8,13 +9,18 @@ from tractor.jsonio import dumps
 from tractor.model import Extractor, schema_for
 from tractor.types import ExtractRequest
 
+parser = argparse.ArgumentParser(description="Real cached/direct product-policy parity check")
+parser.add_argument("--model", default="models/tractor")
+parser.add_argument("--data", default="tests/fixtures/api-cases.jsonl")
+parser.add_argument("--limit", type=int, default=16)
+args = parser.parse_args()
 Path("reports").mkdir(exist_ok=True)
-x = Extractor("models/tractor", "cpu")
+x = Extractor(args.model, "cpu")
 grid = [
     dict(zip(("text", "quantity", "anchor"), values, strict=True))
     for values in itertools.product((0.25, 0.5, 0.75), repeat=3)
 ]
-rows = read_rows("data/bootstrap/dev.jsonl")[:16]
+rows = read_rows(args.data)[:args.limit]
 started = time.perf_counter()
 for row in rows:
     request = ExtractRequest.model_validate(row["request"])

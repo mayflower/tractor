@@ -1,0 +1,27 @@
+{
+  "seed": 731,
+  "pilot_train": 10000,
+  "scale_train": 100000,
+  "evaluation_per_split": 4000,
+  "family_weights": {
+    "records": 25,
+    "relations": 20,
+    "events": 15,
+    "document_fields": 15,
+    "role_contrasts": 15,
+    "cross_section": 10
+  },
+  "language_weights": {
+    "de": 45,
+    "en": 45,
+    "mixed": 10
+  },
+  "scale_requires": {
+    "synthetic_macro_f1_improvement": 0.02,
+    "public_macro_f1_max_drop": 0.01,
+    "product_exact_request_floor": 0.9
+  },
+  "qualification": "Deterministic fact-grounded synthetic pilot. No claim of natural-document representativeness. Recursive schemas, normalization, cross-window joins and ambiguous native training targets remain unsupported.",
+  "retired": true,
+  "retirement_reason": "Schematic generator violates reqs.md realism and scope; use document_build."
+}

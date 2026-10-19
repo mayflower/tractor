@@ -11,16 +11,18 @@ to `POST /v1/extract`. The default address is `http://127.0.0.1:8000`.
 | `text` | Original source text |
 | `fields` | Named field definitions with `type` and `description` |
 | `locale` | Optional number-format locale, such as `de-DE` or `en-US` |
-| `anchor` | Text-field key identifying records, such as `product` |
+| `anchor` | Text/name/place/identifier field identifying records, such as `product` |
 | `many` | Return an array of records when true |
-| `include_details` | Include original source spans and offsets |
 
-Field types are `text` and `quantity`. A quantity field also requires a target
-`unit`. Without an anchor, extraction is document-wide. With an anchor, each
+Field types are `text`, `quantity`, `number`, `money`, `date`, `address`,
+`identifier`, `list`, `person`, `organization`, `place`, `phone`,
+`email`, `postcode`, `time`, `datetime`, `duration`, `interval`, `percent`,
+`iban`, and `url`. The type selects normalization; its parameters belong
+to the field. A quantity field also requires a target `unit`. Without an anchor, extraction is document-wide. With an anchor, each
 occurrence identifies a record, including repeated product names.
 
-Responses contain `data` and `issues`, plus `details` when requested. Unresolved
-fields are null. Issues identify the field and a code such as `not_found` or
+Responses contain only `data` and `issues`. Unresolved
+scalar fields are null; list cardinalities return empty arrays. Issues identify the field and a code such as `not_found` or
 `ambiguous_value`; array responses include the affected record index. Do not treat
 null as zero. SDK fractional values use Decimal.
 
@@ -32,3 +34,6 @@ Use the generated OpenAPI document at `/openapi.json` for the complete schema an
 
 See [the SDK example](../examples/extract.py) for scalar fields, anchored records
 and issue handling.
+
+The same endpoint handles all [typed document fields](manual/how-to/document-processing.md).
+There is one SDK method, `Client.extract`, and no separate processing map.

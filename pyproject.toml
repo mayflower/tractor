@@ -12,13 +12,28 @@ dependencies = ["httpx>=0.28,<1", "pydantic>=2,<3", "simplejson>=3.20,<4"]
 
 [project.optional-dependencies]
 server = [
-  "fastapi>=0.115,<1", "uvicorn>=0.34,<1", "pint>=0.24,<1", "babel>=2.17,<3",
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.34,<1",
+  "pint>=0.24,<1",
+  "babel>=2.17,<3",
   "gliner2[local] @ git+https://github.com/fastino-ai/GLiNER2@b86d35c02f2c1a4d9840ea50197bd1b6d13b031e",
-  "sentencepiece>=0.2,<1", "protobuf>=4,<8",
+  "sentencepiece>=0.2,<1",
+  "protobuf>=4,<8",
+  "phonenumbers>=9,<10",
+  "email-validator>=2,<3",
+  "google-i18n-address>=3,<4",
+  "postal>=1.1,<2",
+  "python-stdnum>=2,<3",
+  "dateparser>=1.2,<2",
+  "isoduration>=20.11,<21",
 ]
 train = [
   "tractor[server]",
   "gliner2[train] @ git+https://github.com/fastino-ai/GLiNER2@b86d35c02f2c1a4d9840ea50197bd1b6d13b031e",
+  "pyarrow>=18,<24",
+  "scipy>=1.14,<2",
+  "beautifulsoup4>=4.12,<5",
+  "py7zr>=1,<2",
 ]
 dev = ["pytest>=8,<10", "pytest-cov>=5,<8", "hypothesis>=6,<7", "ruff>=0.6,<1", "mypy>=1.10,<3"]
 
@@ -38,6 +53,11 @@ extend-exclude = ["tests/fixtures"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# These local writers are called synchronously and pool.map is fully consumed
+# before the enclosing split loop advances; no closure escapes its iteration.
+"src/tractor/public_source_filter.py" = ["B023"]
 
 [project.scripts]
 tractor = "tractor.cli:main"

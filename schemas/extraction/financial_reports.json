@@ -1,0 +1,177 @@
+{
+  "domain": "financial_reports",
+  "weight": 2,
+  "document": "Annual or quarterly company report excerpt",
+  "header": {
+    "company": {
+      "description": "Reporting company",
+      "examples": [
+        "Nordhafen Messtechnik GmbH",
+        "Cedar Instruments Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "period": {
+      "description": "Reporting period",
+      "examples": [
+        "Geschäftsjahr 2025",
+        "financial year 2025"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "currency": {
+      "description": "Reporting currency as stated",
+      "examples": [
+        "EUR",
+        "GBP"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "auditor": {
+      "description": "Named auditor",
+      "examples": [
+        "Prüfkontor Nord GmbH",
+        "Cedar Audit LLP"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "published": {
+      "description": "Publication date",
+      "examples": [
+        "15. April 2026",
+        "April 15, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "metric": {
+      "description": "Metric label verbatim",
+      "examples": [
+        "Umsatzerlöse",
+        "Operating profit"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "value": {
+      "description": "Printed metric value",
+      "examples": [
+        "12,4 Mio.",
+        "1.8 million"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "period": {
+      "description": "Period for this value",
+      "examples": [
+        "2025",
+        "2024"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "unit": {
+      "description": "Unit as written",
+      "examples": [
+        "EUR",
+        "GBP"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "metric",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Annual or quarterly company report excerpt",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "company": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Reporting company"
+      },
+      "period": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Reporting period"
+      },
+      "currency": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Reporting currency as stated"
+      },
+      "auditor": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Named auditor"
+      },
+      "published": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Publication date"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "metric": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Metric label verbatim"
+            },
+            "value": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed metric value"
+            },
+            "period": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Period for this value"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Unit as written"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

@@ -1,0 +1,209 @@
+{
+  "domain": "communication",
+  "weight": 12,
+  "document": "Customer email, ticket text or already transcribed call",
+  "header": {
+    "contact": {
+      "description": "Named contact person",
+      "examples": [
+        "Mara Winter",
+        "Alex Morgan"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "customer": {
+      "description": "Customer reference",
+      "examples": [
+        "KD-80472",
+        "CU-80472"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "order": {
+      "description": "Order reference",
+      "examples": [
+        "BE-2026-482",
+        "PO-2026-482"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "contract": {
+      "description": "Contract reference",
+      "examples": [
+        "VT-29814",
+        "CT-29814"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "callback": {
+      "description": "Callback phone number",
+      "examples": [
+        "+49 30 555 0182",
+        "+44 20 7946 0182"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "appointment": {
+      "description": "Explicit appointment",
+      "examples": [
+        "22. Oktober um 14:30 Uhr",
+        "22 October at 2:30 pm"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "email": {
+      "description": "Contact email",
+      "examples": [
+        "mara.winter@example.org",
+        "alex.morgan@example.org"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "address": {
+      "description": "Delivery address",
+      "examples": [
+        "Hafenstraße 18, 24103 Kiel",
+        "18 Willow Lane, Bristol BS1 4ST"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "item": {
+      "description": "Requested item as written",
+      "examples": [
+        "Ersatzfilter Modell F8",
+        "replacement filter model F8"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "quantity": {
+      "description": "Requested quantity",
+      "examples": [
+        "6 Stück",
+        "6 units"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "reference": {
+      "description": "Item reference",
+      "examples": [
+        "F8-204",
+        "F8-305"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "item",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Customer email, ticket text or already transcribed call",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "contact": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Named contact person"
+      },
+      "customer": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Customer reference"
+      },
+      "order": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Order reference"
+      },
+      "contract": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Contract reference"
+      },
+      "callback": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Callback phone number"
+      },
+      "appointment": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Explicit appointment"
+      },
+      "email": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Contact email"
+      },
+      "address": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Delivery address"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "item": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Requested item as written"
+            },
+            "quantity": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Requested quantity"
+            },
+            "reference": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Item reference"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

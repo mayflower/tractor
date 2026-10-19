@@ -3,6 +3,13 @@
 Download the complete bundle first. The container expects it as a read-only mount;
 it does not download weights or train during startup.
 
+Address components require libpostal 1.1.4 and the `postal` Python bindings.
+`nix develop` supplies the pinned C library and model data; `just setup` installs
+the locked Python dependencies. The Docker build includes the same library revision
+and data, verified against `configs/libpostal-data.sha256`. Installation downloads
+several gigabytes of address-model data once. Runtime address parsing is local on
+CPU, with no external service calls or GPU requirement.
+
 ## Run on CPU with Docker
 
 ```sh

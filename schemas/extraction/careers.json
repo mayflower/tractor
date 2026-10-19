@@ -1,0 +1,209 @@
+{
+  "domain": "careers",
+  "weight": 6,
+  "document": "CV or job advertisement",
+  "header": {
+    "name": {
+      "description": "Candidate name or named employer",
+      "examples": [
+        "Lena Berger",
+        "Casey Taylor"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "email": {
+      "description": "Contact email",
+      "examples": [
+        "lena.berger@example.org",
+        "casey.taylor@example.org"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "phone": {
+      "description": "Contact phone",
+      "examples": [
+        "+49 30 555 0147",
+        "+44 20 7946 0147"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "location": {
+      "description": "Stated location",
+      "examples": [
+        "Berlin",
+        "Manchester"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "degree": {
+      "description": "Degree title verbatim",
+      "examples": [
+        "Bachelor of Science Wirtschaftsinformatik",
+        "BSc Information Systems"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "skills": {
+      "description": "Explicitly named skills",
+      "examples": [
+        "Python, SQL und SAP",
+        "Python, SQL and SAP"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "salary": {
+      "description": "Salary as written if stated",
+      "examples": [
+        "58.000 EUR brutto jährlich",
+        "GBP 58,000 per year"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "employer": {
+      "description": "Employer for this career entry",
+      "examples": [
+        "Elbwiese Logistik GmbH",
+        "Willow Logistics Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "role": {
+      "description": "Job title for this entry",
+      "examples": [
+        "Datenanalystin",
+        "Data Analyst"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "start": {
+      "description": "Start of employment",
+      "examples": [
+        "April 2021",
+        "April 2021"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "end": {
+      "description": "End of employment",
+      "examples": [
+        "September 2025",
+        "September 2025"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "employer",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "CV or job advertisement",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Candidate name or named employer"
+      },
+      "email": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Contact email"
+      },
+      "phone": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Contact phone"
+      },
+      "location": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Stated location"
+      },
+      "degree": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Degree title verbatim"
+      },
+      "skills": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Explicitly named skills"
+      },
+      "salary": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Salary as written if stated"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "employer": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Employer for this career entry"
+            },
+            "role": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Job title for this entry"
+            },
+            "start": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Start of employment"
+            },
+            "end": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "End of employment"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

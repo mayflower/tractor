@@ -188,12 +188,12 @@ def generate_row(rng, family, index, split):
             absent, issue = True, "not_found"
         elif scenario == 5:
             quantity = f"{number} °C"
-            issue = "unsupported_unit"
+            issue = "incompatible_dimension"
         elif scenario == 6:
             quantity = f"{number} gal"
             issue = "ambiguous_unit"
         elif scenario == 7:
-            quantity = f"{number} nm"
+            quantity = f"{number} angstrom"
             issue = "unsupported_unit"
         elif scenario == 8:
             quantity = f"{number} {unit} ± 1 {unit}"

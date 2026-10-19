@@ -1,0 +1,193 @@
+{
+  "domain": "forms",
+  "weight": 5,
+  "document": "Application or administrative form",
+  "header": {
+    "applicant": {
+      "description": "Applicant full name",
+      "examples": [
+        "Nora Seidel",
+        "Jamie Parker"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "birth_date": {
+      "description": "Applicant date of birth",
+      "examples": [
+        "14. März 1984",
+        "March 14, 1984"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "address": {
+      "description": "Applicant postal address",
+      "examples": [
+        "Lindenweg 7, 53111 Bonn",
+        "7 Linden Road, York YO1 8RT"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "reference": {
+      "description": "Application reference",
+      "examples": [
+        "AN-2026-4821",
+        "APP-26-3817"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "authority": {
+      "description": "Receiving authority",
+      "examples": [
+        "Stadtverwaltung Bonn",
+        "York City Council"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "submitted": {
+      "description": "Submission date",
+      "examples": [
+        "12. Oktober 2026",
+        "October 12, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "amount": {
+      "description": "Requested amount",
+      "examples": [
+        "450,00 EUR",
+        "GBP 450.00"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "name": {
+      "description": "Named household member",
+      "examples": [
+        "Emil Seidel",
+        "Taylor Parker"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "birth_date": {
+      "description": "Member date of birth",
+      "examples": [
+        "6. Mai 2016",
+        "May 6, 2016"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "relationship": {
+      "description": "Relationship explicitly stated",
+      "examples": [
+        "Sohn",
+        "daughter"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "name",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Application or administrative form",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "applicant": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Applicant full name"
+      },
+      "birth_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Applicant date of birth"
+      },
+      "address": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Applicant postal address"
+      },
+      "reference": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Application reference"
+      },
+      "authority": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Receiving authority"
+      },
+      "submitted": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Submission date"
+      },
+      "amount": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Requested amount"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Named household member"
+            },
+            "birth_date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Member date of birth"
+            },
+            "relationship": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Relationship explicitly stated"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

@@ -13,7 +13,7 @@ the design through explanation. Examples use the released model and the actual A
 ## Learn by doing
 
 1. [Your first extraction](tutorials/first-extraction.md): install, download, serve, and call HTTP.
-2. [Build a Python product extractor](tutorials/python.md): fields, records, and source details.
+2. [Build a Python product extractor](tutorials/python.md): fields, records, and normalized values.
 3. [Build a batch import](tutorials/batch.md): process JSONL and route uncertain results.
 
 ## Complete a task
@@ -24,10 +24,11 @@ the design through explanation. Examples use the released model and the actual A
 - [Use async Python and web applications](how-to/async.md)
 - [Store results in a database](how-to/persistence.md)
 - [Handle errors, retries, and backpressure](how-to/errors-and-retries.md)
-- [Highlight evidence and preserve offsets](how-to/source-details.md)
+- [Handle normalized results and issues](how-to/results.md)
 - [Deploy with Docker and Compose](how-to/deployment.md)
 - [Install an offline or pinned model](how-to/offline.md)
 - [Validate an integration and diagnose failures](how-to/validation.md)
+- [Train and evaluate native extraction tasks](how-to/training.md)
 
 ## Look up the contract
 

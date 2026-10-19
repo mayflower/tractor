@@ -37,7 +37,6 @@ source reference in a production audit record.
 
 For anchored arrays, use a stable document ID plus an occurrence identifier. A
 product name alone is not unique: repeated equal names are separate source records.
-Use source offsets from `include_details` where appropriate, and preserve the exact
-input text against which those offsets were measured.
+Preserve the original input text when required by your storage policy.
 
 [Manual home](../index.md) · [Record semantics](../explanation/records.md)

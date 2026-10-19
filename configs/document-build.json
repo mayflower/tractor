@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "seed": 20261024,
+  "domains": {
+    "invoices": 18,
+    "contracts": 12,
+    "forms": 5,
+    "banking": 10,
+    "communication": 12,
+    "contacts": 6,
+    "insurance": 7,
+    "clinical": 7,
+    "careers": 6,
+    "products": 5,
+    "metadata": 3,
+    "financial_reports": 2,
+    "research": 2,
+    "news": 1,
+    "logistics": 2,
+    "operations": 2
+  },
+  "shapes": {
+    "single_object": 60,
+    "repeated_records": 30,
+    "entity_list": 10
+  },
+  "languages": [
+    "de",
+    "en"
+  ],
+  "train_target": 30000,
+  "heldout_per_domain_per_split": 200,
+  "model": "claude-haiku-5-5",
+  "max_output_tokens": 4096,
+  "real_public_target": 200000,
+  "requires_semantic_review": true,
+  "requires_realism_review": true,
+  "max_native_tokens": 512,
+  "scale_stages": [
+    30000,
+    100000,
+    200000
+  ],
+  "max_candidates_without_scale_audit": 256
+}

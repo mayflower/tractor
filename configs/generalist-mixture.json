@@ -1,0 +1,14 @@
+{
+  "seed": 911,
+  "train_examples": 10000,
+  "dev_per_bucket": 100,
+  "weights": {
+    "entities": 10,
+    "records": 35,
+    "events": 10,
+    "document_fields": 25,
+    "role_contrasts": 10,
+    "cross_section": 10
+  },
+  "qualification": "Bounded generalist pilot, not a selected full-training recipe. No dedicated product replay. Equal Dev bucket weight; classification task accuracy reported separately. Select by general-task Dev with product >=90% only as a regression floor."
+}

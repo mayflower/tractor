@@ -18,11 +18,6 @@ with httpx.Client(
         response.raise_for_status()
         result = loads(response.content)
         assert exact({k: result[k] for k in ("data", "issues")}, case["expected"]), case["id"]
-        if "details" in result:
-            records = result["details"] if isinstance(result["details"], list) else [result["details"]]
-            for record in records:
-                for span in record.values():
-                    if span is not None:
-                        assert case["request"]["text"][span["start"]:span["end"]] == span["text"]
+        assert set(result) == {"data", "issues"}
         print(case["id"], "passed")
 print("All published integration cases passed; this is not an accuracy benchmark.")

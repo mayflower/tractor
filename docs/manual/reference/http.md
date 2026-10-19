@@ -20,36 +20,32 @@ NaN/Infinity literals, and incompatible types are rejected.
 | `text` | required string | Nonempty and not all whitespace; original source text. |
 | `fields` | required object | 1–32 named field definitions. |
 | `locale` | string or null; null | `de-DE`, `en-US`, `en-GB`, or null. |
-| `anchor` | string or null; null | Must name an existing text field. |
+| `anchor` | string or null; null | Must name an existing text, name, place or identifier field. |
 | `many` | boolean; false | True requires an anchor; controls array output. |
-| `include_details` | boolean; false | Adds original source details. |
 
 Field keys match `^[A-Za-z][A-Za-z0-9_]{0,63}$`. Each definition has a required
-`type` (`text` or `quantity`) and a 1–240 character `description`. A quantity also
+`type` (`text`, `quantity`, `number`, `money`, `date`, `address`, `identifier`, `list`, `person`, `organization`, `place`, `phone`, `email`, `postcode`, `time`, `datetime`, `duration`, `interval`, `percent`, `iban`, or `url`) and a 1–240 character `description`. A quantity also
 requires `unit`, from the [canonical units](quantities-and-issues.md). Text fields
-must not have a unit. Field definitions reject unknown properties. Booleans must
+must not have a unit. Each type selects its processing; see the
+[typed field parameters](../how-to/document-processing.md). There is no separate
+processing map. Field definitions reject unknown properties. Booleans must
 be JSON booleans, not strings such as `"true"`.
 
 ```json
-{"text":"Alpha ist 10 cm breit. Beta ist 2 inches breit.","fields":{"product":{"type":"text","description":"Produktbezeichnung"},"width_mm":{"type":"quantity","description":"Breite","unit":"mm"}},"anchor":"product","many":true,"include_details":true}
+{"text":"Alpha ist 10 cm breit. Beta ist 2 inches breit.","fields":{"product":{"type":"text","description":"Produktbezeichnung"},"width_mm":{"type":"quantity","description":"Breite","unit":"mm"}},"anchor":"product","many":true}
 ```
 
 ## Successful response
 
 `data` is a field-keyed object, or an array of such objects when `many=true`.
 Every record contains all requested keys. Values are source strings, normalized
-JSON numbers, or null. Equivalent numbers may use exponent notation or trailing
-zeroes; compare numeric values rather than the literal response text. `issues` is always an array and may be empty. `details` is
-present only when requested and mirrors the object/array shape of data.
+JSON numbers, or null; list cardinalities return arrays of values. Equivalent numbers may use exponent notation or trailing
+zeroes; compare numeric values rather than the literal response text. `issues` is always an array and may be empty.
 
 An issue contains `field` (a key or null) and `code`. Field-level issues for array
 results also contain zero-based `index`. Record-level `not_found` or
 `ambiguous_record` issues have `field=null`. Their data shape is described in
 [record semantics](../explanation/records.md).
-
-A non-null detail contains `text`, `start`, and `end`; optionally `extraction_score`.
-Quantity details additionally contain `source_unit` (possibly null) and
-`target_unit`. Source indices are Unicode code points with an exclusive end.
 
 Successful extraction responses include:
 

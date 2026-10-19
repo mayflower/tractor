@@ -1,0 +1,193 @@
+{
+  "domain": "products",
+  "weight": 5,
+  "document": "Supplier product description or catalogue entry",
+  "header": {
+    "name": {
+      "description": "Product name",
+      "examples": [
+        "Industrieschlauch FlexPro",
+        "FlexPro industrial hose"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "brand": {
+      "description": "Brand as written",
+      "examples": [
+        "FlexPro",
+        "FlexPro"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "material": {
+      "description": "Material as written",
+      "examples": [
+        "EPDM mit Polyestergewebe",
+        "EPDM with polyester reinforcement"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "colour": {
+      "description": "Colour as written",
+      "examples": [
+        "schwarz",
+        "black"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "size": {
+      "description": "Printed size",
+      "examples": [
+        "DN 25",
+        "DN 25"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "weight": {
+      "description": "Printed weight",
+      "examples": [
+        "1,4 kg/m",
+        "1.4 kg/m"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "certification": {
+      "description": "Printed certification",
+      "examples": [
+        "ISO 9001",
+        "ISO 9001"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "code": {
+      "description": "Variant item code",
+      "examples": [
+        "FP-25-10",
+        "FP-25-20"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "length": {
+      "description": "Variant length",
+      "examples": [
+        "10 m",
+        "20 m"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "price": {
+      "description": "Variant price",
+      "examples": [
+        "89,50 EUR",
+        "GBP 89.50"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "code",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Supplier product description or catalogue entry",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Product name"
+      },
+      "brand": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Brand as written"
+      },
+      "material": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Material as written"
+      },
+      "colour": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Colour as written"
+      },
+      "size": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed size"
+      },
+      "weight": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed weight"
+      },
+      "certification": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Printed certification"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Variant item code"
+            },
+            "length": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Variant length"
+            },
+            "price": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Variant price"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

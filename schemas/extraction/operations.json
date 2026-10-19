@@ -1,0 +1,193 @@
+{
+  "domain": "operations",
+  "weight": 2,
+  "document": "Maintenance, incident or inspection report",
+  "header": {
+    "reference": {
+      "description": "Report reference",
+      "examples": [
+        "PR-2026-0814",
+        "IR-2026-0814"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "asset": {
+      "description": "Asset identifier",
+      "examples": [
+        "L\u00fcftungsanlage L-04",
+        "Ventilation unit V-04"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "location": {
+      "description": "Asset location",
+      "examples": [
+        "Halle 3, Kiel",
+        "Hall 3, Bristol"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "date": {
+      "description": "Inspection date and time",
+      "examples": [
+        "16.10.2026, 08:45 Uhr",
+        "16 October 2026, 08:45"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "technician": {
+      "description": "Named technician",
+      "examples": [
+        "Nora Seidel",
+        "Jamie Parker"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "action": {
+      "description": "Main completed maintenance action explicitly documented",
+      "examples": [
+        "Dichtung ersetzt und Probelauf durchgef\u00fchrt",
+        "seal replaced and test run completed"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "component": {
+      "description": "Component name",
+      "examples": [
+        "Druckleitung",
+        "pressure line"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "measurement": {
+      "description": "Measurement with unit",
+      "examples": [
+        "4,8 bar",
+        "4.8 bar"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "limit": {
+      "description": "Printed limit",
+      "examples": [
+        "maximal 6 bar",
+        "maximum 6 bar"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "time": {
+      "description": "Measurement time",
+      "examples": [
+        "08:52 Uhr",
+        "08:52"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "component",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Maintenance, incident or inspection report",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "reference": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Report reference"
+      },
+      "asset": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Asset identifier"
+      },
+      "location": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Asset location"
+      },
+      "date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Inspection date and time"
+      },
+      "technician": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Named technician"
+      },
+      "action": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Main completed maintenance action explicitly documented"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "component": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Component name"
+            },
+            "measurement": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Measurement with unit"
+            },
+            "limit": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Printed limit"
+            },
+            "time": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Measurement time"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

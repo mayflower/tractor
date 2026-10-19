@@ -1,0 +1,38 @@
+{
+  "seed": 731,
+  "pilot_train": 10000,
+  "scale_train": 100000,
+  "evaluation_per_split": 4000,
+  "family_weights": {
+    "records": 25,
+    "relations": 20,
+    "events": 15,
+    "document_fields": 15,
+    "role_contrasts": 15,
+    "cross_section": 10
+  },
+  "language_weights": {
+    "de": 45,
+    "en": 45,
+    "mixed": 10
+  },
+  "scale_requires": {
+    "synthetic_macro_f1_improvement": 0.02,
+    "public_macro_f1_max_drop": 0.01,
+    "product_exact_request_floor": 0.9
+  },
+  "qualification": "Scale pool preserves the frozen 10k pilot; later blocks broaden scalar role contrasts and avoid additional duplicate bodies. The original gate measures the initial pilot only. Extra role evaluation is reserved, unscored, and protected from training overlap. Deterministic template diversity is not proof of natural-document reliability.",
+  "protected_episodes": [
+    "data/generalist-expanded/dev.episodes.jsonl",
+    "data/generalist-expanded/calibration.episodes.jsonl",
+    "data/generalist-expanded/test.episodes.jsonl",
+    "data/generalist-frozen/calibration.episodes.jsonl",
+    "data/generalist-frozen/test.episodes.jsonl",
+    "data/generalist-extraction-integrated/dev.episodes.jsonl",
+    "data/synthetic-coverage-role-evaluation/dev.episodes.jsonl",
+    "data/synthetic-coverage-role-evaluation/calibration.episodes.jsonl",
+    "data/synthetic-coverage-role-evaluation/test.episodes.jsonl"
+  ],
+  "retired": true,
+  "retirement_reason": "Schematic generator violates reqs.md realism and scope; use document_build."
+}

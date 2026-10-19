@@ -1,7 +1,7 @@
 {"id":"h001","request":{"text":"Breite 12 cm.","fields":{}},"expected_status":422}
 {"id":"h002","request":{"text":"","fields":{"width":{"type":"quantity","description":"Breite","unit":"mm"}}},"expected_status":422}
 {"id":"h003","request":{"text":"Breite 12 cm.","fields":{"width":{"type":"quantity","description":"Breite"}}},"expected_status":422}
-{"id":"h004","request":{"text":"Temperatur 20 °C.","fields":{"temperature":{"type":"quantity","description":"Temperatur","unit":"degC"}}},"expected_status":422}
+{"id":"h004","request":{"text":"Temperatur 20 °C.","fields":{"temperature":{"type":"quantity","description":"Temperatur","unit":"psi"}}},"expected_status":422}
 {"id":"h005","request":{"text":"Breite 12 cm.","fields":{"width":{"type":"quantity","description":"Breite","unit":"mm"}},"many":true},"expected_status":422}
 {"id":"h006","request":{"text":"Breite 12 cm.","fields":{"width":{"type":"quantity","description":"Breite","unit":"mm"}},"many":true,"anchor":"width"},"expected_status":422}
 {"id":"h007","request":{"text":"Breite 12 cm.","fields":{"width":{"type":"quantity","description":"Breite","unit":"mm"}},"locale":"invalid-locale"},"expected_status":422}

@@ -1,0 +1,37 @@
+{
+  "minimum_exclusive": 0.7,
+  "domains": [
+    "invoices",
+    "contracts",
+    "forms",
+    "banking",
+    "communication",
+    "contacts",
+    "insurance",
+    "clinical",
+    "careers",
+    "products",
+    "metadata",
+    "financial_reports",
+    "research",
+    "news",
+    "logistics",
+    "operations"
+  ],
+  "shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "required_origins": [
+    "real/human",
+    "synthetic/teacher"
+  ],
+  "metrics": {
+    "domain": "field_f1",
+    "shape": "field_f1",
+    "repeated_records": "record_f1"
+  },
+  "missing_measurement": "fail",
+  "qualification": "reqs.md strict extraction; per-domain and per-shape gates, real and synthetic separate. No classification, relations, table parsing or layout reconstruction. Repeated-record gates apply only to explicitly described text records; missing real evidence remains missing."
+}

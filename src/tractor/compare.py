@@ -64,7 +64,7 @@ def score_response(result, gold):
 
 
 def provider_request(provider, request, prompt, max_tokens):
-    user = dumps({k: v for k, v in request.items() if k != "include_details"})
+    user = dumps(request)
     if provider == "openai":
         return "https://api.openai.com/v1/responses", {
             "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}",
@@ -163,7 +163,7 @@ def main(argv=None):
             try:
                 if args.provider == "tractor":
                     response = client.post(args.url.rstrip("/") + "/v1/extract", json={
-                        **row["request"], "include_details": False,
+                        **row["request"],
                     })
                 else:
                     url, headers, body = provider_request(

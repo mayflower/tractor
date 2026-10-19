@@ -1,0 +1,177 @@
+{
+  "domain": "news",
+  "weight": 1,
+  "document": "News article or public announcement",
+  "header": {
+    "company": {
+      "description": "Company named in announcement",
+      "examples": [
+        "Nordhafen Messtechnik GmbH",
+        "Cedar Instruments Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "person": {
+      "description": "Main named spokesperson in the announcement",
+      "examples": [
+        "Mara Winter",
+        "Alex Morgan"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "location": {
+      "description": "Announcement location explicitly given in the dateline or event description",
+      "examples": [
+        "Kiel",
+        "Bristol"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "date": {
+      "description": "Explicit date",
+      "examples": [
+        "14. Oktober 2026",
+        "October 14, 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "amount": {
+      "description": "Headline transaction or investment amount explicitly announced",
+      "examples": [
+        "2,4 Millionen EUR",
+        "GBP 2.4 million"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "ticker": {
+      "description": "Ticker explicitly printed",
+      "examples": [
+        "NHM",
+        "CDR"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "name": {
+      "description": "Named participant",
+      "examples": [
+        "Elbwiese Labortechnik GmbH",
+        "Willow Research Ltd"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "amount": {
+      "description": "Amount attributed explicitly to participant",
+      "examples": [
+        "350.000 EUR",
+        "GBP 350,000"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "location": {
+      "description": "Participant location",
+      "examples": [
+        "Bonn",
+        "York"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "name",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "News article or public announcement",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "company": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Company named in announcement"
+      },
+      "person": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Main named spokesperson in the announcement"
+      },
+      "location": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Announcement location explicitly given in the dateline or event description"
+      },
+      "date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Explicit date"
+      },
+      "amount": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Headline transaction or investment amount explicitly announced"
+      },
+      "ticker": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Ticker explicitly printed"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Named participant"
+            },
+            "amount": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Amount attributed explicitly to participant"
+            },
+            "location": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Participant location"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

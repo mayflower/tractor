@@ -20,7 +20,7 @@ uv run --no-sync python examples/manual/check_examples.py
 ```
 
 The final command runs the published request cases and verifies expected data,
-issues, and source spans. It does not call paid cloud APIs.
+issues, and normalized values. It does not call paid cloud APIs.
 
 ## Build a task-specific acceptance set
 

@@ -23,7 +23,7 @@ with CPU or GPU inference and an HTTP API that works with any language.
 | Fields from messy text | Source-span extraction with field descriptions in plain language |
 | Consistent measurements | Locale-aware parsing and deterministic Decimal unit conversion |
 | Multiple products in one request | Anchored records with values associated with each product |
-| Traceable answers | Original source offsets, explicit missing-value and ambiguity issues |
+| Explicit outcomes | Missing-value, normalization and ambiguity issues |
 | Control over deployment | Local, offline serving with CPU or GPU support |
 | A small integration surface | One HTTP endpoint and a lightweight Python SDK |
 
@@ -51,8 +51,7 @@ include network overhead and do not measure optimized LLM pipelines.
 
 A supplier writes **“Die Breite beträgt 12,5 cm.”** Your system needs millimeters.
 tractor returns **`125`** under your field name. For multiple products, it returns
-separate records. Source details let your application show where a value came from;
-structured issues let it route missing or ambiguous values for review.
+separate records. Structured issues identify missing or ambiguous values for review.
 
 Use it to populate catalog attributes, normalize dimensions from short technical
 specifications, or provide an extraction step inside a larger agent workflow.
@@ -98,7 +97,6 @@ with Client("http://127.0.0.1:8000") as client:
          "width_mm": Quantity("Breite", unit="mm")},
         anchor="product",
         many=True,
-        include_details=True,
     )
     print(result.data)
 ```

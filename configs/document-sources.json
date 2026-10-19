@@ -1,0 +1,92 @@
+[
+  {
+    "source": "kleister-nda",
+    "repo": "applicaai/kleister-nda",
+    "revision": "c2c7bf069b919bfb618b268fda2a2c079c0db316",
+    "path": "data/document-sources/kleister-nda",
+    "files": {
+      "README.md": "35c783085461ccb7d04a945374139d5d00444c5cf87f7ac3e83ce7d8eb94ac70",
+      "in-header.tsv": "441aaa02bedfd3f9db56596dcc364f55b7f77c9464296de8ff1e7c6efcd5b46f",
+      "dev-0/in.tsv.xz": "728e6b4ce5f2347a596b9ed28f04fcee07b712cc12362155e489b2fe3e26eb48",
+      "dev-0/expected.tsv": "2ac328d80ad15688a613d78d96384dca0f13aa99fad1952012a55a31052dca34",
+      "train/expected.tsv": "db71adab8293add4380c4c87b6025e6f660c4fed772fda902a79e3f7547b35e9",
+      "train/in.tsv.xz": "f8bd7eb0f05829b470040e31164ca5735c22d758754b5fd59e272ac33a4eddd7"
+    },
+    "status": "downloaded_for_adapter_audit",
+    "release_eligibility": "unverified_data_terms",
+    "text_origin": "real",
+    "label_origin": "human",
+    "official_test_not_imported": true
+  },
+  {
+    "source": "kleister-charity",
+    "repo": "applicaai/kleister-charity",
+    "revision": "2309f4861cc49864ac653a7fa108efc2144400b3",
+    "path": "data/document-sources/kleister-charity",
+    "files": {
+      "in-header.tsv": "441aaa02bedfd3f9db56596dcc364f55b7f77c9464296de8ff1e7c6efcd5b46f",
+      "README.md": "e3566e3fc6d1d08ad8e1f885b569eaf1a64925e71ccbc78be82e6bad1d0b51a8",
+      "train/in.tsv.xz": "39b8b00fdfcdf2d7b51ec0e59711109eaa85c7b2464879e378f6ecb5549c39c2",
+      "train/expected.tsv": "245f84f1894bb3e072ea05f7ddba3819f084acbf3636f5ba440221662200eb25",
+      "dev-0/in.tsv.xz": "f6b0dfab523db02521a9aa3716f45d308fa5133d3973f952f39500b4c6f2a1c1",
+      "dev-0/expected.tsv": "5a56ca82384eed65dcca423ece28ec3f7b31c9b9f2a2ba59e3df9ed8696e5f36"
+    },
+    "status": "downloaded_for_adapter_audit",
+    "release_eligibility": "unverified_data_terms",
+    "text_origin": "real",
+    "label_origin": "human",
+    "official_test_not_imported": true
+  },
+  {
+    "source": "vrdu",
+    "repo": "google-research-datasets/vrdu",
+    "revision": "04a4df7ac5cc694e51c48115c03fe428f0e240cc",
+    "path": "data/document-sources/vrdu",
+    "files": {
+      "README.md": "aa11cb95138011a0745d908034af1b646187841ad66f39b8372df3d37e83f8a8",
+      "ad-buy-form/main/dataset.jsonl.gz": "5fbf579a023e1068433f3115006da109145307cdd3e1b64346b92c959384ef36",
+      "ad-buy-form/main/meta.json": "312a229850651e982c995533fed5443e2073b2c50d50c32b9e95c0a50fd8911f",
+      "ad-buy-form/few_shot-splits/DeepForm-kno_template-train_10-test_5-valid_100-SD_2.json": "aac4e8b28354562e45a52a4ea9451562c7ec609dccdfcfdd4a9e0670fa40f9d7",
+      "registration-form/few_shot-splits/FARA-lv3-unk_Amendment-train_200-test_300-valid_100-SD_0.json": "a08bf742b4e34ebb1e533d58993d6fe6bc3ab995d7c927f58760da352cf0162d",
+      "registration-form/main/meta.json": "248e2c1f9a127397f73c20e0b546ba29779a4a66f15acedd06b5d1d507c513da",
+      "registration-form/main/dataset.jsonl.gz": "9dd5f711e34861bdf9a98e05415355b522439e8658fcef763ef8d9b6b50cdc49",
+      "ad-buy-form/few_shot-splits/DeepForm-mixed_template-train_200-test_300-valid_100-SD_0.json": "be1341f30662d2df9f5bf52e58c5b188d05dbcbb99f698b3a8b6839781a0b65c"
+    },
+    "status": "downloaded_for_adapter_audit",
+    "release_eligibility": "unverified_data_terms",
+    "text_origin": "real",
+    "label_origin": "human",
+    "official_test_not_imported": true,
+    "active_splits": {
+      "ad-buy-form": "ad-buy-form/few_shot-splits/DeepForm-mixed_template-train_200-test_300-valid_100-SD_0.json",
+      "registration-form": "registration-form/few_shot-splits/FARA-lv3-unk_Amendment-train_200-test_300-valid_100-SD_0.json"
+    }
+  },
+  {
+    "source": "cord",
+    "repo": "naver-clova-ix/cord-v2",
+    "revision": "7f0115a4b758a71d6473b8d085751692da2fef98",
+    "path": "data/document-sources/cord",
+    "license": "CC-BY-4.0",
+    "status": "downloaded",
+    "text_origin": "real",
+    "label_origin": "human",
+    "release_eligibility": "attribution_required",
+    "files": {
+      "README.md": "835f3f7d88a86e05a882c6a6b6333da6ab874776385f85473798769d767c2fca",
+      "data/train-00002-of-00004-688fe1305a55e5cc.parquet": "591e2db8fe8b1d364b054f46e8c375b7f00e72578914ba46a573b6858162cab2",
+      "data/validation-00000-of-00001-cc3c5779fe22e8ca.parquet": "0d0f6dac11fdcc549de2746aa9f53136a3bc22a2a1aff2b0b847f7622ad60c15",
+      "data/train-00003-of-00004-2d0cd200555ed7fd.parquet": "1ffd9de8d6fbcee7630fd4cdfedff05b9b7fabc0fae4fc17557c5fe7cf178748",
+      "data/train-00001-of-00004-7dbbe248962764c5.parquet": "cce4def16a0d6a6c75f80be712f7494c56c318a8829b712f5c62650155c9e58e",
+      "data/test-00000-of-00001-9c204eb3f4e11791.parquet": "51c65f1788faff392abe2a0b55b023eb23e9be551c509138eaa3a832514224e7",
+      "data/train-00000-of-00004-b4aaeceff1d90ecb.parquet": "da3994eee1bf9bd3c57f0d53a72c3a6812c8696c5ba26245987949ddf73483cc"
+    }
+  },
+  {
+    "source": "docile",
+    "url": "https://docile.rossum.ai/",
+    "status": "blocked_access_token_required",
+    "release_eligibility": "data_terms_unverified",
+    "qualification": "No download attempted without provider-issued token. Code MIT does not determine data terms."
+  }
+]

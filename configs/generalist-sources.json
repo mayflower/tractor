@@ -1,0 +1,80 @@
+{
+  "sources": [
+    {
+      "name": "germanquad",
+      "repo": "deepset/germanquad",
+      "revision": "a2f3a59f0be843fc305d0417d7292ef0b1a66884",
+      "file": "plain_text/train/0000.parquet",
+      "license": "cc-by-4.0",
+      "text_origin": "real",
+      "label_origin": "human",
+      "note": "Pinned Hugging Face parquet conversion; original download URL returned 404."
+    },
+    {
+      "name": "squad_v2",
+      "repo": "rajpurkar/squad_v2",
+      "revision": "3ffb306f725f7d2ce8394bc1873b24868140c412",
+      "file": "squad_v2/train-00000-of-00001.parquet",
+      "license": [
+        "cc-by-sa-4.0"
+      ],
+      "text_origin": "real",
+      "label_origin": "human"
+    },
+    {
+      "name": "guidex",
+      "repo": "HiTZ/GuideX_pre-training_data",
+      "revision": "852ff86658b19b82268fc7155158a2850ff5ac6a",
+      "file": "data/train-00000-of-00001.parquet",
+      "license": "apache-2.0",
+      "text_origin": "real",
+      "label_origin": "teacher"
+    },
+    {
+      "name": "gretel",
+      "repo": "gretelai/gretel-pii-masking-en-v1",
+      "revision": "e06eb1499ca8d54470f085021cd8e54f9efac7fd",
+      "file": "data/train-00000-of-00001.parquet",
+      "license": "apache-2.0",
+      "text_origin": "synthetic",
+      "label_origin": "teacher"
+    },
+    {
+      "name": "multispan",
+      "url": "https://raw.githubusercontent.com/haonan-li/MultiSpanQA/07f8b02340fd07d28fa15956720f92a6f61ba70a/data/MultiSpanQA_data/train.json",
+      "revision": "07f8b02340fd07d28fa15956720f92a6f61ba70a",
+      "license": "cc-by-sa-4.0",
+      "text_origin": "real",
+      "label_origin": "human"
+    },
+    {
+      "name": "docred",
+      "url": "https://raw.githubusercontent.com/klassessg/re2-docred/006412ef599a3fd6039b3746cc2d1e22fc600d62/dataset/re2docred_train_re.json",
+      "revision": "006412ef599a3fd6039b3746cc2d1e22fc600d62",
+      "license": "cc-by-sa-4.0",
+      "text_origin": "real",
+      "label_origin": "human"
+    },
+    {
+      "name": "few_nerd",
+      "repo": "DFKI-SLT/few-nerd",
+      "revision": "205f3e9c9f3577ea2561d43f2f62dc249ab92d5b",
+      "file": "supervised/train-00000-of-00001.parquet",
+      "license": "cc-by-sa-4.0",
+      "text_origin": "real",
+      "label_origin": "human",
+      "note": "Only supervised original train; token-preserving space joining, coarse types with fine-type run boundaries. Document IDs absent; train-only import."
+    },
+    {
+      "name": "adversarial_qa",
+      "repo": "UCLNLP/adversarial_qa",
+      "revision": "c2d5f738db1ad21a4126a144dfbb00cb51e0a4a9",
+      "file": "adversarialQA/train-00000-of-00001.parquet",
+      "license": "cc-by-sa-4.0",
+      "text_origin": "real",
+      "label_origin": "human",
+      "note": "Human-authored adversarial extractive QA. Combined subset only; do not duplicate component subsets."
+    }
+  ],
+  "note": "Declared dataset licenses; underlying source-text rights must be retained separately. Downloads are explicit and train-only."
+}

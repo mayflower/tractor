@@ -1,0 +1,177 @@
+{
+  "domain": "research",
+  "weight": 2,
+  "document": "Study abstract or measurement report excerpt",
+  "header": {
+    "title": {
+      "description": "Study title as printed",
+      "examples": [
+        "Temperaturstabilität keramischer Sensoren",
+        "Temperature stability of ceramic sensors"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "author": {
+      "description": "Named author",
+      "examples": [
+        "Dr. Eva Sommer",
+        "Dr. Robin Hayes"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "sample_size": {
+      "description": "Explicit sample size",
+      "examples": [
+        "48 Proben",
+        "48 samples"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "method": {
+      "description": "Study method verbatim",
+      "examples": [
+        "randomisierte Vergleichsmessung",
+        "randomized comparative measurement"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "date": {
+      "description": "Study date",
+      "examples": [
+        "September 2026",
+        "September 2026"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "record": {
+    "sample": {
+      "description": "Sample identifier",
+      "examples": [
+        "Probe A17",
+        "Sample B24"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "measurement": {
+      "description": "Measured property",
+      "examples": [
+        "Leitfähigkeit",
+        "conductivity"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "value": {
+      "description": "Measurement with unit",
+      "examples": [
+        "1,82 mS/cm",
+        "1.82 mS/cm"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    },
+    "condition": {
+      "description": "Stated measurement condition",
+      "examples": [
+        "bei 23 °C",
+        "at 23 °C"
+      ],
+      "type": "string",
+      "value_policy": "verbatim"
+    }
+  },
+  "anchor": "sample",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Study abstract or measurement report excerpt",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "title": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Study title as printed"
+      },
+      "author": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Named author"
+      },
+      "sample_size": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Explicit sample size"
+      },
+      "method": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Study method verbatim"
+      },
+      "date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Study date"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sample": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Sample identifier"
+            },
+            "measurement": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Measured property"
+            },
+            "value": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Measurement with unit"
+            },
+            "condition": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Stated measurement condition"
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_shapes": [
+    "single_object",
+    "repeated_records",
+    "entity_list"
+  ],
+  "qualification": "Facts are fictional seeds, not document templates. Teacher renders unique realistic texts; fields remain verbatim."
+}

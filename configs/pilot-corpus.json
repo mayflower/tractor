@@ -1,0 +1,20 @@
+{
+  "seed": 42,
+  "train_size": 30000,
+  "dev_size": 3000,
+  "max_per_document": 8,
+  "max_per_source_group": 64,
+  "sources": {
+    "germanquad": "data/generalist-sources/germanquad/plain_text/train/0000.parquet",
+    "squad_v2": "data/generalist-sources/squad_v2/squad_v2/train-00000-of-00001.parquet",
+    "gretel": "data/generalist-sources/gretel-pii-masking-en-v1/data/train-00000-of-00001.parquet",
+    "guidex": "data/generalist-sources/GuideX_pre-training_data/data/train-00000-of-00001.parquet",
+    "multispan": "data/generalist-sources/MultiSpanQA/train.json",
+    "docred": "data/generalist-sources/re2-docred/re2docred_train_re.json"
+  },
+  "synthetic_files": ["data/generalist-pilot-clean/train.episodes.jsonl", "data/generalist-pilot-clean/dev.episodes.jsonl"],
+  "product_train": "data/generalist-product-replay/train.jsonl",
+  "train_targets": {"germanquad": 3000, "squad_v2": 7000, "gretel": 7000, "guidex": 300, "multispan": 2000, "docred": 1700, "synthetic": 6000, "product_replay": 3000},
+  "dev_targets": {"germanquad": 400, "squad_v2": 800, "gretel": 800, "guidex": 50, "multispan": 300, "docred": 200, "synthetic": 450},
+  "note": "Source-diversified pilot, not the ideal semantic-family percentages. Public-source shortfalls are filled round-robin from other public sources only. Existing synthetic templates are capped, not expanded to pad counts. Product replay uses training rows only."
+}
