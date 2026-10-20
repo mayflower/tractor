@@ -121,12 +121,13 @@ def summarize(counts):
     def divide(a, b):
         return a / b if b else None
     tp, fp, fn = counts["field_tp"], counts["field_fp"], counts["field_fn"]
-    return {
+    result = {
         "counts": dict(counts),
         "field_precision": divide(tp, tp + fp), "field_recall": divide(tp, tp + fn),
         "field_f1": divide(2 * tp, 2 * tp + fp + fn),
         "element_f1": divide(2 * counts["tp"], 2 * counts["tp"] + counts["fp"] + counts["fn"]),
-        "request_exact": divide(counts["exact_requests"], counts["requests"]),
+        "request_exact": divide(counts["exact_requests"], counts.get("scored_requests", counts["requests"])),
+        "reference_complete": not bool(counts.get("incomplete_reference_fields", 0)),
         "record_precision": divide(counts["exact_records"], counts["predicted_records"]),
         "record_recall": divide(counts["exact_records"], counts["gold_records"]),
         "answer_rate": divide(counts["answered"], counts["fields"]),
@@ -136,3 +137,11 @@ def summarize(counts):
         "issue_accuracy": divide(counts["issue_correct"], counts["issue_fields"]),
         "error_rate": divide(counts["errors"], counts["requests"]),
     }
+    if not result['reference_complete']:
+        # The reviewed subset changes with the outputs. Its fraction is neither
+        # a population estimate nor a comparable model-quality score.
+        metrics = ('field_precision', 'field_recall', 'field_f1', 'element_f1',
+                   'request_exact', 'record_precision', 'record_recall')
+        result['reviewed_subset_scores'] = {key: result[key] for key in metrics}
+        result.update(dict.fromkeys(metrics))
+    return result

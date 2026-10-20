@@ -5,7 +5,9 @@ Unspecified output parameters and mixed semantic fields remain explicit debt.
 """
 import re
 
-VERSION = 'typed-corpus-20261019-v1'
+from .record_contracts import cardinality
+
+VERSION = 'typed-corpus-20261019-v2-cardinality'
 
 PERSON = {
     'research': {'author'}, 'clinical': {'patient', 'clinician'},
@@ -63,6 +65,12 @@ def currency_context(text):
 
 def choose(schema, task, key, existing=None):
     """Return (rule, debt). schema contains no gold, ids, split or predictions."""
+    rule, debt = _choose(schema, task, key, existing)
+    rule = dict(rule, cardinality=cardinality(task.get('cardinalities', {}).get(key), rule.get('cardinality')))
+    return rule, debt
+
+
+def _choose(schema, task, key, existing=None):
     source, family = schema['source'], schema['family']
     kind, options, debt = None, {}, None
     authored = source in {'tractor_authored_documents', 'tractor_authored_gb_offices'}

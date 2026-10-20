@@ -5,6 +5,7 @@ from pathlib import Path
 from .coverage_assembly import sha
 from .document_training import selection_score
 from .generalist_data import read_episodes
+from .inference_context import EVALUATION_PRECISION, evaluation_precision
 from .jsonio import dumps, loads
 from .pipeline_evaluation import evaluate_pipeline, infer
 
@@ -13,8 +14,6 @@ def run(model, episodes, output, device='cuda', policy='configs/extraction-quali
     for value in (threshold, record_threshold):
         if value is not None and (isinstance(value, bool) or not 0 < float(value) <= 1):
             raise ValueError('Provisional Dev threshold must be in (0, 1]')
-    import torch
-
     from .model import Extractor
     rows = list(read_episodes(episodes))
     if not rows or any(e.split != 'dev' for e in rows):
@@ -24,7 +23,8 @@ def run(model, episodes, output, device='cuda', policy='configs/extraction-quali
     source_names = ('document_pipeline.py', 'field_contracts.py', 'field_normalization.py',
                     'pipeline_evaluation.py', 'pipeline_diagnostics.py', 'normalize.py', 'model.py', 'types.py', 'service.py',
                     'contact_normalization.py', 'temporal_normalization.py', 'scalar_normalization.py',
-                    'identifier_normalization.py', 'address_normalization.py', 'episodes.py', 'episode_metrics.py', 'document_eval.py')
+                    'identifier_normalization.py', 'address_normalization.py', 'episodes.py', 'episode_metrics.py', 'document_eval.py',
+                    'inference_context.py', 'record_contracts.py', 'evaluation_reference.py', 'document_quality.py')
     source_hashes = {name: sha(Path(__file__).with_name(name)) for name in source_names}
     # Keep the exact implementation reviewable alongside the frozen predictions.
     snapshot = root / 'pipeline-source'
@@ -40,7 +40,7 @@ def run(model, episodes, output, device='cuda', policy='configs/extraction-quali
     if threshold is not None or record_threshold is not None:
         native.use_native_policy = True
     predictions = {}
-    with torch.inference_mode(), (root/'predictions.jsonl').open('w') as stream:
+    with evaluation_precision(), (root/'predictions.jsonl').open('w') as stream:
         for i, e in enumerate(rows):
             try:
                 raw = infer(native, e)
@@ -66,7 +66,7 @@ def run(model, episodes, output, device='cuda', policy='configs/extraction-quali
                   normalization_artifacts={str(path): sha(path) for path in
                       (Path('flake.lock'), Path('flake.nix'), Path('uv.lock'), Path('configs/libpostal-data.sha256'))
                       if path.is_file()},
-                  pipeline_sources=source_hashes)
+                  pipeline_sources=source_hashes, evaluation_precision=EVALUATION_PRECISION)
     (root/'metrics.json').write_text(dumps(report, indent=2))
     print(dumps({'selection_metric': report['selection_metric'], 'passed': report['passed']}), flush=True)
     return report

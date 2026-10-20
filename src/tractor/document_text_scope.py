@@ -9,6 +9,38 @@ from .episodes import Episode, native_episode
 from .jsonio import dumps, loads
 
 
+def position_blocks(text):
+    """Recognize numbered item blocks with field lists, not numbered prose.
+
+    This is a corpus scope check only. It never groups runtime extractions or
+    consults model predictions/answers. Single-object forms remain supported.
+    """
+    heading = re.compile(r'^\s*(?:#{1,6}\s*)?(?:\*\*)?(?:position|pos\.?|item|line(?:\s+item)?|artikel)'
+                         r'\s*(?:no\.?\s*|nr\.?\s*|#\s*)?\d+\b[^\n]*$', re.I)
+    field = re.compile(r'^\s*(?:[-*]\s+)?(?:\*\*)?[^:;.!?\n]{1,60}:\s*\S')
+    item_label = re.compile(r'^\s*(?:[-*]\s+|\d+[.)]\s*)?(?:artikel|ware|warenbeschreibung|produkt|'
+                            r'item|goods|product|description of goods)\s*:\s*\S', re.I)
+    blocks, labelled, current = [], [], None
+    inline_positions = 0
+    for line in text.splitlines():
+        if heading.fullmatch(line):
+            inline_positions += bool(re.search(r'\d+\s*:\s*\S', line))
+            current = []
+            blocks.append(current)
+        elif current is not None:
+            current.append(line)
+    current = None
+    for line in text.splitlines():
+        if item_label.match(line):
+            current = []
+            labelled.append(current)
+        elif current is not None:
+            current.append(line)
+    return (inline_positions >= 2
+            or sum(sum(bool(field.match(line)) for line in block) >= 2 for block in blocks) >= 2
+            or sum(sum(bool(field.match(line)) for line in block) >= 1 for block in labelled) >= 2)
+
+
 def table_record_reason(row):
     if not any(t['kind'] == 'records' for t in row.get('tasks', [])):
         return None
@@ -21,6 +53,8 @@ def table_record_reason(row):
         return 'delimited_table_with_record_task'
     if sum(len(re.split(r' {2,}', line.strip())) >= 3 for line in lines) >= 2:
         return 'aligned_columns_with_record_task'
+    if position_blocks(row.get('text', '')):
+        return 'labelled_position_blocks_with_record_task'
     return None
 
 
@@ -34,8 +68,12 @@ def restrict(row):
               'task': ident, 'reason': reason} for ident in removed]
     if not tasks:
         return None, audit
-    return dict(row, tasks=tasks, gold={t['id']: row['gold'][t['id']] for t in tasks},
-                artifact='single_object'), audit
+    result = dict(row, tasks=tasks, gold={t['id']: row['gold'][t['id']] for t in tasks},
+                  artifact='single_object')
+    if 'processing' in row:
+        result['processing'] = {t['id']: row['processing'][t['id']] for t in tasks
+                                if t['id'] in row['processing']}
+    return result, audit
 
 
 def prepare(source, output, roles=False):

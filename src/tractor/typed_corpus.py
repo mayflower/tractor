@@ -123,7 +123,8 @@ def build(source, output):
     if manifest.get('training_ready') is False:
         raise ValueError('Unqualified source cannot become a typed training corpus')
     code = {name: sha(Path(__file__).with_name(name)) for name in
-            ('typed_corpus.py', 'typed_corpus_policy.py', 'corpus_annotations.py', 'pipeline_contract_data.py')}
+            ('typed_corpus.py', 'typed_corpus_policy.py', 'record_contracts.py',
+             'corpus_annotations.py', 'pipeline_contract_data.py')}
     # Verify frozen inputs, including heldout files, before any output writes.
     for name, digest in manifest['files'].items():
         if sha(source / name) != digest:

@@ -5,7 +5,7 @@ values into fixed fields, repeated records or typed entity lists. Classification
 routing, sentiment, urgency, QA, relation triplets, summaries and normalization
 onto code systems are excluded. Grouping of explicitly described text records is allowed; table parsing and layout reconstruction are excluded. Training tools
 support more task types internally; that does not make those types product goals.
-The public HTTP contract remains `Text` and `Quantity` extraction.
+Training uses the same typed `POST /v1/extract` contract as inference.
 
 ## Prepare realistic document data
 
@@ -87,6 +87,25 @@ A scope-filtered historical pool is not automatically realistic or balanced.
 Retired deterministic coverage/classification configs must not be used to fill
 new quotas. In particular, retained schematic synthetic rows need separate
 exclusion from the realistic-document corpus.
+
+For a targeted repair of repeated text records, `tractor_decoder_only: true`
+freezes every parameter except `record_decoder` before optimizer creation. Set
+`tractor_required_groups` to `["record_decoder"]` and disable LoRA. The encoder
+runs without dropout; native record proposal supervision remains in training
+mode. Training evidence verifies every frozen parameter, and the saved model
+must still pass a full production-pipeline Dev comparison.
+Use `eval_strategy: "epoch"` when the evaluation interval coincides with the last
+partial gradient accumulation of an epoch: the pinned trainer does not execute
+step-based evaluation on that trailing update. A run without any production
+pipeline checkpoint evaluation is rejected.
+
+An optional `tractor_regression_baseline` names the previous full-pipeline Dev
+metrics file. Dev bytes, quality policy, thresholds and precision must match.
+Checkpoint eligibility then limits supported field F1 drops to two percentage
+points and domain/output F1 drops to half a percentage point. Supported rejection
+scores and the total number of correct rejections may not decrease. These are
+repair regression tolerances, not release thresholds or statistical confidence
+claims. A run with no eligible checkpoint leaves the prior candidate active.
 
 Use [the extraction policy](../../../configs/extraction-quality.json) for domain
 and output-form gates: field F1 must exceed 70% in each declared group, with
@@ -242,6 +261,12 @@ tasks. Header fields remain eligible. Removed tasks are recorded in a sidecar au
 A structural filter is conservative, not a semantic proof; ambiguous text records
 require review. Generation and independent review must enforce the same boundary.
 
+Numbered or unnumbered goods/quantity/code position blocks and inline position
+lists are excluded too,
+even without pipes, tabs or aligned columns. Apply the same scope filter to every
+split, preserve eligible header tasks, and reevaluate both baseline and candidate
+on the resulting Dev version before attributing a gain to training.
+
 ## Local field roles and bounded replay
 
 Before building a mixture from public document windows, run
@@ -334,18 +359,68 @@ text, source groups and splits and changes no requests or annotations.
 
 ## Train with final-value contracts and diagnose individual fields
 
+Textual reference annotations must not impose requirements absent from the
+request. A model designation with a trim suffix, or without a year that was
+never required, can be a valid answer. Offline `value_equivalences` groups record
+reviewed, source-supported alternatives for one field value. Any member, or
+multiple members of the same group, satisfies that value. This affects evaluation
+only; the API still returns its own normalized output. Numeric values, identifiers
+and dates keep their type-specific comparison rules.
+
+Use `reference_complete: false` when the reference cannot establish all acceptable
+answers. The broad SWDE auto/camera model requests have this limitation by default:
+their source cell annotations do not define permissible model-name boundaries or
+an exhaustive set of page-level model mentions. A nonempty unreviewed alternative
+is unresolved, not a demonstrated extraction error or a success. An empty answer
+still misses known present evidence. Reports expose unresolved/reference counts;
+incomplete-reference scores are conditional diagnostics and cannot select a
+checkpoint or establish release quality. Fully unresolved requests are excluded
+from the exact-request denominator. Do not compare the resulting diagnostic
+fractions as though their reviewed subsets were identical.
+
+Approve alternatives against the actual source and request, retaining review
+provenance. Do not automatically accept substrings, similarly spelled names or
+year-stripped values. Review decisions made after inspecting Dev predictions
+correct the benchmark; they are not independent held-out evidence. Re-score all
+compared checkpoints using the same versioned annotations and evaluation code.
+
 Native training must compile the same schemas as the public API: anonymous field
 IDs, record name and anchor, cardinalities, descriptions (including quantity
 instructions), and one request per task. `tractor.api_training` converts frozen
 typed episodes using `typed_requests_for` and `model.native_example`, then checks
-native span offsets and record counts with the training collator. Reusing older
+native span offsets, record counts and every packed record's field bindings with
+the training collator. Reusing older
 task-named native files trains a different schema distribution. The converter
 records token-limit exclusions and contradictory component supervision; it never
 turns those into negative targets. All Dev episodes remain in pipeline scoring.
 
+Declared source cardinalities survive typed migration. An implicit legacy list
+default cannot replace an independently specified scalar; contradictory explicit
+scalar contracts fail validation. Correcting an old request contract requires a
+versioned corpus and reevaluation of both checkpoints on identical corrected
+requests. That change alone is not evidence of a training improvement.
+
+Scalar cardinality limits normalized values, not source mentions. Native decoding
+therefore retains evidence lists so equivalent mentions can collapse and conflicting
+values can produce an ambiguity issue. For scalar record fields, each selected
+occurrence belongs to its highest-scoring record. Identical titles printed
+separately beside two people remain separate occurrences. A single mention shared
+across several people is not resolved by this mechanism; quarantine such training
+targets instead of silently changing their meaning.
+
 Checkpoint selection can declare `tractor_dev_thresholds` with `threshold` and
 `record_threshold`. Use the same provisional settings for the starting checkpoint
 and the training callback. This does not calibrate or modify a released bundle.
+Both evaluators explicitly use the same FP32 matrix-multiplication settings and
+restore the trainer's settings after evaluation. Reload and evaluate the saved
+checkpoint before accepting a candidate.
+
+`tractor_record_loss_weight` optionally sets the native GLiNER record objective's
+positive, finite weight. It is persisted in the checkpoint configuration and
+training evidence; inference thresholds are unchanged. Record assignment and
+span losses have different reductions, so their scalar magnitudes alone do not
+measure learning quality. Validate a changed weight on final record fields and
+the other domains, retaining the same frozen Dev and baseline.
 
 Episodes can declare `processing` and `locale`. A processed present answer must
 carry an independently annotated `final_values` or `final_alternatives`, alongside
@@ -377,12 +452,34 @@ requests. Use `tractor.document_eval` for model scores and
 `tractor.pipeline_attribution` for separate offline probes using annotated evidence;
 probe results are diagnostic and never enter checkpoint predictions.
 
-`tractor.pipeline_contract_data` adapts approved source contracts. Movie titles
-include the printed parenthesized year when part of the displayed title; director
-lists use explicit newline separation. UK registered-office roles are explicit.
+`tractor.pipeline_contract_data` adapts approved source contracts. A general movie
+title request does not require a release year. Source-supported title forms with
+and without a year may be equivalent when they identify one unambiguous film;
+different dated films are not collapsed. Director lists use explicit newline
+separation. UK registered-office roles are explicit.
 Authored German numeric dates declare DMY; English numeric dates without an
 explicit order stay unresolved. Original text and group/split membership are retained.
 A separate, narrower annotation converter never calls production normalizers.
+
+`tractor.reference_repairs` applies source-checked offline adjudications. Accepted
+subtitles, honorifics, initial spacing and alternative printed designations belong
+in explicit equivalence groups, not fuzzy string matching. Incorrect field-label
+boundaries and merged people require corrected targets and native training spans.
+Whole-address targets represent one address, not a list of its lines. Production
+normalization can join adjacent selected address fragments when libpostal identifies
+one address; it does not add unselected text or merge distinct address components.
+Source-reviewed answers that convey the requested information must also count as
+correct in the offline annotations. `apply_accepted_answers` records explicit
+complete `final_alternatives`, bound to the reviewed source and field contract,
+while preserving the original references, evidence spans and issue expectations.
+Complete answer sets prevent accidental weakening: accepting `["Asian", "Asian,
+Sushi"]` alongside `["Asian, Sushi"]` does not accept `["Asian"]` alone.
+Keep these decisions outside inference and verify that the API requests and native
+supervision are unchanged when reusing saved pipeline outputs.
+
+Every compared checkpoint must use the same repaired references. Changed requests
+or processing paths require fresh pipeline inference. Adjudicated Dev results
+are not independent held-out evidence.
 
 `tractor.pipeline_corpus` builds a bounded repair pilot: distinct text records,
 metadata, broad retention, and up to three independent windows per charity source.
@@ -412,3 +509,25 @@ to single-object fields. Deployment policies may declare an optional
 `record_threshold` in `native-policy.json`; omitting it preserves the global
 threshold. Any deployment thresholds require independent calibration for the
 specified model hash, not copying a promising Dev setting.
+
+## Controlled assignment-loss experiments
+
+For decoder-only repairs, `tractor_assignment_positive_weight` enables a
+training-only adapter for explicitly anchored records. Use `1.0` for the unchanged
+native objective and diagnostics, then compare a separately trained candidate
+with a bounded positive weight such as `3.0`. The adapter adds the positive BCE
+term for matched list fields; scalar anchors, negative examples, object loss and
+record matching retain the native objective. It never changes API inference or
+normalization. Unsupported non-natural record groups fail explicitly.
+
+Keep initial weights, data, seed, training steps, inference thresholds and Dev
+identical across experiments. The training evidence records candidate-pair counts,
+unweighted BCE gradient masses and the chosen weight. These are diagnostics;
+only the full pipeline and unchanged regression guards determine acceptance.
+Verify saved-checkpoint predictions against callback predictions.
+
+Replay must include explicitly present ambiguous or invalid values as extraction
+targets, so that normalizers can return their defined issues. A missing value is
+a different target. Independently annotate final outcomes and mix these cases
+with representative general extraction data. Synthetic documents must not exceed
+three scheduled exposures per epoch. Never copy Dev failures into training.

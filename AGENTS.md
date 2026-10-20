@@ -26,6 +26,14 @@ The authoritative scope and implementation requirements are in reqs.md.
   request boundaries. Preserved legacy task-named native files are not API-aligned
   training. Match provisional entity/record thresholds across baseline and Dev
   checkpoint selection; never silently compare different inference policies.
+  Match evaluation precision too: a trainer's TF32 defaults must not silently
+  differ from saved-checkpoint evaluation. Validate packed record field bindings,
+  not only span unions and record counts. Record-loss weights are explicit,
+  persisted training parameters; final pipeline results determine their value.
+  Decoder-only repairs freeze all other weights before optimizer creation and
+  verify them afterwards. Preserve native training proposal injection. Apply
+  declared per-field and rejection regression guards before accepting a checkpoint;
+  a better aggregate alone is insufficient.
   Evaluate both final data and expected field/record issue codes. Correct rejection
   of invalid or ambiguous evidence is a valid outcome; not_found is not a substitute
   for recognizing invalid present evidence. Expected issues are offline answer
@@ -44,11 +52,35 @@ Do not forget or reverse this contract when expanding domains or diagnosing erro
   benchmark-only repairs or use gold labels to guide parsing, field recovery,
   grouping, normalization or candidate selection. Define expected final outputs
   independently; keep original spans available as evidence, separately scored.
+- Do not turn one source annotation's spelling/boundary into an unstated output
+  requirement. A broadly requested product model may include its trim or omit a
+  year; reviewed acceptable variants and their simultaneous occurrence must not
+  fail solely on string equality. Store adjudicated equivalences in offline
+  annotations, never in inference. Do not infer equivalence from substring or
+  fuzzy similarity. Incomplete references leave unreviewed alternative answers
+  unscored, not failed or successful; empty output for a known present value
+  remains an omission. Report reference coverage and exclude incomplete-reference
+  aggregates from selection/release evidence. Re-score every compared checkpoint
+  under the same evaluation contract before comparing or continuing training.
+  Source-reviewed semantically correct outputs must be accepted in the offline
+  annotations, not merely described as correct in an audit. Use explicit complete
+  final_alternatives when correctness depends on the whole answer set; accepting
+  a full answer plus a repeated component does not approve that component alone.
+  Preserve original valid answers and issue checks, bind reviews to source and
+  field contracts, and verify changed outcomes against all compared checkpoints.
+- Corpus adapters must not add an unrequested mandatory year, subtitle, honorific
+  or label boundary. Repair defective references and native span supervision at
+  the source; do not teach the model to return field labels as identifiers or
+  multiple people as one person. Reviewed source-supported variants remain
+  offline annotations. A full address is one value, not a list of its lines;
+  adjacent selected fragments may be joined using the production address parser,
+  with distinct addresses and record boundaries preserved. Re-run affected
+  requests whenever the request or production processing changes.
 - Extraction identifies relevant explicitly stated source values and their roles.
   Deterministic code parses and normalizes them where the supported contract allows
   it (already quantities/units; address components and other domains need explicit
   implementations). Missing normalizers are pipeline gaps, not automatically model
-  failures or optional additions outside the product objective.
+failures or optional additions outside the product objective.
 - Do not demand that the model perform a reliably programmable parsing step solely
   to satisfy a raw-span benchmark. Training targets must support the full pipeline.
   Conversely, do not claim an unimplemented parser or normalizer already exists.
@@ -59,6 +91,15 @@ Do not forget or reverse this contract when expanding domains or diagnosing erro
   distinct business values. Score final results according to their declared scalar,
   unique-list or record contract; do not require every duplicate mention unless the
   user explicitly requests occurrence extraction. Preserve distinct records.
+  Preserve independently declared task cardinalities through typed migration;
+  an implicit legacy list default must not overwrite a declared scalar. Conflicting
+  explicit scalar declarations fail. Scalar means one normalized value, not one
+  source occurrence: retain equivalent mentions and detect conflicting values.
+  For scalar fields in repeated records, native decoding assigns each selected
+  occurrence exclusively to its scored record. Separate occurrences of the same
+  title remain available to separate people. This does not implement resolution
+  of a single shared mention across multiple records. Keep such training evidence
+  quarantined pending an explicit supported contract; never silently relabel it.
 - Deterministic parsing of explicitly stated values does NOT authorize table/OCR
   layout reconstruction, classification, QA, generic relation extraction or reasoning.
 - Require >70% for each declared domain/output form on pipeline results; report
@@ -72,6 +113,11 @@ helper tasks. No inference of unstated facts or reasoning criteria.
 Only explicitly described records in readable text are in scope. Table parsing,
 column/row reconstruction and layout-dependent invoice positions are excluded
 from training and release gates. Generic relation triplets are also excluded.
+Repeated numbered or unnumbered goods/quantity/code position blocks and inline
+position lists are also excluded; absence
+of table delimiters does not make them prose. Apply corpus scope corrections to
+all splits before comparing both baseline and candidate on identical retained
+tasks. Keep supported header tasks and never remove cases based on predictions.
 Synthetic training inputs must be realistic authored document texts, not fixed
 field-list templates with substituted values. Deterministic facts may establish
 gold internally; independent realism/semantic review must precede scaling.

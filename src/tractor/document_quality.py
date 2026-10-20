@@ -37,7 +37,7 @@ def evaluate(episodes, predictions, policy, *, score_fn=score_episode, task_scor
             for origin in policy['required_origins']:
                 key = ':'.join((axis, name, origin))
                 score = scores.get(key, {})
-                add(key, 'field_f1', score.get('field_f1'))
+                add(key, 'field_f1', score.get('field_f1') if score.get('reference_complete', True) else None)
                 if axis == 'shape' and name == 'repeated_records':
                     records = scores.get(f'task:records:{origin}', {}).get('counts', {})
                     gold, predicted = records.get('gold_records', 0), records.get('predicted_records', 0)

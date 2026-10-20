@@ -75,11 +75,18 @@ def _compile(fields_json, anchor, thresholds_json, _revision):
     if anchor:
         builder = schema.structure("record", mode="natural", anchor=ids[anchor])
         for name, field in request.fields.items():
+            # Cardinality concerns normalized VALUES, not evidence occurrences.
+            # Retain all evidence so duplicate mentions can normalize together
+            # and competing values remain detectable. Native exclusive ownership
+            # assigns a scalar field's occurrence to its strongest record, rather
+            # than returning that same occurrence for several different anchors.
+            scalar = field.cardinality in {'required_one', 'optional_one'}
             builder.field(
                 ids[name],
                 dtype="list",
                 description=description(field),
                 cardinality="required_one" if name == anchor else "zero_or_more",
+                exclusive=scalar,
                 threshold=float(thresholds["anchor"] if name == anchor else thresholds.get(field.type, thresholds["text"])),
             )
         builder.build()

@@ -9,6 +9,7 @@ def diagnostics(episodes, predictions, minimum_support=30, threshold=.7):
     fields = defaultdict(Counter)
     records = defaultdict(Counter)
     examples = defaultdict(list)
+    unresolved_examples = defaultdict(list)
     for e in episodes:
         item = predictions[e.id]
         response = {} if item.get('error') else item.get('prediction', {})
@@ -37,6 +38,12 @@ def diagnostics(episodes, predictions, minimum_support=30, threshold=.7):
                                                  matches.get(index), (status, alternatives))
                     found, gold, exact = observed['found'], observed['gold'], observed['exact']
                     c.update(observed['counts'])
+                    if observed['unresolved_reference']:
+                        if len(unresolved_examples[field_key]) < 3:
+                            unresolved_examples[field_key].append({
+                                'id': e.id, 'record': index, 'reference': sorted(gold),
+                                'actual': sorted(found), 'diagnosis': 'incomplete_reference_requires_review'})
+                        continue
                     if not exact:
                         kind = ('issue_mismatch' if observed['values_correct'] else
                                 'missing_value' if not found else 'extra_value' if not gold else 'wrong_or_incomplete_value')
@@ -56,9 +63,11 @@ def diagnostics(episodes, predictions, minimum_support=30, threshold=.7):
     for key, result in scores.items():
         support = result['counts'].get('answerable', 0)
         value = result['field_f1']
-        checks[key] = {'score': value, 'positive_support': support,
+        incomplete = result['counts'].get('incomplete_reference_fields', 0) > 0
+        checks[key] = {'score': None if incomplete else value, 'positive_support': support,
+                       'reference_complete': not incomplete,
                        'status': 'insufficient_evidence' if support < minimum_support or value is None or result['counts'].get('unscored_fields', 0) > 0 else
-                       'pass' if value > threshold else 'fail'}
+                       'insufficient_evidence' if incomplete else 'pass' if value > threshold else 'fail'}
     rejection_checks = {}
     for key, result in scores.items():
         support = result['counts'].get('expected_rejections', 0)
@@ -67,6 +76,7 @@ def diagnostics(episodes, predictions, minimum_support=30, threshold=.7):
             rejection_checks[key] = {'score': value, 'support': support,
                 'status': 'insufficient_evidence' if support < minimum_support else 'pass' if value > threshold else 'fail'}
     return {'rejection_checks': rejection_checks, 'field_scores': scores, 'field_checks': checks, 'field_error_examples': dict(examples),
+            'unresolved_reference_examples': dict(unresolved_examples),
             'record_diagnostics': {k: dict(v) for k, v in records.items()},
             'field_support_policy': {'minimum_positive_support': minimum_support,
                                      'threshold_exclusive': threshold,

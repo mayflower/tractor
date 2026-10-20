@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .address_normalization import address_parts
+from .address_normalization import address_parts, joined_address_spans
 from .episodes import Task
 from .field_contracts import Processing
 from .field_normalization import Unresolved, normalize_value
@@ -119,7 +119,9 @@ def resolve_document(request, raw):
                             }
                         )
                 else:
-                    for span in spans[key]:
+                    selected = (joined_address_spans(request.text, spans[key], rule.country)
+                                if rule and rule.kind == "address" else spans[key])
+                    for span in selected:
                         if rule and rule.include_adjacent_year and not re.search(r'\([0-9]{4}\)$', span['text'].rstrip()):
                             # Explicit displayed-title contract: extend only this
                             # validated evidence span into an attached year. Never

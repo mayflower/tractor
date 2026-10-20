@@ -13,7 +13,7 @@ from pathlib import Path
 from .data import read_rows
 from .jsonio import dumps
 from .model import load_native
-from .training_adapter import configure_processor
+from .training_adapter import configure_decoder_only, configure_processor, configure_record_loss
 
 
 def parameter_hash(parameter):
@@ -44,6 +44,18 @@ def _train(model, data, config_path, device):
     generalist_dev = config_data.pop("tractor_generalist_dev", None)
     extraction_dev = config_data.pop("tractor_extraction_dev", None)
     dev_thresholds = config_data.pop("tractor_dev_thresholds", {})
+    record_loss_weight = config_data.pop("tractor_record_loss_weight", None)
+    decoder_only = config_data.pop("tractor_decoder_only", False)
+    regression_baseline = config_data.pop("tractor_regression_baseline", None)
+    assignment_positive_weight = config_data.pop("tractor_assignment_positive_weight", None)
+    if not isinstance(decoder_only, bool):
+        raise ValueError('tractor_decoder_only must be boolean')
+    if decoder_only and (evidence_groups != ['record_decoder'] or config_data.get('use_lora')):
+        raise ValueError('Decoder-only training requires record_decoder evidence and no LoRA')
+    if assignment_positive_weight is not None and not decoder_only:
+        raise ValueError('Assignment loss experiments require frozen encoder/span weights')
+    if regression_baseline and not extraction_dev:
+        raise ValueError('Regression guards require production pipeline Dev evaluation')
     if dev_thresholds and not extraction_dev:
         raise ValueError('Dev thresholds require production pipeline evaluation')
     if generalist_dev and extraction_dev:
@@ -74,6 +86,11 @@ def _train(model, data, config_path, device):
         )
     native_model = load_native(model, device)
     configure_processor(native_model.processor)
+    if record_loss_weight is not None:
+        configure_record_loss(native_model, record_loss_weight)
+    decoder_handle = configure_decoder_only(native_model) if decoder_only else None
+    frozen_hashes = {name: parameter_hash(param) for name, param in native_model.named_parameters()
+                     if decoder_only and not param.requires_grad}
     # Watch representative parameters from each trainable subsystem.
     selected = {}
     for name, param in native_model.named_parameters():
@@ -86,7 +103,7 @@ def _train(model, data, config_path, device):
                     parameter_hash(param),
                 )
     gradients = {key: False for key in selected}
-    handles = []
+    handles = [decoder_handle] if decoder_handle else []
     workload = {"training_samples": 0, "training_tokens": 0, "padded_tokens": 0}
 
     def count_work(module, inputs):
@@ -151,7 +168,7 @@ def _train(model, data, config_path, device):
         if config.metric_for_best != 'eval_pipeline_selection_score' or not config.greater_is_better or config.eval_strategy == 'no':
             raise ValueError('Extraction checkpoint selection requires the declared domain Dev selection score, maximized')
         trainer.compute_metrics = extraction_callback(extraction_dev, quality_policy, output, lambda: trainer.global_step,
-                                                      **dev_thresholds)
+                                                      regression_baseline=regression_baseline, **dev_thresholds)
     if generalist_dev:
         from .full_training import dev_callback
 
@@ -165,11 +182,19 @@ def _train(model, data, config_path, device):
     started = time.monotonic()
     if device == "cuda":
         torch.cuda.reset_peak_memory_stats()
+    assignment_loss = None
+    if assignment_positive_weight is not None:
+        from .assignment_training import AssignmentLoss
+
+        assignment_loss = AssignmentLoss(assignment_positive_weight)
+        handles.append(assignment_loss)
     try:
         result = trainer.train(train_data=native_train, eval_data=native_dev)
     finally:
         for handle in handles:
             handle.remove()
+    if extraction_dev and not result.get('eval_metrics_history'):
+        raise RuntimeError('No production pipeline checkpoint evaluation ran; use an evaluation schedule that includes epoch boundaries')
     # Upstream uses infinity as the sentinel when evaluation is disabled.
     if result.get("best_metric") is not None and not math.isfinite(result["best_metric"]):
         if config.eval_strategy != "no":
@@ -198,6 +223,13 @@ def _train(model, data, config_path, device):
         "dtype": str(next(trainer.model.parameters()).dtype),
         "encoder_linear_activation_dtypes": sorted(activation_dtypes),
         "observed_loss_components": loss_components,
+        "record_loss_weight": native_model.boundary_settings.record_loss_weight,
+        "assignment_loss": assignment_loss.evidence() if assignment_loss else None,
+        "decoder_only": decoder_only,
+        "regression_baseline": regression_baseline,
+        "frozen_parameters_verified": len(frozen_hashes),
+        "frozen_parameter_changes": [name for name, param in native_model.named_parameters()
+                                     if name in frozen_hashes and frozen_hashes[name] != parameter_hash(param)],
         "config": config_data,
         "generalist_dev": generalist_dev,
         "extraction_dev": extraction_dev,
@@ -212,6 +244,8 @@ def _train(model, data, config_path, device):
         "resume": "Weights-only restart; optimizer/scheduler/RNG resume unsupported by pinned trainer.",
     }
     Path(output, "training-evidence.json").write_text(dumps(report, indent=2))
+    if report['frozen_parameter_changes']:
+        raise RuntimeError('Frozen parameters changed during decoder-only training')
     for key in evidence_groups:
         if key not in changes or not changes[key]["changed"] or not changes[key]["nonzero_finite_gradient"]:
             raise RuntimeError(f"{key} learning not demonstrated")

@@ -179,7 +179,7 @@ def test_additional_units_independent_targets(source, target, expected):
 
 
 def test_bundle_accepts_only_compatible_additions():
-    policy = loads(Path("models/tractor/normalization.json").read_text())
+    policy = loads((Path(__file__).parent / "fixtures/normalization-policy.json").read_text())
     assert compatible_policy(policy)
     policy["aliases"]["cm"] = "m"
     assert not compatible_policy(policy)

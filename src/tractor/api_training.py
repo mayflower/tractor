@@ -72,7 +72,32 @@ def validate(request, native, extractor, collator):
         record_count = sum(any(fields.values()) for row in targets for fields in row.values())
         if batch.targets.record_targets is None or int(batch.targets.record_targets[2].sum()) != record_count:
             raise ValueError('Public native record target count changed')
+        validate_record_bindings(targets, batch)
     return tokens
+
+
+def validate_record_bindings(targets, batch):
+    """Check each packed record, not just the union of its field spans."""
+    def signature(fields):
+        return tuple(sorted((field, tuple(sorted(set(spans)))) for field, spans in fields.items()))
+
+    wanted = Counter(signature({field: [(s['start'], s['end']) for s in spans]
+                                for field, spans in fields.items()})
+                     for row in targets for fields in row.values() if any(fields.values()))
+    packed_spans, packed_mask, record_mask = batch.targets.record_targets[:3]
+    recovered = Counter()
+    for group, spec in enumerate(batch.record_specs[0].values()):
+        for record in range(record_mask.shape[2]):
+            if not record_mask[0, group, record]:
+                continue
+            fields = {}
+            for index, field in enumerate(spec.fields):
+                pairs = packed_spans[0, group, record, index][packed_mask[0, group, record, index]]
+                fields[field.name] = [(batch.start_mappings[0][int(start)],
+                                       batch.end_mappings[0][int(end)-1]) for start, end in pairs]
+            recovered[signature(fields)] += 1
+    if recovered != wanted:
+        raise ValueError('Public native training changed record field bindings')
 
 
 def build(source, dev, output, model):

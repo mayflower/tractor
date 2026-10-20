@@ -28,9 +28,10 @@ def load_key(path):
     raise ValueError('OPENAI_API_KEY missing')
 
 
-def review(record, root, env='~/.env', ledger='reports/training/teacher-budget.json'):
+def review(record, root, env='~/.env', ledger='reports/training/teacher-budget.json',
+           prompt_path='configs/document-critic.txt'):
     load_key(env)
-    prompt = Path('configs/document-critic.txt').read_text()
+    prompt = Path(prompt_path).read_text()
     episode = record['episode']
     gold = {task: {'complete': value['complete'], 'records': [
         {field: {'status': answer['status'], 'items': [{'text': span['text'],

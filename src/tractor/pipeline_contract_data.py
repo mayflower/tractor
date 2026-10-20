@@ -96,39 +96,14 @@ def adapt(episode):
                                     if value:
                                         span.update(start=original['start']+offset,
                                                     end=original['start']+offset+len(value), text=value)
+                                        for targets in [a['final_values'], *a['final_alternatives']]:
+                                            if targets is not None:
+                                                targets[:] = [value if v == original['text'] else v for v in targets]
                                         audit.append({'id': row['id'], 'task': task['id'], 'field': key,
                                                       'reason': 'source_label_boundary_repaired',
                                                       'before': original, 'after': dict(span)})
                                     break
         if row['source'] == 'swde' and row['source_group'].startswith('swde:movie:'):
-            if 'title' in task['fields']:
-                task['fields']['title'] = 'Complete displayed film title, including the release year in parentheses when it is printed as part of the title'
-                rules['title'] = {'kind': 'literal', 'include_adjacent_year': True}
-                # Source-boundary annotation repair, independent of predictions
-                # and the production resolver. Preserve an explicit before/after
-                # audit and align pre-existing literal final annotations as well.
-                for record in records:
-                    answer = record['title']
-                    replacements = {}
-                    for variant in [answer['items'], *answer['answer_alternatives']]:
-                        for span in variant:
-                            if re.search(r'\([0-9]{4}\)$', span['text'].rstrip()):
-                                continue
-                            following = row['text'][span['end']:]
-                            match = re.match(r'[ \t]*\(([0-9]{4})\)', following)
-                            if not match or int(match[1]) == 0:
-                                continue
-                            before = dict(span)
-                            span['end'] += match.end()
-                            span['text'] = row['text'][span['start']:span['end']]
-                            replacements[before['text']] = span['text']
-                            audit.append({'id': row['id'], 'task': task['id'], 'field': 'title',
-                                'reason': 'source_title_boundary_repaired', 'before': before, 'after': dict(span)})
-                    if replacements and not answer['final_annotation_missing']:
-                        variants = answer['answer_alternatives'] or [answer['items']]
-                        targets = [list(dict.fromkeys(s['text'] for s in spans)) for spans in variants]
-                        answer['final_values'] = targets[0] if len(targets) == 1 else None
-                        answer['final_alternatives'] = targets if len(targets) > 1 else []
             if 'director' in task['fields']:
                 task['fields']['director'] = 'All explicitly named film directors, one person per value'
                 rules['director'] = {'kind': 'list', 'separator': 'newline'}
@@ -190,4 +165,6 @@ def adapt(episode):
                 for record, targets in zip(records, annotated, strict=True):
                     record[key]['final_values'] = targets[0] if len(targets) == 1 else None
                     record[key]['final_alternatives'] = targets if len(targets) > 1 else []
+    from .reference_repairs import source_contracts
+    audit.extend(source_contracts(row))
     return Episode.model_validate(row), audit

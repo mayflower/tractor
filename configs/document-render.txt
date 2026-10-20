@@ -8,3 +8,5 @@ Do NOT explain that a field is absent, not printed, or omitted merely because it
 Facts on context. paths are ordinary document information, not extraction targets. Include them naturally with their markers, just like queried facts. Their presence allows a credible complete header even when the extraction query asks only a few fields. Do not label a column Printed service fee or Gedruckter Betrag: use normal document labels such as Fee or Betrag.
 
 Scope rule: reject any record task requiring table parsing, column alignment, or reconstruction of PDF/OCR rows. Records must be explicitly described in readable text. Tables may be incidental context for a header-only extraction task. Do not reject legitimate prose records or labelled single-object fields.
+
+Record scope also excludes numbered position blocks and unnumbered repeated goods/quantity/code field lists. A lack of table delimiters does not make those prose. Keep ordinary single-object forms and readable narrative records eligible.

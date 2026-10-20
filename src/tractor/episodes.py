@@ -29,11 +29,24 @@ class Answer(Strict):
     final_values: list[str] | None = None
     final_annotation_missing: bool = False
     final_alternatives: list[list[str]] = Field(default_factory=list)
+    # Offline adjudication, never input to extraction or normalization.
+    # Members describe acceptable renderings of one value for this request.
+    value_equivalences: list[list[str]] = Field(default_factory=list)
+    reference_complete: bool = True
     # Offline expected API behavior only; never sent to inference or native training.
     expected_issues: list[str] | None = Field(default=None, max_length=16)
 
     @model_validator(mode="after")
     def consistent(self):
+        if self.value_equivalences:
+            if self.status != 'present' or self.final_annotation_missing or self.expected_issues:
+                raise ValueError('Value equivalences require a positive extraction annotation')
+            seen = set()
+            for group in self.value_equivalences:
+                values = {' '.join(v.split()) for v in group}
+                if len(values) < 2 or '' in values or seen & values:
+                    raise ValueError('Equivalence groups must contain distinct, disjoint nonempty values')
+                seen.update(values)
         if self.expected_issues is not None:
             if (self.status not in {'present', 'absent'} or self.final_annotation_missing
                     or self.label is not None):
@@ -156,6 +169,19 @@ class Episode(Strict):
                 if set(record) != keys:
                     raise ValueError("Gold keys must match task fields, including unknowns")
                 for key, answer in record.items():
+                    if answer.value_equivalences:
+                        if key in rules and rules[key].kind not in {'literal', 'person', 'organization', 'place'}:
+                            raise ValueError('Value equivalences are only supported for textual names/values')
+                        source = ' '.join(self.text.split())
+                        references = {' '.join(v.split()) for values in (
+                            answer.final_alternatives or [answer.final_values or [
+                                s.text for s in (answer.items or [
+                                    item for alternative in answer.answer_alternatives for item in alternative])]]) for v in values}
+                        for group in answer.value_equivalences:
+                            if not references & {' '.join(v.split()) for v in group}:
+                                raise ValueError('Equivalence group must include a reference value')
+                            if any(' '.join(v.split()) not in source for v in group):
+                                raise ValueError('Every approved textual variant must occur in the source')
                     if key in rules and rules[key].kind != 'literal' and answer.status == 'present' and answer.final_values is None and not answer.final_alternatives and not answer.final_annotation_missing:
                         raise ValueError("Processed fields require independently annotated final values")
                     if answer.label is not None and answer.label not in task.labels:

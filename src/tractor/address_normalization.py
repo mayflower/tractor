@@ -2,6 +2,7 @@
 
 No geocoding, generated expansion or inferred country enters the output.
 """
+import re
 from collections import Counter
 from functools import lru_cache
 from threading import Lock
@@ -10,6 +11,43 @@ from .contact_normalization import clean_text, postal_code
 from .field_normalization import Unresolved
 
 _parse_lock = Lock()
+
+
+def joined_address_spans(text, spans, country=None):
+    """Join selected adjacent fragments only when libpostal sees one address.
+
+    No missing words, blank paragraphs, other records or inferred components
+    enter the joined evidence. Multiple street/locality components remain separate.
+    """
+    clusters = []
+    for span in sorted(spans, key=lambda s: (s['start'], s['end'])):
+        gap = text[clusters[-1][-1]['end']:span['start']] if clusters else None
+        if (gap is not None and span['start'] >= clusters[-1][-1]['end']
+                and re.fullmatch(r'[ \t,]*(?:\r?\n[ \t,]*)?', gap)):
+            clusters[-1].append(span)
+        else:
+            clusters.append([span])
+    result = []
+    for cluster in clusters:
+        if len(cluster) == 1:
+            result.extend(cluster)
+            continue
+        start, end = cluster[0]['start'], cluster[-1]['end']
+        value = text[start:end]
+        try:
+            counts = Counter(label for _, label in parsed_parts(value, country))
+        except Unresolved:
+            result.extend(cluster)
+            continue
+        unique = ('road', 'house_number', 'po_box', 'city', 'postcode', 'country')
+        # A partial name or street fragment alone is insufficient to join values.
+        if (all(counts[k] <= 1 for k in unique)
+                and (counts['road'] or counts['po_box'])
+                and (counts['city'] or counts['postcode'])):
+            result.append({'start': start, 'end': end, 'text': value})
+        else:
+            result.extend(cluster)
+    return result
 
 
 @lru_cache(maxsize=256)

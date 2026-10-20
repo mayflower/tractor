@@ -104,10 +104,11 @@ def test_movie_source_boundary_and_inference_contract_agree_without_gold_at_runt
         {'doc': {'complete': True, 'records': [{'title': {'status': 'present',
             'items': [{'start': 0, 'end': 6, 'text': 'Sphere'}]}}]}})
     revised, audit = adapt(e)
-    assert revised.processing['doc']['title'].include_adjacent_year
-    assert revised.gold['doc'].records[0]['title'].items[0].text == text
-    assert revised.gold['doc'].records[0]['title'].final_values == [text]
-    assert audit[0]['reason'] == 'source_title_boundary_repaired'
+    assert not revised.processing['doc']['title'].include_adjacent_year
+    assert revised.gold['doc'].records[0]['title'].items[0].text == 'Sphere'
+    assert revised.gold['doc'].records[0]['title'].final_values == ['Sphere']
+    assert revised.gold['doc'].records[0]['title'].value_equivalences == [['Sphere', text]]
+    assert not audit
     twice, audit = adapt(revised)
     assert not audit
     assert twice == revised
@@ -118,8 +119,12 @@ def test_title_boundary_repair_keeps_distinct_years_for_equal_bare_titles():
     e = envelope('swde', 'movie:imdb:two-years', 'train', 'metadata', 'en', text,
         [{'id': 'doc', 'kind': 'entities', 'description': 'Films', 'fields': {'title': 'Displayed titles'}}],
         {'doc': {'complete': True, 'records': [{'title': {'status': 'present',
-            'items': [{'start': 0, 'end': 6, 'text': 'Sphere'}, {'start': 15, 'end': 21, 'text': 'Sphere'}],
-            'final_values': ['Sphere']}}]}})
+            'items': [{'start': 0, 'end': 13, 'text': 'Sphere (1998)'},
+                      {'start': 15, 'end': 28, 'text': 'Sphere (2000)'}],
+            'final_values': ['Sphere (1998)', 'Sphere (2000)']}}]}})
     revised, audit = adapt(e)
-    assert len(audit) == 2
+    assert not audit
+    assert not revised.gold['doc'].records[0]['title'].value_equivalences
+    assert len(revised.gold['doc'].records[0]['title'].items) == 2
     assert revised.gold['doc'].records[0]['title'].final_values == ['Sphere (1998)', 'Sphere (2000)']
+    assert not episode_counts(revised, {'data': {'doc': {'title': ['Sphere']}}})['exact_fields']

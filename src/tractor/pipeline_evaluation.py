@@ -4,6 +4,10 @@ from collections import Counter
 from decimal import Decimal, InvalidOperation
 
 from .document_pipeline import DocumentRequest
+from .evaluation_reference import VERSION, comparison, incomplete_reference
+from .record_contracts import cardinality
+
+EVALUATION_CONTRACT = "production-extraction-pipeline-v5: repaired source contracts, reviewed text equivalence, incomplete references explicit; final typed values and issues"
 
 ADDRESS_COMPONENTS = {
     "address__post_town": "city",
@@ -52,9 +56,8 @@ def typed_requests_for(episode):
             kind = options.pop("kind", "literal")
             fields[key] = dict(type="text" if kind == "literal" else kind, description=description,
                                **options)
-            fields[key].setdefault("cardinality", rule.cardinality if rule else
-                                   {"zero_or_more": "unique_list"}.get(
-                                       task.cardinalities.get(key), task.cardinalities.get(key, "unique_list")))
+            fields[key]['cardinality'] = cardinality(task.cardinalities.get(key),
+                                                    rule.cardinality if rule else None)
         requests[task.id] = ExtractRequest(text=episode.text, fields=fields, locale=episode.locale,
                                           many=task.kind == "records", anchor=task.anchor)
     return requests
@@ -137,10 +140,12 @@ def field_observation(episode, task, record, key, actual, response, predicted_in
     """One final API outcome comparator shared by gates, diagnostics and attribution."""
     status, alternatives = target if target is not None else expected(episode, task)[record][key]
     answer = episode.gold[task.id].records[record][key]
+    open_reference = incomplete_reference(episode, task, key, answer)
     rule = request_for(episode).processing.get(task.id, {}).get(key)
     kind = rule.kind if rule else None
     def canonical(v):
-        return field_value_key(v, kind)
+        return comparison(v, answer, open_reference=open_reference,
+                          key=lambda value: field_value_key(value, kind))
     found = {canonical(v) for v in actual.get(key, [])}
     choices = [{canonical(v) for v in values} for values in alternatives]
     gold = min(choices, key=lambda values: (len(values ^ found), -len(values & found)))
@@ -153,10 +158,20 @@ def field_observation(episode, task, record, key, actual, response, predicted_in
     known = status not in {'unknown_annotation', 'ambiguous'}
     issues_correct = codes == expected_codes
     values_correct = found == gold
+    # A non-exhaustive reference cannot prove an additional/different answer
+    # wrong. Empty output is still a proven omission of present evidence.
+    unresolved = known and open_reference and bool(found) and not values_correct
+    known &= not unresolved
     exact = known and values_correct and issues_correct
     rejection = known and status == 'present' and bool(expected_codes) and not any(choices)
     positive = status == 'present' and not rejection
     counts = Counter()
+    if open_reference:
+        counts['incomplete_reference_fields'] = 1
+    if answer.value_equivalences:
+        counts['reviewed_equivalence_fields'] = 1
+    if unresolved:
+        counts['unresolved_reference_fields'] = 1
     if not known:
         counts['unscored_fields'] = 1
     else:
@@ -171,6 +186,7 @@ def field_observation(episode, task, record, key, actual, response, predicted_in
             rejected_with_value=int(rejection and bool(found)))
     return dict(counts=counts, known=known, exact=exact, values_correct=values_correct,
                 issues_correct=issues_correct, rejection=rejection, found=found, gold=gold,
+                unresolved_reference=unresolved,
                 expected_issues=expected_codes, actual_issues=codes)
 
 
@@ -178,10 +194,6 @@ def task_counts(episode, task, response, *, with_matches=False):
     from scipy.optimize import linear_sum_assignment
 
     target = expected(episode, task)
-    rules = request_for(episode).processing.get(task.id, {})
-    def key_for(value, field):
-        rule = rules.get(field)
-        return field_value_key(value, rule.kind if rule else None)
     value = response.get("data", {}).get(task.id, {} if task.kind == "entities" else [])
     predicted = [value] if task.kind == "entities" else value
 
@@ -198,8 +210,8 @@ def task_counts(episode, task, response, *, with_matches=False):
         for j, actual in enumerate(predicted):
             c = pair(i, actual, j)
             cost = c["fp"] + c["fn"] + c["issue_mismatches"]
-            if task.anchor and {key_for(v, task.anchor) for v in actual.get(task.anchor, [])} not in [
-                {key_for(v, task.anchor) for v in alternative} for alternative in row[task.anchor][1]]:
+            if task.anchor and not field_observation(
+                    episode, task, i, task.anchor, actual, response, j, row[task.anchor])['values_correct']:
                 cost += 1000000
             line.append(cost)
         costs.append(line)
@@ -252,7 +264,10 @@ def episode_counts(episode, response, error=None):
         and counts["gold_records"] == counts["predicted_records"]
         and not counts["issue_mismatches"]
         and not structural_issue_errors(episode, response)
+        and not counts["unscored_fields"]
     )
+    counts['scored_requests'] = int(not counts['unscored_fields'])
+    counts['unscored_requests'] = int(bool(counts['unscored_fields']))
     return counts
 
 
@@ -288,10 +303,9 @@ def evaluate_pipeline(episodes, predictions, policy):
     report['field_gates_passed'] = bool(report['field_checks']) and all(v['status'] == 'pass' for v in report['field_checks'].values())
     report['rejection_gates_passed'] = all(v['status'] == 'pass' for v in report['rejection_checks'].values())
     report['passed'] = report['passed'] and report['field_gates_passed'] and report['rejection_gates_passed']
-    report["evaluation_contract"] = (
-        "production-extraction-pipeline-v3: final typed values, exact field/record issue sets and distinct records; evidence retained separately"
-    )
+    report["evaluation_contract"] = EVALUATION_CONTRACT
+    report['reference_policy'] = VERSION
     report["qualification"] = (
-        "Full production document pipeline. Explicit per-field contracts, independent final annotations, source evidence preserved. Legacy Kleister GB address adapter retained. Fields without processing remain literal unique values. Missing real evidence blocks release. No latency measurement."
+        "Full production pipeline. Reviewed textual equivalents are offline annotations only. Incomplete references cannot establish wrong alternative values; unresolved cases are unscored, not successful. Scores containing incomplete references are conditional diagnostics, not selection or release evidence. Missing real evidence blocks release. No latency measurement."
     )
     return report

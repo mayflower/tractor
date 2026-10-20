@@ -87,7 +87,7 @@
       "value_policy": "verbatim"
     },
     "weight": {
-      "description": "Printed row weight",
+      "description": "Weight explicitly stated for these goods, including its unit",
       "examples": [
         "240 kg",
         "180 kg"
@@ -186,7 +186,7 @@
                 "string",
                 "null"
               ],
-              "description": "Printed row weight"
+              "description": "Weight explicitly stated for these goods, including its unit"
             },
             "customs_code": {
               "type": [
