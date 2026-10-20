@@ -47,7 +47,7 @@ A description saying "date" does not change a field declared as `text`.
 | `email` | none | Validate syntax and normalize domain; no DNS lookup |
 | `postcode` | required `country` | Validate country-specific format; retain leading zeros |
 | `address` | optional `country`; components require `country`, `component`, `group` | Full address formatting; international component parsing with libpostal |
-| `identifier` | `remove_spaces`, `uppercase`; optional `format`: `isbn`, `ean`, `vat` (`vat` requires `country`) | Generic formatting or local standard-format/checksum validation |
+| `identifier` | `remove_spaces`, `uppercase`; optional `format`: `isbn`, `isbn13`, `ean`, `vat` (`vat` requires `country`) | Generic formatting or local standard-format/checksum validation; `isbn13` converts valid ISBN-10 and ISBN-13 to ISBN-13 |
 | `list` | required `separator`: `newline` or `semicolon` | Split the extracted text at the declared separator |
 
 Quantity and number processing use Pint, Babel and Decimal. Date processing
@@ -93,6 +93,11 @@ Validation does not query registries or establish that a business exists.
 The format determines normalization; combining it with `remove_spaces` or
 `uppercase` is rejected. Without `format`, identifiers retain the existing generic
 behavior. A field name such as `isbn` never implicitly activates checksum validation.
+
+Use `Identifier("Book ISBN", format="isbn13")` when both ISBN-10 and ISBN-13
+mentions should resolve to the same ISBN-13 value. For example, `0-306-40615-2`
+and `978-0-306-40615-7` both become `9780306406157`. The existing `isbn` format
+validates and compacts the supplied format without converting its length.
 
 ## Address components
 

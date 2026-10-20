@@ -13,12 +13,65 @@ from pathlib import Path
 from .data import read_rows
 from .jsonio import dumps
 from .model import load_native
-from .training_adapter import configure_decoder_only, configure_processor, configure_record_loss
+from .training_adapter import (
+    configure_complete_batches,
+    configure_decoder_only,
+    configure_frozen_encoder,
+    configure_processor,
+    configure_record_loss,
+)
 
 
 def parameter_hash(parameter):
     values = parameter.detach().float().cpu().contiguous().numpy()
     return hashlib.sha256(values.tobytes()).hexdigest()
+
+
+class LearningEvidence:
+    """Check actual updates across each head, not one arbitrary first tensor."""
+
+    def __init__(self, model):
+        import torch
+
+        self.selected = {}
+        self.gradients = {}
+        self.handles = []
+        encoder_selected = False
+        for name, parameter in model.named_parameters():
+            if not parameter.requires_grad:
+                continue
+            group = name.split(".")[0]
+            if group == "encoder":
+                if encoder_selected or parameter.numel() <= 100:
+                    continue
+                encoder_selected = True
+            self.selected[name] = (group, parameter, parameter_hash(parameter))
+            self.gradients[name] = False
+
+            def capture(gradient, name=name):
+                if not self.gradients[name] and torch.isfinite(gradient).all() and gradient.abs().sum().item() > 0:
+                    self.gradients[name] = True
+
+            self.handles.append(parameter.register_hook(capture))
+
+    def report(self):
+        groups = {}
+        for name, (group, parameter, before) in self.selected.items():
+            item = {
+                "changed": before != parameter_hash(parameter),
+                "initial_parameter_sha256": before,
+                "nonzero_finite_gradient": self.gradients[name],
+            }
+            groups.setdefault(group, {"parameters": {}})["parameters"][name] = item
+        for group in groups.values():
+            items = list(group["parameters"].values())
+            group["changed"] = any(item["changed"] for item in items)
+            group["nonzero_finite_gradient"] = any(item["nonzero_finite_gradient"] for item in items)
+            group["learning_demonstrated"] = any(
+                item["changed"] and item["nonzero_finite_gradient"] for item in items
+            )
+            group["verification_scope"] = "full tensors; all trainable head parameters, representative encoder parameter"
+        return groups
 
 
 def train(model, data, config_path, device="cuda"):
@@ -27,6 +80,14 @@ def train(model, data, config_path, device="cuda"):
         manifest = json.loads(manifest_path.read_text())
         if manifest.get("training_ready") is False:
             raise ValueError("Dataset is explicitly not training-ready; resolve its audit findings first")
+    config = json.loads(Path(config_path).read_text())
+    if binding := config.get('tractor_dataset'):
+        from .training_corpus import verify_training_binding
+        verify_training_binding(data, binding)
+        if config.get('max_steps', -1) != -1 or config.get('early_stopping', False):
+            raise ValueError('Full-dataset training requires complete epochs, not a step cap or early stopping')
+        if config.get('tractor_max_seconds', 7200) is not None:
+            raise ValueError('Full-dataset training cannot have a short wall-clock cutoff')
     lock_path = Path("runs/.training.lock")
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     with lock_path.open("a") as lock:
@@ -39,6 +100,7 @@ def _train(model, data, config_path, device):
     from gliner2.training import ExtractorTrainer, TrainingConfig
 
     config_data = json.loads(Path(config_path).read_text())
+    dataset_binding = config_data.pop("tractor_dataset", None)
     evidence_groups = config_data.pop("tractor_required_groups", ["encoder", "boundary_head", "record_decoder"])
     max_seconds = config_data.pop("tractor_max_seconds", 7200)
     generalist_dev = config_data.pop("tractor_generalist_dev", None)
@@ -46,10 +108,17 @@ def _train(model, data, config_path, device):
     dev_thresholds = config_data.pop("tractor_dev_thresholds", {})
     record_loss_weight = config_data.pop("tractor_record_loss_weight", None)
     decoder_only = config_data.pop("tractor_decoder_only", False)
+    freeze_encoder = config_data.pop("tractor_freeze_encoder", False)
     regression_baseline = config_data.pop("tractor_regression_baseline", None)
     assignment_positive_weight = config_data.pop("tractor_assignment_positive_weight", None)
     if not isinstance(decoder_only, bool):
         raise ValueError('tractor_decoder_only must be boolean')
+    if not isinstance(freeze_encoder, bool):
+        raise ValueError('tractor_freeze_encoder must be boolean')
+    if freeze_encoder and (decoder_only or config_data.get('use_lora')
+                           or 'encoder' in evidence_groups
+                           or not {'boundary_head', 'record_decoder'} <= set(evidence_groups)):
+        raise ValueError('Frozen-encoder training requires both extraction heads, no encoder evidence, no decoder-only mode or LoRA')
     if decoder_only and (evidence_groups != ['record_decoder'] or config_data.get('use_lora')):
         raise ValueError('Decoder-only training requires record_decoder evidence and no LoRA')
     if assignment_positive_weight is not None and not decoder_only:
@@ -89,21 +158,13 @@ def _train(model, data, config_path, device):
     if record_loss_weight is not None:
         configure_record_loss(native_model, record_loss_weight)
     decoder_handle = configure_decoder_only(native_model) if decoder_only else None
+    if freeze_encoder:
+        decoder_handle = configure_frozen_encoder(native_model)
     frozen_hashes = {name: parameter_hash(param) for name, param in native_model.named_parameters()
-                     if decoder_only and not param.requires_grad}
-    # Watch representative parameters from each trainable subsystem.
-    selected = {}
-    for name, param in native_model.named_parameters():
-        if param.requires_grad and param.numel() > 100:
-            group = name.split(".")[0]
-            if group not in selected:
-                selected[group] = (
-                    name,
-                    param,
-                    parameter_hash(param),
-                )
-    gradients = {key: False for key in selected}
+                     if (decoder_only or freeze_encoder) and not param.requires_grad}
+    learning = LearningEvidence(native_model)
     handles = [decoder_handle] if decoder_handle else []
+    handles.extend(learning.handles)
     workload = {"training_samples": 0, "training_tokens": 0, "padded_tokens": 0}
 
     def count_work(module, inputs):
@@ -114,13 +175,6 @@ def _train(model, data, config_path, device):
             workload["padded_tokens"] += batch.input_ids.numel()
 
     handles.append(native_model.register_forward_pre_hook(count_work))
-    for key, (_, param, _) in selected.items():
-
-        def capture(gradient, key=key):
-            if torch.isfinite(gradient).all() and gradient.abs().sum().item() > 0:
-                gradients[key] = True
-
-        handles.append(param.register_hook(capture))
     activation_dtypes = set()
     loss_components = {}
     early_learning_checked = False
@@ -137,20 +191,15 @@ def _train(model, data, config_path, device):
 
     def observe_loss(_module, _inputs, value):
         nonlocal early_learning_checked
-        if time.monotonic() - started > max_seconds:
+        if max_seconds is not None and time.monotonic() - started > max_seconds:
             raise TimeoutError("Training wall-clock budget exhausted")
         if _module.training and trainer.global_step >= 50 and not early_learning_checked:
-            evidence = {
-                key: {
-                    "changed": key in selected and selected[key][2] != parameter_hash(selected[key][1]),
-                    "nonzero_finite_gradient": gradients.get(key, False),
-                }
-                for key in evidence_groups
-            }
+            observed = learning.report()
+            evidence = {key: observed.get(key, {"learning_demonstrated": False}) for key in evidence_groups}
             Path(output, "early-learning-evidence.json").write_text(
                 dumps({"step": trainer.global_step, "parameters": evidence}, indent=2)
             )
-            if not all(v["changed"] and v["nonzero_finite_gradient"] for v in evidence.values()):
+            if not all(v["learning_demonstrated"] for v in evidence.values()):
                 raise RuntimeError("Early learning check failed; see early-learning-evidence.json")
             early_learning_checked = True
         if len(loss_components) < 32 and value.losses:
@@ -162,6 +211,7 @@ def _train(model, data, config_path, device):
     native_train = read_rows(Path(data) / "train.native.jsonl")
     native_dev = read_rows(Path(data) / "dev.native.jsonl")
     trainer = ExtractorTrainer(native_model, config)
+    complete_batches = configure_complete_batches(trainer) if dataset_binding else None
     if extraction_dev:
         from .document_training import dev_callback as extraction_callback
 
@@ -200,16 +250,7 @@ def _train(model, data, config_path, device):
         if config.eval_strategy != "no":
             raise RuntimeError("Nonfinite evaluation metric")
         result["best_metric"] = None
-    changes = {
-        key: {
-            "parameter": name,
-            "changed": before != parameter_hash(param),
-            "initial_parameter_sha256": before,
-            "verification_scope": "full representative parameter",
-            "nonzero_finite_gradient": gradients[key],
-        }
-        for key, (name, param, before) in selected.items()
-    }
+    changes = learning.report()
     report = {
         "result": result,
         "elapsed_seconds": time.monotonic() - started,
@@ -218,6 +259,8 @@ def _train(model, data, config_path, device):
         "peak_cuda_allocated_bytes": torch.cuda.max_memory_allocated() if device == "cuda" else None,
         "required_learning_groups": evidence_groups,
         "wall_clock_limit_seconds": max_seconds,
+        "dataset_binding": dataset_binding,
+        "complete_batches": complete_batches,
         "parameters": changes,
         "device": str(trainer.device),
         "dtype": str(next(trainer.model.parameters()).dtype),
@@ -226,6 +269,7 @@ def _train(model, data, config_path, device):
         "record_loss_weight": native_model.boundary_settings.record_loss_weight,
         "assignment_loss": assignment_loss.evidence() if assignment_loss else None,
         "decoder_only": decoder_only,
+        "freeze_encoder": freeze_encoder,
         "regression_baseline": regression_baseline,
         "frozen_parameters_verified": len(frozen_hashes),
         "frozen_parameter_changes": [name for name, param in native_model.named_parameters()
@@ -245,8 +289,8 @@ def _train(model, data, config_path, device):
     }
     Path(output, "training-evidence.json").write_text(dumps(report, indent=2))
     if report['frozen_parameter_changes']:
-        raise RuntimeError('Frozen parameters changed during decoder-only training')
+        raise RuntimeError('Frozen parameters changed during training')
     for key in evidence_groups:
-        if key not in changes or not changes[key]["changed"] or not changes[key]["nonzero_finite_gradient"]:
+        if key not in changes or not changes[key]["learning_demonstrated"]:
             raise RuntimeError(f"{key} learning not demonstrated")
     return report

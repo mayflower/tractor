@@ -22,7 +22,7 @@ class Processing(BaseModel):
     prefixes: list[str] = Field(default_factory=list, max_length=16)
     remove_spaces: bool = False
     uppercase: bool = False
-    format: Literal['isbn', 'ean', 'vat'] | None = None
+    format: Literal['isbn', 'isbn13', 'ean', 'vat'] | None = None
     cardinality: Literal['unique_list', 'optional_one', 'required_one', 'one_or_more'] = 'unique_list'
 
     @model_validator(mode='after')

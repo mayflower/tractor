@@ -346,7 +346,7 @@ def export(run, selection_path, output):
     Path(target, "README.md").write_text(
         "# tractor · System One Extraction Model\n\n"
         "Local training candidate for evidence-based extraction.\n\n"
-        "The HTTP contract supports Text and Quantity fields. Native tasks use the local schema interface.\n"
+        "Use POST /v1/extract or Client.extract with mandatory typed fields and programmatic normalization.\n"
         "See metrics.json for available measured results and their split. Development results are not final test results.\n"
         "This export does not promote a release or establish general-purpose reliability.\n"
         "Source and data licensing must be resolved before publication.\n"

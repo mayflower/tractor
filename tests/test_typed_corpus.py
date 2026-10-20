@@ -28,6 +28,7 @@ def episode(value, field='date', family='operations', source='tractor_authored_d
     ('HTTPS://EXAMPLE.ORG/Shop?A=B', {'kind': 'url'}, ['https://example.org/Shop?A=B']),
     ('Dr.\nHelena Vogt', {'kind': 'person'}, ['Dr. Helena Vogt']),
     ('2200 g', {'kind': 'quantity', 'unit': 'kg'}, ['2.2']),
+    ('0-306-40615-2', {'kind': 'identifier', 'format': 'isbn13'}, ['9780306406157']),
     ('01.09.2026 – 30.09.2026', {'kind': 'interval', 'date_order': 'DMY'}, ['2026-09-01/2026-09-30']),
 ])
 def test_independent_annotation_oracles(text, rule, expected):
@@ -141,3 +142,19 @@ def test_policy_has_no_gold_parameter_and_keeps_declared_country():
     existing = dict(kind='phone', country='GB', cardinality='optional_one')
     rule, debt = choose(schema, {'fields': {'phone': 'Phone'}, 'anchor': None}, 'phone', existing)
     assert rule == existing and debt is None
+
+
+def test_explicit_source_isbn13_contract_migrates_generic_identifier_idempotently():
+    from tractor.field_contracts import Processing
+    original = episode('0-306-40615-2', 'isbn_13', 'research', source='swde')
+    original.source_group = 'swde:book:site:1'
+    original.processing = {'doc': {'isbn_13': Processing(kind='identifier')}}
+    result, _ = migrate(original)
+    assert typed_requests_for(result)['doc'].fields['isbn_13'].format == 'isbn13'
+    assert result.gold['doc'].records[0]['isbn_13'].final_values == ['9780306406157']
+    assert evidence(result.model_dump()) == evidence(original.model_dump())
+    assert migrate(result)[0] == result
+    # A generic API field is never reinterpreted from its field name.
+    original.source = 'tractor_authored_documents'
+    generic, _ = migrate(original)
+    assert typed_requests_for(generic)['doc'].fields['isbn_13'].format is None

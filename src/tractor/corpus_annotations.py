@@ -152,6 +152,14 @@ def annotate(value, rule):
             raise ValueError('invalid_name_annotation')
         return [result]
     if kind in {'literal', 'identifier'}:
+        if kind == 'identifier' and rule.get('format') == 'isbn13':
+            from stdnum import isbn
+            from stdnum.exceptions import ValidationError
+            # Independent offline target conversion, never call runtime parsing.
+            try:
+                return [isbn.to_isbn13(isbn.validate(value))]
+            except ValidationError as exc:
+                raise ValueError('invalid_isbn_annotation') from exc
         if rule.get('remove_spaces'):
             value = ''.join(value.split())
         return [value.upper() if rule.get('uppercase') else value]

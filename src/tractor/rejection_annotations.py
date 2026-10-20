@@ -16,6 +16,7 @@ from .jsonio import dumps, loads
 from .pipeline_evaluation import typed_requests_for
 
 REASONS = {
+    'invalid_isbn_annotation': 'invalid_identifier',
     'invalid_iban_checksum_annotation': 'invalid_iban',
     'invalid_phone_annotation': 'invalid_phone',
     'phone_annotation_requires_country': 'missing_phone_country',

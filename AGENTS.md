@@ -122,6 +122,14 @@ Synthetic training inputs must be realistic authored document texts, not fixed
 field-list templates with substituted values. Deterministic facts may establish
 gold internally; independent realism/semantic review must precede scaling.
 Current active corpus paths and build status are recorded in reports/extraction-build.
+For full training, use every eligible German and English training episode from the
+complete public/synthetic pools and approved supplements. Do not substitute repair
+samples, per-domain quotas or bounded step runs. Every source row and exclusion must
+be accounted for. The active selection is configs/active-training.json; its training
+configuration binds the dataset path, manifest hash and exact counts. A prepared
+dataset is not a completed training run. Do not mark a corpus fully semantically
+reviewed merely because structural/native checks pass. Keep all heldout splits out
+of training. A smaller diagnostic run requires an explicit request for that scope.
 Typed corpus paths and the frozen migration policy are recorded in
 reports/extraction-build/typed-corpus.json. Use those views for the next pipeline
 evaluation/training; retain explicit contract/annotation gaps. Migration never
@@ -146,7 +154,10 @@ source-component checks; its defaults can still discard qualifiers or infer year
 Use Babel/CLDR for supported currency names and symbols, and isoduration for exact
 Decimal ISO duration components. Keep explicit date order, currency, precision and
 ambiguity rules around library calls. Standard identifiers use python-stdnum only
-when Identifier.format explicitly requests isbn/ean/vat; VAT requires country.
+when Identifier.format explicitly requests isbn/isbn13/ean/vat; VAT requires country.
+The isbn format preserves valid ISBN-10 or ISBN-13; isbn13 explicitly converts to
+ISBN-13. Corpus schema adapters must select declared standard formats, never
+infer them from arbitrary public API field names.
 
 Use nix develop, just setup and uv run --no-sync. just check runs lint, fixtures
 and unit tests. just check-model models/tractor cpu checks real HTTP and encoder

@@ -126,7 +126,7 @@ class Postcode(FieldBase):
 
 class Identifier(FieldBase):
     type: Literal["identifier"] = "identifier"
-    format: Literal["isbn", "ean", "vat"] | None = None
+    format: Literal["isbn", "isbn13", "ean", "vat"] | None = None
     country: Annotated[str, StringConstraints(pattern=r"^[A-Z]{2}$")] | None = None
     remove_spaces: bool = False
     uppercase: bool = False

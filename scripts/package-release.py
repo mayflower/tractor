@@ -32,7 +32,8 @@ def files_under(directory):
             and p.suffix not in ('.pyc', '.pyo')
             and not (directory.name == 'configs' and (
                 any(part.isdigit() and len(part) == 8 for part in p.stem.split('-'))
-                or p.name == 'extraction-repair-pilot.json'))]
+                or p.name in {'extraction-repair-pilot.json', 'active-training.json',
+                              'full-training-data.json', 'extraction-full.json'}))]
 
 
 def pack(name, base, files, mode):

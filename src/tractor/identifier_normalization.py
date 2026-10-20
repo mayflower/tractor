@@ -11,7 +11,7 @@ def standard_identifier(value, format, country=None):
     from stdnum import ean, get_cc_module, isbn
     from stdnum.exceptions import ValidationError
 
-    parser = {'isbn': isbn, 'ean': ean}.get(format)
+    parser = {'isbn': isbn, 'isbn13': isbn, 'ean': ean}.get(format)
     if format == 'vat':
         parser = get_cc_module(country.lower(), 'vat')
     if parser is None:
@@ -21,6 +21,8 @@ def standard_identifier(value, format, country=None):
     if not re.fullmatch(r'[A-Za-z0-9\s.-]+', value, flags=re.ASCII):
         raise Unresolved('invalid_identifier')
     try:
+        if format == 'isbn13':
+            return isbn.validate(value, convert=True)
         return parser.validate(value)
     except ValidationError as exc:
         raise Unresolved('invalid_identifier') from exc

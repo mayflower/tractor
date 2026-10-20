@@ -83,6 +83,33 @@ review. Synthetic data never counts toward the public minimum.
 ## Assemble and qualify a training corpus
 
 Current local build paths and counts belong in `reports/extraction-build`.
+
+For full training, include every eligible German and English training episode
+from the complete source pools and approved supplements. Do not replace the
+training pool with a repair sample or per-domain quotas. Keep Dev, calibration
+and test membership fixed. Repeated schedule exposures are not new documents.
+
+`tractor.training_corpus` takes a frozen selection configuration with `languages`,
+`sources`, `heldout` and `dev`. Source entries contain `path` and `sha256`.
+Earlier sources take precedence for corrected annotations of the same episode;
+conflicting text or task inventories fail. Every input row is recorded as included,
+duplicate or excluded with a reason. Other configuration keys, including sampling
+limits, are rejected.
+
+`tractor.full_corpus_native` then compiles every selected episode through the public
+API adapter and validates native spans, record bindings and token limits. Rejected
+tasks remain in the audit. All Dev episodes remain in evaluation, including requests
+that exceed model capacity. Successful compilation proves technical compatibility;
+it does not constitute a new human semantic review of the corpus.
+
+The local `configs/active-training.json` identifies the active dataset and training
+configuration. A configuration's `tractor_dataset` binds its dataset path, manifest
+SHA-256, unique episode count and native training request count. The trainer checks
+these before loading a model, and rejects a substituted subset or modified files.
+Bound full-dataset runs require complete epochs without step or wall-clock caps
+or early stopping. Their data loader preserves the final partial batch.
+Dataset preparation, a completed training run and a measured quality improvement
+are separate results and must be reported separately.
 A scope-filtered historical pool is not automatically realistic or balanced.
 Retired deterministic coverage/classification configs must not be used to fill
 new quotas. In particular, retained schematic synthetic rows need separate
@@ -94,6 +121,12 @@ freezes every parameter except `record_decoder` before optimizer creation. Set
 runs without dropout; native record proposal supervision remains in training
 mode. Training evidence verifies every frozen parameter, and the saved model
 must still pass a full production-pipeline Dev comparison.
+To train span recognition and record assignment together while preserving the
+encoder, set `tractor_freeze_encoder: true` and require learning evidence for
+`boundary_head` and `record_decoder`. This is mutually exclusive with decoder-only
+training and LoRA. Encoder dropout stays disabled and all frozen encoder weights
+are verified after training. For full fine-tuning, leave both freeze options false
+and require evidence for the encoder and both extraction heads.
 Use `eval_strategy: "epoch"` when the evaluation interval coincides with the last
 partial gradient accumulation of an epoch: the pinned trainer does not execute
 step-based evaluation on that trailing update. A run without any production
@@ -154,7 +187,7 @@ Dev cases enter selection (up to 200 per cell), alongside the fixed synthetic
 sample. A source-count floor alone is not evidence of domain coverage.
 
 Before training, freeze paired episode/native files, split membership, source
-hashes and mixture quotas. Keep source documents and derived windows in one split.
+hashes and eligibility exclusions. Keep source documents and derived windows in one split.
 All model selection uses Dev; calibration and test are held out. Verify encoder
 and relevant extraction-head gradients and actual weight changes during a bounded
 learning check. Never overwrite `models/tractor` or an existing run directory.

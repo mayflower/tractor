@@ -51,3 +51,47 @@ def configure_decoder_only(model):
     handle = model.register_forward_pre_hook(keep_frozen_modules_in_eval)
     keep_frozen_modules_in_eval(model, None)
     return handle
+
+
+def configure_frozen_encoder(model):
+    """Train extraction heads jointly while keeping every encoder weight fixed."""
+    if not any(name.startswith('encoder.') for name, _ in model.named_parameters()):
+        raise ValueError('Frozen-encoder training requires an encoder')
+    for name, parameter in model.named_parameters():
+        parameter.requires_grad_(not name.startswith('encoder.'))
+
+    def keep_encoder_in_eval(module, _inputs):
+        module.encoder.eval()
+
+    handle = model.register_forward_pre_hook(keep_encoder_in_eval)
+    keep_encoder_in_eval(model, None)
+    return handle
+
+
+def configure_complete_batches(trainer):
+    """Retain the final partial batch instead of dropping source examples."""
+    from torch.utils.data import DataLoader
+
+    if trainer.is_distributed:
+        raise ValueError('Complete-epoch adapter currently requires single-device training')
+    original = trainer._create_dataloader
+    evidence = {'drop_last': False, 'training_loader_sizes': []}
+
+    def create(dataset, batch_size, shuffle=True, is_training=True):
+        loader = original(dataset, batch_size, shuffle=shuffle, is_training=is_training)
+        if not is_training:
+            return loader
+        # Preserve the original sampler (including length grouping) and collator.
+        complete = DataLoader(
+            dataset, batch_size=loader.batch_size, sampler=loader.sampler,
+            drop_last=False, num_workers=loader.num_workers, collate_fn=loader.collate_fn,
+            pin_memory=loader.pin_memory, timeout=loader.timeout,
+            worker_init_fn=loader.worker_init_fn, generator=loader.generator,
+            prefetch_factor=loader.prefetch_factor, persistent_workers=loader.persistent_workers,
+            multiprocessing_context=loader.multiprocessing_context,
+        )
+        evidence['training_loader_sizes'].append({'examples': len(dataset), 'batches': len(complete)})
+        return complete
+
+    trainer._create_dataloader = create
+    return evidence

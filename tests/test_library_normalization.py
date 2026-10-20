@@ -37,6 +37,8 @@ VALID = [
     (Duration('Term'), 'P2W', 'P2W'),
     (Identifier('Book', format='isbn'), '978-0-471-11709-4', '9780471117094'),
     (Identifier('Book', format='isbn'), '0-306-40615-2', '0306406152'),
+    (Identifier('Book', format='isbn13'), '0-306-40615-2', '9780306406157'),
+    (Identifier('Book', format='isbn13'), '978-0-306-40615-7', '9780306406157'),
     (Identifier('Barcode', format='ean'), '4006381333931', '4006381333931'),
     (Identifier('VAT', format='vat', country='DE'), 'DE136695976', '136695976'),
     (Identifier('Reference'), 'DE136695976', 'DE136695976'),
@@ -75,6 +77,7 @@ def test_library_normalization(field, source, expected):
     (Duration('Term'), '-P1D'),
     (Duration('Term'), 'PT1H1H'),
     (Identifier('Book', format='isbn'), '9780471117095'),
+    (Identifier('Book', format='isbn13'), '0-306-40615-3'),
     (Identifier('Book', format='isbn'), '9780471117094 / 9789024538270'),
     (Identifier('Barcode', format='ean'), '4006381333932'),
     (Identifier('VAT', format='vat', country='DE'), 'DE136695977'),
@@ -94,6 +97,25 @@ def test_library_inference_and_invalid_values_rejected(field, source):
 def test_identifier_contract_is_explicit(options):
     with pytest.raises(ValidationError):
         Identifier('Identifier', **options)
+
+
+def test_http_isbn13_resolves_two_explicit_formats_to_one_scalar():
+    mentions = ['0-306-40615-2', '978-0-306-40615-7']
+    text = 'ISBN-10: ' + mentions[0] + '; ISBN-13: ' + mentions[1]
+
+    class Backend:
+        def candidates(self, request):
+            if request.text != text:
+                return [] if request.anchor else [{key: [] for key in request.fields}]
+            return [{'book': [{'text': value, 'start': text.index(value),
+                               'end': text.index(value) + len(value)}
+                              for value in mentions]}]
+
+    request = ExtractRequest(text=text, fields={'book': Identifier('Book ISBN', format='isbn13')})
+    with TestClient(create_app(extractor=Backend())) as http:
+        result = http.post('/v1/extract', json=request.model_dump())
+        assert result.status_code == 200
+        assert loads(result.content) == {'data': {'book': '9780306406157'}, 'issues': []}
 
 
 def test_final_numeric_equality_preserves_identifier_semantics():

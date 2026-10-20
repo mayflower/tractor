@@ -7,7 +7,7 @@ import re
 
 from .record_contracts import cardinality
 
-VERSION = 'typed-corpus-20261019-v2-cardinality'
+VERSION = 'typed-corpus-20261020-v3-isbn13'
 
 PERSON = {
     'research': {'author'}, 'clinical': {'patient', 'clinician'},
@@ -98,6 +98,10 @@ def _choose(schema, task, key, existing=None):
             debt = 'source_schema_has_no_explicit_target_unit'
         if kind == 'list':
             options['separator'] = 'newline'
+        if (vertical, key) == ('book', 'isbn_13'):
+            # This source schema explicitly requests ISBN-13. Generic public
+            # identifiers and arbitrary field names retain their existing rules.
+            return {**(existing or {}), 'kind': 'identifier', 'format': 'isbn13'}, None
     elif source == 'kleister-charity':
         if key == 'charity_name':
             kind = 'organization'
