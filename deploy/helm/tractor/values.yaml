@@ -27,6 +27,16 @@ model:
     size: 4Gi
     storageClassName: ""
 
+# Serve on the node's shared NVIDIA GPU (MPS slot, runtimeClassName nvidia).
+# Set enabled=false for CPU serving.
+gpu:
+  enabled: true
+  runtimeClassName: nvidia
+  precision: fp32
+  # Device memory this client may pin on the shared card (MPS limit).
+  memoryLimit: 6G
+  mpsHostPath: /run/nvidia/mps
+
 threads: 4
 
 resources:
@@ -37,11 +47,13 @@ resources:
     cpu: "4"
     memory: 6Gi
 
+# The MPS pipe on the GPU node is only usable as root, like every other GPU
+# workload on this cluster. For CPU serving use runAsUser/Group/fsGroup 10001
+# and runAsNonRoot true.
 podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 10001
-  runAsGroup: 10001
-  fsGroup: 10001
+  runAsNonRoot: false
+  runAsUser: 0
+  runAsGroup: 0
   seccompProfile:
     type: RuntimeDefault
 

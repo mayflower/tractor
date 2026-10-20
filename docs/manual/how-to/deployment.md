@@ -53,7 +53,7 @@ measurements and do not predict GPU latency.
 
 ## Run on Kubernetes
 
-The Helm chart in `deploy/helm/tractor` runs one CPU worker per pod. An init
+The Helm chart in `deploy/helm/tractor` runs one worker per pod, on a shared NVIDIA GPU by default (`gpu.enabled`, MPS slot and `runtimeClassName` configurable) or on CPU with `--set gpu.enabled=false`. An init
 container downloads the pinned Hub revision into a persistent volume and verifies
 the weights' SHA-256 before the server starts; the server itself stays offline.
 Provide a Hugging Face read token in a Secret (key `HF_TOKEN`, name from

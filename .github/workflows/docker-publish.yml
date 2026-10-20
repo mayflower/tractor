@@ -3,6 +3,8 @@ name: Publish Docker image
 on:
   push:
     branches: [main]
+    # Chart, docs and workflow edits do not change the image.
+    paths-ignore: ['deploy/**', 'docs/**', '.github/**']
   workflow_dispatch:
 
 jobs:
