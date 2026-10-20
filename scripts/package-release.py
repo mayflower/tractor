@@ -12,7 +12,7 @@ SOURCE_FILES = (
     'pyproject.toml', 'uv.lock', 'flake.nix', 'flake.lock', '.envrc',
     '.gitignore', '.dockerignore', 'reqs.md',
 )
-SOURCE_DIRS = ('src', 'tests', 'scripts', 'examples', 'docs', 'configs', 'release', 'benchmarks', 'schemas')
+SOURCE_DIRS = ('src', 'tests', 'scripts', 'examples', 'docs', 'configs', 'release', 'benchmarks', 'schemas', 'deploy')
 MODEL_FILES = (
     'model.safetensors', 'config.json', 'tokenizer.json', 'tokenizer_config.json',
     'thresholds.json', 'normalization.json', 'source-lock.json', 'README.md', 'metrics.json',

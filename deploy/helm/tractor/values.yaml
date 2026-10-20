@@ -1,0 +1,72 @@
+# One process serves one worker; scale by adding replicas behind the Service.
+replicaCount: 1
+
+image:
+  repository: ghcr.io/mayflower/tractor
+  # The Argo CD Application pins a sha- tag published by
+  # .github/workflows/docker-publish.yml.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# The source repository and the image package are private.
+imagePullSecrets: []
+
+service:
+  port: 8000
+
+# Weights are downloaded once by an init container into the volume and
+# verified against the pinned SHA-256 (see release/targets.json).
+model:
+  repository: mayflowergmbh/tractor
+  revision: c36fd6e5bd0171c64c32e6124182d0d428f6844b
+  weightsSha256: 209a62ad03f559d7fd21fca9e44c4daad597825b1b6520df72545823bbc9c61b
+  # Secret with the Hugging Face read token under the key HF_TOKEN. Created by
+  # the tractor-bootstrap Application (SOPS), not by this chart.
+  tokenSecretName: tractor-secrets
+  persistence:
+    size: 4Gi
+    storageClassName: ""
+
+threads: 4
+
+resources:
+  requests:
+    cpu: "1"
+    memory: 3Gi
+  limits:
+    cpu: "4"
+    memory: 6Gi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# /readyz proves the model is loaded; an internal inference error marks the
+# server unready and the pod must be restarted after investigation.
+startupProbe:
+  httpGet: {path: /readyz, port: http}
+  periodSeconds: 5
+  failureThreshold: 60
+readinessProbe:
+  httpGet: {path: /readyz, port: http}
+  periodSeconds: 10
+  timeoutSeconds: 5
+livenessProbe:
+  httpGet: {path: /healthz, port: http}
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

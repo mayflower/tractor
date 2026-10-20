@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tractor
+description: System One Extraction Model HTTP API (POST /v1/extract), CPU serving
+type: application
+version: 0.1.0
+appVersion: "latest"

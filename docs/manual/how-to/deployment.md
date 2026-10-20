@@ -51,6 +51,21 @@ docker run --rm --gpus all --user "$(id -u):$(id -g)"   -p 127.0.0.1:8000:8000 -
 accuracy when changing precision. Published release comparison timings are CPU
 measurements and do not predict GPU latency.
 
+## Run on Kubernetes
+
+The Helm chart in `deploy/helm/tractor` runs one CPU worker per pod. An init
+container downloads the pinned Hub revision into a persistent volume and verifies
+the weights' SHA-256 before the server starts; the server itself stays offline.
+Provide a Hugging Face read token in a Secret (key `HF_TOKEN`, name from
+`model.tokenSecretName`) and, for a private image package, `imagePullSecrets`.
+The Service is cluster-internal because the API has no authentication. Size memory
+for the model plus the Python runtime; the defaults request 3 GiB and allow 6 GiB.
+
+```sh
+helm upgrade --install tractor deploy/helm/tractor --namespace tractor --create-namespace \
+  --set image.tag=sha-COMMIT
+```
+
 ## Operate the service
 
 Use `/healthz` for process liveness and `/readyz` for inference readiness. Route
