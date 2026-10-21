@@ -43,9 +43,9 @@ def create_app(
         if extractor is not None:
             app.state.extractor = extractor
         else:
-            from .model import Extractor
+            from .backends import load_extractor
 
-            app.state.extractor = await asyncio.to_thread(Extractor, model_path, device, precision)
+            app.state.extractor = await asyncio.to_thread(load_extractor, model_path, device, precision)
         warm = ExtractRequest(
             text="Atlas: Breite 12 cm.",
             fields={

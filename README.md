@@ -1,5 +1,9 @@
 # tractor · System One Extraction Model
 
+This branch adds the experimental [BiQwen backend](docs/manual/how-to/biqwen.md)
+with a decoder that preserves multiple values per record field. See the
+[pipeline comparison](docs/biqwen-evaluation.md) before choosing a model.
+
 ![tractor — System One Extraction Model](docs/brand/tractor.svg)
 
 **Text in. Structured data out. Ready for your application.**

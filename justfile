@@ -1,6 +1,14 @@
 default:
     @just --list
 
+# Experimental BiQwen backend, same public API. Explicit download, pinned revision.
+prepare-biqwen:
+    uv sync --locked --extra biqwen --extra dev
+    uv run --no-sync python scripts/prepare-biqwen.py
+
+serve-biqwen:
+    OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 uv run --no-sync tractor serve --model models/biqwen-extract-decide-4b --device cuda --precision bf16 --port 8002
+
 # Lightweight SDK dependencies and developer tools.
 setup-sdk:
     uv sync --locked --extra dev

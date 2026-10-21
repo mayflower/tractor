@@ -1,0 +1,24 @@
+{
+  "repo": "johannhartmann/biqwen-extract-decide-4b",
+  "revision": "96184881677b03adbf28ed5ba18a17548f8fb861",
+  "files": {
+    "bootstrap.py": "3fd3f58ed7a239d630cd4925d148a033a2d4ddcba91307eb8e2bc71a0ae31492",
+    "model/backbone/config.json": "86266ac0c56fccb543efba45b91be58cca5fe8273c255dac8f68c868cbd9ee51",
+    "model/backbone/model.safetensors": "e65706a25c0643bd1d9a3cbf1adba0b703cd7654b0b7a1c3bc44db5eb806fb5e",
+    "model/calibration.json": "650220299780d33d8143b47d9d911b957840bebe053a203f8009fed0ad2469ad",
+    "model/extractor_config.json": "5c5638f7956bf4c6c40deae9a6852dd5efbb5b048724841bd1968870d26ab8a6",
+    "model/extractor_heads.safetensors": "8e63d971c2317c71bacd17716b33b3baae5ed033ef291b047735972ace4b113f",
+    "model/tokenizer/chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715",
+    "model/tokenizer/tokenizer.json": "a5cd9732badce41de57e6efce8302930ded1c1188c5f81feb2bd6c24c4a1941f",
+    "model/tokenizer/tokenizer_config.json": "429721f730f42043159445b48039714682fac2cef2ad0e82917dfa0c8ca5f430",
+    "tractor_qwen/__init__.py": "74f9d3257ea4c451ebd009f63e4461cdaae9eb6ee00585a50044167850b82e6e",
+    "tractor_qwen/api.py": "e5239c36ab51ace5cf7c73a4e8b33787b57ff71f44b988deb1fcb97f3d80d023",
+    "tractor_qwen/data.py": "6841bb220d3eee2221210ce7521c9420187eb0cd035660027bab20df4a75c8c6",
+    "tractor_qwen/decisions.py": "d43ecd71cfde04982b0282149be181757ff8d051ff7fd2ecddf1524a0e9dc374",
+    "tractor_qwen/encoding.py": "832d8eaf660f1500b6030588e7676d2ade40aa72c91e4fef9cb2f4edae6986ee",
+    "tractor_qwen/metrics.py": "71f63b79821ddfdf2bc32b277134e84fe4dd9125c2b6850f22bc5d6fd535f48c",
+    "tractor_qwen/model.py": "b7f4ce16d117ba92596a9820ea109ace07fa572f5ce3ac7ce0030b66d540ab87",
+    "tractor_qwen/train.py": "4029a2cd21b43775efb4f50634122572ae80e1c366fa6eedb88b7521d9d9f1c4",
+    "tractor_qwen/upstream.py": "e79373056b883996cfec8d747b51fbb40ae26e925536751452b7a2ef0085ffe1"
+  }
+}
