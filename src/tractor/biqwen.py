@@ -14,7 +14,7 @@ from pathlib import Path
 from types import MethodType
 
 from .jsonio import loads
-from .model import description, field_ids
+from .model import field_ids
 from .types import TractorError
 
 LOCK = Path(__file__).with_name("biqwen-lock.json")
@@ -56,10 +56,15 @@ def load_runtime(path):
 
 
 def schema_for(request):
+    """Preserve descriptions as in BiQwen training; types still select normalizers.
+
+    GLiNER's quantity-description suffix is a model-specific training convention,
+    not part of the public field contract or BiQwen's training input format.
+    """
     ids = field_ids(request)
     fields = []
     for name, field in request.fields.items():
-        spec = {"id": ids[name], "kind": "span", "description": description(field),
+        spec = {"id": ids[name], "kind": "span", "description": field.description,
                 "multiple": not bool(request.anchor), "resolve_references": False}
         if request.anchor:
             spec["table_id"] = "record"

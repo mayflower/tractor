@@ -5,6 +5,8 @@ This experimental branch supports
 at revision `96184881677b03adbf28ed5ba18a17548f8fb861`. The local model directory
 selects the backend. Requests, the Python SDK, field types, normalization and the
 `data`/`issues` response remain the same.
+Field descriptions are passed verbatim, matching BiQwen's training format;
+GLiNER-specific quantity-description additions are not applied.
 
 ## Install and start
 
@@ -84,9 +86,11 @@ nix develop -c uv run --no-sync python -m tractor.document_eval \
 The output directory must not exist. The evaluator records every prediction or
 error, weights, runtime sources and precision. Record failures remain in the
 evaluation. GLiNER threshold overrides do not apply to BiQwen. This is a Dev
-compatibility/quality comparison, not final calibration or an independent test:
-BiQwen was trained from a derivative of the Tractor corpus, and overlap with its
-training split has not been ruled out. No latency measurement is part of this run.
+compatibility/quality comparison, not final calibration or an independent test.
+The exact-text audit found no overlap with the published extraction training
+split, but all native validation texts overlap Tractor Dev. Near duplicates,
+pretraining and the separate decision corpus are outside that audit. No latency
+measurement is part of this run.
 
 Results are recorded in [the branch evaluation](../../biqwen-evaluation.md).
 
@@ -100,3 +104,34 @@ OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 nix develop -c uv run --no-sync \
   --episodes data/full-training-de-en-native/dev.episodes.jsonl \
   --output reports/biqwen-decoder-comparison-new
 ```
+
+## Diagnose data selection and schema differences
+
+With the pinned `extract-de-en` JSONL files under
+`data/biqwen-source-audit/data`, reproduce the read-only overlap and schema audit:
+
+```sh
+nix develop -c uv run --no-sync python scripts/audit-biqwen-data.py \
+  --output reports/biqwen-dataset-audit-new
+```
+
+This compares exact text hashes across splits, source counts and the input schema.
+It records file hashes and never runs inference on calibration or test data.
+It audits the current checkout's schema compiler. The report's historical 292
+quantity-description differences refer to the compiler before the adopted fix.
+
+To isolate the original input format, evaluate all 3,116 native validation documents
+using their declared schemas, both decoders and the ordinary Tractor normalizers:
+
+```sh
+OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 nix develop -c uv run --no-sync \
+  python scripts/compare-biqwen-schemas.py \
+  --output reports/biqwen-native-schema-new
+```
+
+This is an internal diagnostic, not a second extraction API. The script rejects
+non-validation native rows, mismatched task bindings and reference resolution.
+Only text and the declared schema reach the model; native gold annotations do not.
+The default comparison uses the saved CORD-free API predictions from before the
+quantity-description fix, reproducing the control experiment. Use `--baseline`
+to provide a fresh full-pipeline run if the serving implementation changes.

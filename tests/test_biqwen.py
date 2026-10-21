@@ -62,6 +62,8 @@ def test_schema_disables_indirection_and_preserves_all_entity_evidence():
     assert not schema['choices']
     assert not any(f['resolve_references'] for f in schema['fields'])
     assert schema['tables'][0]['anchor_field_id'] == 'f0'
+    # Types drive normalization; descriptions must match BiQwen's input format.
+    assert [f['description'] for f in schema['fields']] == ['Produkt', 'Breite']
     assert all(f['multiple'] for f in schema_for(req.model_copy(update={'anchor': None, 'many': False}))['fields'])
 
 
