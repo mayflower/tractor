@@ -21,23 +21,8 @@ VRDU_FIELDS = {
     'signer_title': 'Job title of the registrant representative signing the declaration, not the notary title',
     'file_date': 'Printed date of the registrant declaration or its notarization, not receipt stamp or notary commission expiry',
 }
-CORD_FIELDS = {
-    'menu_nm': 'Entire printed item name or description on this receipt line',
-    'menu_price': 'Entire printed line-item price, including any printed currency or field label',
-    'menu_cnt': 'Printed quantity of this receipt item',
-    'menu_unitprice': 'Entire printed unit price of this receipt item, including any printed label',
-    'total_total_price': 'Entire printed receipt grand-total field, INCLUDING its printed label (such as TOTAL or TL) if present',
-    'total_cashprice': 'Entire printed cash-tendered field, INCLUDING its printed label (such as CASH) if present',
-    'total_changeprice': 'Entire printed change-returned field, INCLUDING its printed label if present',
-}
-
-
 def description(source, key):
-    mapping = CORD_FIELDS if source == 'cord' else VRDU_FIELDS
-    if key in mapping:
-        return mapping[key]
-    label = key.replace('_', ' ')
-    return f'Entire printed {label} field, including its printed label if present' if source == 'cord' else label
+    return VRDU_FIELDS.get(key, key.replace('_', ' '))
 
 
 def complete_token_boundary(text, start, end):

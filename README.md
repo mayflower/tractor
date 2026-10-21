@@ -41,10 +41,11 @@ explicit handling of missing or ambiguous values.
 repeated prose records.**
 
 Version **2026.10.21** uses the selected checkpoint from complete training on
-**341,237 German/English episodes**. Evaluation covers **4,483 Dev documents**
+**341,237 German/English episodes**. Evaluation covers **4,429 Dev documents**
 through the full API pipeline. Complete-record F1 is **57.61%**: strong field
 extraction does not mean every record is complete. Real human-annotated Dev field
-F1 ranges from **71.03% for contracts to 92.67% for invoices** in the measured sets.
+F1 is **71.03% for contracts and 85.71% for document metadata**.
+Only four real advertising-order headers remain; they cannot establish invoice-domain reliability.
 
 ![Current pipeline Dev results by output form](docs/brand/comparison.svg)
 
@@ -116,7 +117,7 @@ installs its development dependencies without the model stack.
 
 The selected model improves generalist coverage, with remaining weaknesses in
 complete records, restaurant cuisine, product prices and some company/contract
-fields. 12 regression checks remain failed. Real evidence is missing for many
+fields. 10 regression checks remain failed. Real evidence is missing for many
 domains, and incomplete references are reported as unscored. Calibration and test
 remain held out. See [the full evaluation](docs/benchmarks.md) and
 [model card](release/MODEL_CARD.md).

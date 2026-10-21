@@ -6,16 +6,18 @@ from pathlib import Path
 
 from .coverage_assembly import sha
 from .jsonio import dumps, loads
+from .source_policy import excluded_source
 
 EXCLUDED_FAMILIES = frozenset({'question_answering', 'multiple_answers', 'classification_intent',
                                'classification_routing', 'classification_urgency', 'classification_sentiment', 'relations'})
-EXCLUDED_SOURCES = frozenset({'squad_v2', 'germanquad', 'multispan', 'adversarialqa', 'adversarial_qa', 'massive'})
+EXCLUDED_SOURCES = frozenset({'squad_v2', 'germanquad', 'multispan', 'adversarialqa', 'adversarial_qa', 'massive',
+                              'cord', 'cord-v2', 'naver-clova-ix/cord-v2'})
 
 
 def in_scope(row):
     from .document_text_scope import table_record_reason
 
-    return (row['family'] not in EXCLUDED_FAMILIES and not row['family'].startswith('classification_')
+    return (not excluded_source(row) and row['family'] not in EXCLUDED_FAMILIES and not row['family'].startswith('classification_')
             and row['source'] not in EXCLUDED_SOURCES
             and table_record_reason(row) is None
             and all(t['kind'] in {'entities', 'records'} for t in row.get('tasks', [])))

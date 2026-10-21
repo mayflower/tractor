@@ -4,7 +4,7 @@ Tractor is evaluated as a complete extraction and normalization pipeline. Final
 typed values, record assignment and issue codes determine correctness. Raw spans
 are diagnostic evidence, not the product score.
 
-The current model is selected using 4,483 Dev documents. Synthetic, real/human
+The current pipeline is evaluated on 4,429 Dev documents, with CORD excluded. Synthetic, real/human
 and real/deterministic evidence is reported separately. Field F1 scores individual
 fields; complete-record F1 requires the whole record to be correct. On synthetic
 Dev, these are 90.30% and 57.61% respectively for repeated records. A high field

@@ -3,7 +3,6 @@
 import argparse
 import hashlib
 import json
-import subprocess
 import urllib.request
 from pathlib import Path
 
@@ -22,17 +21,13 @@ def main():
             path = root / name
             if not path.exists() and not args.verify_only:
                 path.parent.mkdir(parents=True, exist_ok=True)
-                if spec['source'] == 'cord':
-                    subprocess.run(['hf', 'download', spec['repo'], name, '--type', 'dataset',
-                                    '--revision', spec['revision'], '--local-dir', str(root)], check=True)
-                else:
-                    url = f'https://raw.githubusercontent.com/{spec["repo"]}/{spec["revision"]}/{name}'
-                    temporary = path.with_suffix(path.suffix+'.download')
-                    with urllib.request.urlopen(url, timeout=120) as response:
-                        temporary.write_bytes(response.read())
-                    if hashlib.sha256(temporary.read_bytes()).hexdigest() != digest:
-                        raise ValueError('Downloaded source checksum mismatch')
-                    temporary.replace(path)
+                url = f'https://raw.githubusercontent.com/{spec["repo"]}/{spec["revision"]}/{name}'
+                temporary = path.with_suffix(path.suffix+'.download')
+                with urllib.request.urlopen(url, timeout=120) as response:
+                    temporary.write_bytes(response.read())
+                if hashlib.sha256(temporary.read_bytes()).hexdigest() != digest:
+                    raise ValueError('Downloaded source checksum mismatch')
+                temporary.replace(path)
             if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
                 raise ValueError(f'Missing or changed pinned source: {path}')
         print(spec['source'], 'verified', len(spec['files']), 'files')

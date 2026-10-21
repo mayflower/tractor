@@ -3,15 +3,14 @@
 The BiQwen backend and decoder adaptation work through the existing Tractor API.
 **The current weights are not a quality replacement for the released Tractor model.**
 The modified record decoder removes the one-value-per-cell restriction, but lowers
-record-field F1 slightly on this Dev corpus. Real invoice/receipt/order headers are
-a much larger weakness; they do not use the modified record-assignment decoder.
+record-field F1 slightly on this Dev corpus. Real contacts and career data remain below the 70% target.
 
 ## Full production-pipeline comparison
 
-All **4,483 Dev documents** were evaluated, without sampling or dropping failed
-requests. Values and issue codes were scored after the same programmatic normalization.
+All **4,429 remaining Dev documents** were scored after permanent source-based
+exclusion of CORD. No failed request from a permitted source was dropped. Values and issue codes were scored after the same programmatic normalization.
 Numbers below are field F1, not raw span scores. The released Tractor checkpoint
-was rerun in the new dependency environment: all 4,483 predictions match its
+was rerun in the new dependency environment: all 4,429 retained predictions match its
 previous release evaluation.
 
 | Evidence / output form | Documents | Tractor | BiQwen, modified decoder |
@@ -21,11 +20,15 @@ previous release evaluation.
 | Repeated records, synthetic | 338 | 90.30% | 85.66% |
 | Contracts, real / human labels | 54 | 71.03% | 74.77% |
 | Document metadata, real / human labels | 143 | 85.71% | 85.93% |
-| Invoices/receipts/orders, real / human labels | 58 | 92.67% | 4.69% |
+| Advertising-order headers, VRDU / human labels; insufficient support | 4 | 100.00% | 50.00% |
 | Contacts, real / deterministic labels | 200 | 79.15% | 66.16% |
 | Careers, real / deterministic labels | 200 | 93.91% | 63.15% |
 | Research, real / deterministic labels | 200 | 92.62% | 87.97% |
 | Document metadata, real / deterministic labels | 200 | 97.29% | 96.81% |
+
+Only four VRDU documents remain in the real invoice/order family; no general
+invoice-domain conclusion is supported. CORD is absent from all splits, including
+headers and derived windows.
 
 The additional 200 real product documents have incomplete references; they were
 evaluated, but neither model receives a product-domain aggregate from them.
@@ -64,7 +67,7 @@ anchors that the proposal heads do not detect.
 
 ## Integration checks and observed failures
 
-- **826 automated tests pass**, including exclusive occurrence ownership, retained
+- **845 automated tests pass**, including exclusive occurrence ownership, retained
   multiple values, scalar ambiguity after normalization, capacity failures and
   rejection of altered model code.
 - All 15 existing manual requests return HTTP 200; HTTP and SDK outputs agree.
@@ -95,7 +98,8 @@ anchors that the proposal heads do not detect.
 - BiQwen was trained on a derivative of the Tractor corpus. Training overlap with
   this Dev corpus has **not** been excluded. This is a compatibility and quality
   comparison on Dev, not an independent generalization benchmark.
-- No training, model promotion, Hugging Face upload or latency benchmark was performed.
+- Scores were recomputed from unchanged saved predictions after source exclusion.
+  No training, model promotion, Hugging Face upload or latency benchmark was performed.
 
 All domain/form aggregates, exact counts, runtime hashes and weight identities are
 in [the machine-readable report](biqwen-evaluation.json).

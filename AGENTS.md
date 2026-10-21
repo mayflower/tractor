@@ -7,6 +7,11 @@ Both release targets must remain private: mayflower/tractor and mayflowergmbh/tr
 
 The authoritative scope and implementation requirements are in reqs.md.
 
+CORD is permanently excluded from ALL training, Dev, calibration and test data,
+including receipt headers, derived windows and native examples. Do not download,
+reimport or restore it through archived corpora. Its Indonesian receipts are not
+DE/EN evaluation evidence. Source removal must keep native/identity rows aligned.
+
 ## Binding product and evaluation contract
 
 - There is exactly ONE public extraction API: POST /v1/extract and Client.extract.

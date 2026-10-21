@@ -11,7 +11,7 @@ from .jsonio import dumps, loads
 
 def scalar_contract(row):
     # Authored domain schemas declare record cells as strings. VRDU source rows
-    # also contain one explicitly annotated span per queried column. CORD can
+    # also contain one explicitly annotated span per queried column. Other sources can
     # contain multi-span subitems and deliberately retains its list contract.
     if row['source'] in {'tractor_authored_documents', 'vrdu'}:
         for task in row['tasks']:
@@ -55,7 +55,7 @@ def build(source, output):
                 counts[split] += 1
     report = dict(manifest, training_ready=False, status='scalar_contract_pending_native_sample',
                   cardinality_source_manifest_sha256=sha(source/'manifest.json'),
-                  cardinality_policy='Authored string cells and VRDU common columns use scalar optional_one, exclusive spans. CORD multi-span annotations retain lists. No gold/text/split changes.',
+                  cardinality_policy='Authored string cells and VRDU common columns use scalar optional_one, exclusive spans. No gold/text/split changes.',
                   counts=dict(counts), files={p.name: sha(p) for p in root.glob('*.jsonl')})
     atomic_json(root/'manifest.json', report)
     return report

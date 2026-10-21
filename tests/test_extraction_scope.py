@@ -56,7 +56,7 @@ def test_configured_classification_and_gates_only_keep_allowed_tasks():
 
 def test_public_positions_excluded_but_header_preserved():
     from tractor.document_text_scope import restrict
-    row = {'id': 'r', 'split': 'dev', 'source': 'cord', 'family': 'invoices',
+    row = {'id': 'r', 'split': 'dev', 'source': 'vrdu', 'family': 'invoices',
            'artifact': 'repeated_records', 'text': 'TOTAL 20',
            'tasks': [{'id': 'head', 'kind': 'entities'}, {'id': 'items', 'kind': 'records'}],
            'gold': {'head': {}, 'items': {}}}
@@ -84,6 +84,6 @@ def test_explicit_prose_records_stay_in_scope():
 
 
 def test_incidental_table_is_not_a_header_extraction_task():
-    assert in_scope({'family': 'invoices', 'source': 'cord',
+    assert in_scope({'family': 'invoices', 'source': 'vrdu',
                      'text': 'Name\tQty\tPrice\nWidget\t2\t10\nTotal: 20',
                      'tasks': [{'kind': 'entities'}]})

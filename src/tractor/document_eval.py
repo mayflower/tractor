@@ -16,6 +16,9 @@ def run(model, episodes, output, device='cuda', policy='configs/extraction-quali
             raise ValueError('Provisional Dev threshold must be in (0, 1]')
     from .backends import load_extractor
     rows = list(read_episodes(episodes))
+    from .source_policy import excluded_source
+    if any(excluded_source(e) for e in rows):
+        raise ValueError('CORD is excluded; clean the dataset before evaluation')
     if not rows or any(e.split != 'dev' for e in rows):
         raise ValueError('This comparison evaluator accepts Dev only')
     root = Path(output)
@@ -25,7 +28,7 @@ def run(model, episodes, output, device='cuda', policy='configs/extraction-quali
                     'contact_normalization.py', 'temporal_normalization.py', 'scalar_normalization.py',
                     'identifier_normalization.py', 'address_normalization.py', 'episodes.py', 'episode_metrics.py', 'document_eval.py',
                     'inference_context.py', 'record_contracts.py', 'evaluation_reference.py', 'document_quality.py',
-                    'backends.py', 'biqwen.py', 'biqwen-lock.json')
+                    'backends.py', 'biqwen.py', 'biqwen-lock.json', 'source_policy.py')
     source_hashes = {name: sha(Path(__file__).with_name(name)) for name in source_names}
     # Keep the exact implementation reviewable alongside the frozen predictions.
     snapshot = root / 'pipeline-source'

@@ -132,7 +132,14 @@ def assemble(config_path, output):
     dev = Path(config['dev'])
     if str(dev) not in {s['path'] for s in config['heldout']}:
         raise ValueError('Dev must be in the heldout registry')
-    (root / 'dev.episodes.jsonl').write_bytes(dev.read_bytes())
+    from .source_policy import excluded_source
+    excluded_dev = 0
+    with dev.open() as source, (root / 'dev.episodes.jsonl').open('w') as target:
+        for line in source:
+            if excluded_source(loads(line)):
+                excluded_dev += 1
+            else:
+                target.write(line)
     manifest = {
         'status': 'assembled', 'training_ready': False, 'native_training_ready': False,
         'selection': 'all eligible de/en training IDs, one exposure each; no sampling or quotas',
@@ -143,6 +150,7 @@ def assemble(config_path, output):
         'families': dict(families), 'origins': dict(origins),
         'removed_tasks': dict(task_changes), 'inputs': inputs,
         'heldout': config['heldout'], 'selection_config_sha256': sha(config_path),
+        'excluded_dev_source_rows': excluded_dev,
         'files': {p.name: sha(p) for p in root.iterdir() if p.is_file()},
     }
     (root / 'manifest.json').write_text(dumps(manifest, indent=2) + '\n')

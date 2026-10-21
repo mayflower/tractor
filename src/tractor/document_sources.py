@@ -34,81 +34,6 @@ def envelope(source, ident, split, domain, language, text, tasks, gold):
         'text': text, 'tasks': tasks, 'gold': gold})
 
 
-def cord(data, split, ident):
-    """Input ordering uses word geometry only, never category/group annotations."""
-    if isinstance(data, str):
-        data = loads(data)
-    lines = data['valid_line']
-    tokens = []
-    for li, line in enumerate(lines):
-        for wi, word in enumerate(line['words']):
-            q = word['quad']
-            tokens.append((min(q['y1'], q['y2'], q['y3'], q['y4']), q['x1'], li, wi, word['text']))
-    # Cluster by visual baseline; fixed y-buckets can split skewed words within one line.
-    clusters = []
-    for token in sorted(tokens):
-        y = token[0]
-        closest = min(clusters, key=lambda c: abs(c[0] - y), default=None)
-        if closest is None or abs(closest[0] - y) > 15:
-            clusters.append([y, [token]])
-        else:
-            closest[1].append(token)
-            closest[0] = sum(t[0] for t in closest[1]) / len(closest[1])
-    text, positions = '', {}
-    for _y, members in sorted(clusters):
-        if text:
-            text += '\n'
-        for j, (_y, _x, li, wi, value) in enumerate(sorted(members, key=lambda t: t[1])):
-            if j:
-                text += ' '
-            start = len(text)
-            text += value
-            positions[li, wi] = (start, len(text))
-    header, records = {}, defaultdict(dict)
-    descriptions = {}
-    for li, line in enumerate(lines):
-        category = line['category']
-        if category in {'other', 'void_menu.nm', 'void_menu.price'} or not line['words']:
-            continue
-        spans = [positions[li, wi] for wi in range(len(line['words']))]
-        start, end = min(s[0] for s in spans), max(s[1] for s in spans)
-        # Do not collapse interleaved unrelated OCR words into a gold field.
-        expected = ' '.join(w['text'] for w in line['words'])
-        if ' '.join(text[start:end].split()) != ' '.join(expected.split()):
-            raise ValueError('OCR field interleaved by geometric serialization')
-        value = answer(text, start, end)
-        key = category.replace('.', '_')
-        descriptions[key] = description('cord', key)
-        if category.startswith('menu.'):
-            group = (line['group_id'], line.get('sub_group_id', 0))
-            if key in records[group]:
-                records[group][key]['items'].extend(value['items'])
-            else:
-                records[group][key] = value
-        elif category.startswith(('total.', 'sub_total.')):
-            if key in header:
-                header[key]['items'].extend(value['items'])
-            else:
-                header[key] = value
-    tasks, gold = [], {}
-    if header:
-        tasks.append({'id': 'header', 'kind': 'entities', 'description': 'Receipt totals as printed',
-                      'fields': {k: descriptions[k] for k in header}})
-        gold['header'] = {'complete': True, 'records': [header]}
-    if records:
-        keys = sorted({k for r in records.values() for k in r})
-        if any('menu_nm' not in r for r in records.values()):
-            raise ValueError('Receipt record has no explicit item anchor')
-        # CORD category definitions provide exhaustive labels within included receipt fields.
-        values = [{k: r.get(k, {'status': 'absent'}) for k in keys} for r in records.values()]
-        tasks.append({'id': 'items', 'kind': 'records', 'description': 'Receipt items',
-                      'fields': {k: descriptions[k] for k in keys}, 'anchor': 'menu_nm'})
-        gold['items'] = {'complete': True, 'records': values}
-    if not tasks:
-        raise ValueError('No supported annotated receipt fields')
-    return envelope('cord', ident, split, 'invoices', 'id', text, tasks, gold)
-
-
 def vrdu(row, split, domain):
     text = row['ocr']['text']
     fields, groups = {}, defaultdict(list)
@@ -239,8 +164,6 @@ def windows(episode, max_chars=700):
 
 def build(output, source_root='data/document-sources', limit=200):
     """Create audited candidates; native validation/release eligibility remain separate gates."""
-    import pyarrow.parquet as pq
-
     root, sources = Path(output), Path(source_root)
     root.mkdir(parents=True, exist_ok=False)
     rejected, excluded, episodes, inputs = [], [], [], {}
@@ -256,18 +179,6 @@ def build(output, source_root='data/document-sources', limit=200):
             episodes.append(e)
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             rejected.append({'source': source, 'id': ident, 'reason': str(exc)[:200]})
-    for original, split in [('train', 'train'), ('validation', 'dev'), ('test', 'test')]:
-        seen = 0
-        for path in sorted((sources / 'cord/data').glob(original+'*.parquet')):
-            inputs[str(path)] = sha(path)
-            for batch in pq.ParquetFile(path).iter_batches(batch_size=16, columns=['ground_truth']):
-                for row in batch.to_pylist():
-                    if seen >= limit:
-                        break
-                    seen += 1
-                    data = loads(row['ground_truth'])
-                    ident = f'{original}:{data["meta"]["image_id"]}'
-                    record('cord', ident, lambda data=data, split=split, ident=ident: cord(data, split, ident))
     for source in ('kleister-nda', 'kleister-charity'):
         for original, split in [('train', 'train'), ('dev-0', 'dev')]:
             ip, gp = sources/source/original/'in.tsv.xz', sources/source/original/'expected.tsv'

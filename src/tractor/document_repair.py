@@ -8,12 +8,13 @@ from pathlib import Path
 from .coverage_assembly import sha
 from .document_campaign import atomic_json
 from .document_duplicates import Index
-from .document_sources import cord, vrdu
+from .document_sources import vrdu
 from .episodes import Episode, text_key
 from .generalist_data import validate_native
 from .jsonio import dumps, loads
 from .public_source_review import review_batch
 from .source_contracts import split_lookup
+from .source_policy import excluded_source
 
 
 def safe_windows(episode, width=1000, overlap=250):
@@ -65,38 +66,25 @@ def safe_windows(episode, width=1000, overlap=250):
 
 
 def candidates(root):
-    import pyarrow.parquet as pq
     specs = loads(Path('configs/document-sources.json').read_text())
     rejected = []
     for spec in specs:
-        if spec['source'] not in {'cord', 'vrdu'}:
+        if spec['source'] != 'vrdu':
             continue
         for name, digest in spec['files'].items():
             if sha(Path(spec['path'], name)) != digest:
                 raise ValueError('Pinned source changed')
-        if spec['source'] == 'cord':
-            for original, split in [('train', 'train'), ('validation', 'dev'), ('test', 'test')]:
-                for path in sorted(Path(spec['path'], 'data').glob(original+'*.parquet')):
-                    for batch in pq.ParquetFile(path).iter_batches(batch_size=32, columns=['ground_truth']):
-                        for row in batch.to_pylist():
-                            data = loads(row['ground_truth'])
-                            ident = f'{original}:{data["meta"]["image_id"]}'
-                            try:
-                                yield from safe_windows(cord(data, split, ident))
-                            except ValueError as exc:
-                                rejected.append({'source': 'cord', 'id': ident, 'reason': str(exc)})
-        else:
-            for group, domain in [('registration-form', 'forms'), ('ad-buy-form', 'invoices')]:
-                lookup = split_lookup(spec, group)
-                with gzip.open(Path(spec['path'], group, 'main/dataset.jsonl.gz'), 'rt') as stream:
-                    for line in stream:
-                        row = loads(line)
-                        if row['filename'] not in lookup:
-                            continue
-                        try:
-                            yield from safe_windows(vrdu(row, lookup[row['filename']], domain))
-                        except ValueError as exc:
-                            rejected.append({'source': 'vrdu', 'id': row['filename'], 'reason': str(exc)})
+        for group, domain in [('registration-form', 'forms'), ('ad-buy-form', 'invoices')]:
+            lookup = split_lookup(spec, group)
+            with gzip.open(Path(spec['path'], group, 'main/dataset.jsonl.gz'), 'rt') as stream:
+                for line in stream:
+                    row = loads(line)
+                    if row['filename'] not in lookup:
+                        continue
+                    try:
+                        yield from safe_windows(vrdu(row, lookup[row['filename']], domain))
+                    except ValueError as exc:
+                        rejected.append({'source': 'vrdu', 'id': row['filename'], 'reason': str(exc)})
     atomic_json(root/'adapter-rejections.json', rejected)
 
 
@@ -163,7 +151,7 @@ def build(output, base='data/real-extraction-dedup', workers=16, env='~/.env'):
                 counts[split] += 1
             for el, nl in zip((base/f'{split}.episodes.jsonl').open(), (base/f'{split}.native.jsonl').open(), strict=True):
                 e, n = loads(el), loads(nl)
-                if e['source'] not in {'cord', 'vrdu'}:
+                if not excluded_source(e) and e['source'] != 'vrdu':
                     write(e, n)
             for e, n in grouped[split]:
                 write(e, n)
@@ -172,7 +160,7 @@ def build(output, base='data/real-extraction-dedup', workers=16, env='~/.env'):
               'source_groups': dict(Counter(':'.join(v) for v in groups.values())),
               'base_manifest_sha256': sha(base/'manifest.json'), 'registry_sha256': sha(Path('configs/document-sources.json')),
               'files': {p.name: sha(p) for p in root.glob('*.jsonl')},
-              'qualification': 'Rebuilt public CORD/VRDU literal task contracts. Every new window independently reviewed and native validated. Frozen old source split memberships preserved. No claim of full domain or heldout evaluation coverage.'}
+              'qualification': 'Rebuilt public VRDU literal task contracts. Every new window independently reviewed and native validated. Frozen old source split memberships preserved. No claim of full domain or heldout evaluation coverage.'}
     atomic_json(root/'manifest.json', report)
     atomic_json(root/'status.json', report)
     return report

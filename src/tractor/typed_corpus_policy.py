@@ -119,8 +119,6 @@ def _choose(schema, task, key, existing=None):
         kind = {'registration_num': 'identifier', 'property': 'organization', 'gross_amount': 'money'}.get(key)
         if key == 'advertiser':
             debt = 'advertiser_schema_allows_person_or_organization'
-    elif source == 'cord':
-        debt = 'source_contract_requests_entire_printed_cell_including_label'
     if authored:
         if key in PERSON.get(family, set()):
             kind = 'person'

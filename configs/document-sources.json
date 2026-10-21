@@ -63,26 +63,6 @@
     }
   },
   {
-    "source": "cord",
-    "repo": "naver-clova-ix/cord-v2",
-    "revision": "7f0115a4b758a71d6473b8d085751692da2fef98",
-    "path": "data/document-sources/cord",
-    "license": "CC-BY-4.0",
-    "status": "downloaded",
-    "text_origin": "real",
-    "label_origin": "human",
-    "release_eligibility": "attribution_required",
-    "files": {
-      "README.md": "835f3f7d88a86e05a882c6a6b6333da6ab874776385f85473798769d767c2fca",
-      "data/train-00002-of-00004-688fe1305a55e5cc.parquet": "591e2db8fe8b1d364b054f46e8c375b7f00e72578914ba46a573b6858162cab2",
-      "data/validation-00000-of-00001-cc3c5779fe22e8ca.parquet": "0d0f6dac11fdcc549de2746aa9f53136a3bc22a2a1aff2b0b847f7622ad60c15",
-      "data/train-00003-of-00004-2d0cd200555ed7fd.parquet": "1ffd9de8d6fbcee7630fd4cdfedff05b9b7fabc0fae4fc17557c5fe7cf178748",
-      "data/train-00001-of-00004-7dbbe248962764c5.parquet": "cce4def16a0d6a6c75f80be712f7494c56c318a8829b712f5c62650155c9e58e",
-      "data/test-00000-of-00001-9c204eb3f4e11791.parquet": "51c65f1788faff392abe2a0b55b023eb23e9be551c509138eaa3a832514224e7",
-      "data/train-00000-of-00004-b4aaeceff1d90ecb.parquet": "da3994eee1bf9bd3c57f0d53a72c3a6812c8696c5ba26245987949ddf73483cc"
-    }
-  },
-  {
     "source": "docile",
     "url": "https://docile.rossum.ai/",
     "status": "blocked_access_token_required",

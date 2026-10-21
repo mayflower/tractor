@@ -31,7 +31,7 @@ service; copy the complete bundle and use the pinned runtime dependencies.
 
 ## Current measurements
 
-On 4,483 Dev documents, the complete pipeline achieves the following results on
+On 4,429 Dev documents, the complete pipeline achieves the following results on
 the synthetic portion:
 
 | Output form | Field F1 | Complete-record F1 |
@@ -42,7 +42,9 @@ the synthetic portion:
 
 Synthetic domain field F1 ranges from 93.19% to 99.57%. Real human-annotated
 Dev field F1 is 71.03% for contracts (54 documents), 85.71% for metadata (143),
-and 92.67% for invoices (58). Real texts with deterministic annotations are
+with only four additional human-annotated advertising-order headers (VRDU;
+insufficient invoice-domain evidence). CORD is excluded from every split.
+Real texts with deterministic annotations are
 reported separately in the [evaluation report](https://github.com/mayflower/tractor/blob/main/docs/benchmarks.md).
 393 of 399 expected rejections are correct. Ten extra records are predicted.
 
@@ -64,7 +66,7 @@ is private and includes provenance and exclusions.
 ## Known limits
 
 This version is the chosen generalist default, with explicit acceptance of the
-reported tradeoffs. Strict release qualification remains false: 12 regression
+reported tradeoffs. Strict release qualification remains false: 10 regression
 checks fail, complete-record F1 is below 70%, and real evidence is missing for
 many domains. Restaurant cuisine, real product prices, company names and real
 contracts need further improvement. Short label/value snippets and several

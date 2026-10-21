@@ -122,22 +122,6 @@ def test_all_domain_schemas_and_quotas_are_present():
         assert s['schema']['properties']['records']['items']['type'] == 'object'
 
 
-def test_cord_text_serialization_does_not_use_gold_categories():
-    from copy import deepcopy
-
-    from tractor.document_sources import cord
-
-    def word(text, x, y):
-        return {'text': text, 'quad': {'x1': x, 'x2': x+20, 'x3': x+20, 'x4': x,
-                                     'y1': y, 'y2': y, 'y3': y+10, 'y4': y+10}}
-    data = {'valid_line': [{'words': [word('Total', 0, 0)], 'category': 'other', 'group_id': 0},
-                           {'words': [word('10.00', 60, 0)], 'category': 'total.total_price', 'group_id': 0}]}
-    first = cord(data, 'train', 'a')
-    second = deepcopy(data)
-    second['valid_line'][1]['category'] = 'total.cashprice'
-    assert cord(second, 'train', 'a').text == first.text
-
-
 def test_all_classification_and_relations_remain_out_of_scope():
     from tractor.extraction_scope import in_scope
 

@@ -7,6 +7,7 @@ from pathlib import Path
 from .coverage_assembly import sha
 from .episodes import Episode, native_episode
 from .jsonio import dumps, loads
+from .source_policy import excluded_source
 
 
 def position_blocks(text):
@@ -44,7 +45,7 @@ def position_blocks(text):
 def table_record_reason(row):
     if not any(t['kind'] == 'records' for t in row.get('tasks', [])):
         return None
-    if row['source'] in {'cord', 'vrdu', 'docile'}:
+    if row['source'] in {'vrdu', 'docile'}:
         return 'public_layout_position_task'
     # Conservative structural quarantine, never a prediction-quality filter.
     # Incidental tables can quarantine prose records too; retain header tasks.
@@ -59,6 +60,9 @@ def table_record_reason(row):
 
 
 def restrict(row):
+    if excluded_source(row):
+        return None, [{'id': row['id'], 'source': row['source'], 'split': row['split'],
+                       'task': t['id'], 'reason': 'excluded_source'} for t in row['tasks']]
     reason = table_record_reason(row)
     if reason is None:
         return row, []

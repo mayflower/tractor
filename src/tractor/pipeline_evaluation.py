@@ -43,7 +43,10 @@ def request_for(episode):
 
 def typed_requests_for(episode):
     """Adapt corpus contracts to the sole public API, without reading gold."""
+    from .source_policy import excluded_source
     from .types import ExtractRequest
+    if excluded_source(episode):
+        raise ValueError('CORD is excluded from all training and evaluation splits')
     legacy = request_for(episode)
     requests = {}
     for task in episode.tasks:
@@ -293,6 +296,10 @@ def structural_issue_errors(episode, response):
 
 def evaluate_pipeline(episodes, predictions, policy):
     from .document_quality import evaluate
+    from .source_policy import excluded_source
+
+    if any(excluded_source(e) for e in episodes):
+        raise ValueError('CORD is excluded; clean the dataset before scoring')
 
     report = evaluate(
         episodes, predictions, policy, score_fn=episode_counts, task_score_fn=task_counts

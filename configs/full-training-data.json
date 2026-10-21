@@ -1,0 +1,67 @@
+{
+  "languages": [
+    "de",
+    "en"
+  ],
+  "sources": [
+    {
+      "path": "data/recall-mixture-20261020/train.episodes.jsonl",
+      "sha256": "5ddb68a4ab0ae449b2fdda1bde47cc4102d63143011f096ef4d930fd04cd84ed"
+    },
+    {
+      "path": "data/recall-contract-20261020/training_mixture/train.episodes.jsonl",
+      "sha256": "51527c285da57f368e5337a18997411403f58c235e1f4bfc7ba991678e024d38"
+    },
+    {
+      "path": "data/recall-contract-20261020/active/train.episodes.jsonl",
+      "sha256": "fdfef1814d4d89397e0cc027654f36e3b30d8b81afb69c2d5fdd606448381d6d"
+    },
+    {
+      "path": "data/recall-contract-20261020/repair/train.episodes.jsonl",
+      "sha256": "f02505252af9573863fc3d32d2708bbeb2a2cf73d1d7a20b2da7612e00edc108"
+    },
+    {
+      "path": "data/recall-contract-20261020/public/train.episodes.jsonl",
+      "sha256": "4227f304af0e86453a575cbdab3ac2a38772e1d44f682c4ef0cf305dd358121e"
+    },
+    {
+      "path": "data/recall-contract-20261020/synthetic/train.episodes.jsonl",
+      "sha256": "e90af7200840b683278b08687d8a96a542d0f791ce80a00cb4531412ec41f7ed"
+    },
+    {
+      "path": "data/recall-contract-20261020/mixture/train.episodes.jsonl",
+      "sha256": "fd80aa1bec3412b15120b23ce73d6338ce92d085a6af2bfcb2feced8d91dede0"
+    }
+  ],
+  "heldout": [
+    {
+      "path": "data/recall-contract-20261020/public/dev.episodes.jsonl",
+      "sha256": "4b468252e64db6f65a3f4df4ef3f171ba803add58bb0c89616eb75de07ba16e8"
+    },
+    {
+      "path": "data/recall-contract-20261020/public/calibration.episodes.jsonl",
+      "sha256": "1b942b91d4653219381b9f5cbe35fc731a1200bb15d6f40c2a7c001d5ee1da71"
+    },
+    {
+      "path": "data/recall-contract-20261020/public/test.episodes.jsonl",
+      "sha256": "601aebd234d7ea7bcf4d905698cfaf039d32ce1266f124d52c0382c5e75338c8"
+    },
+    {
+      "path": "data/recall-contract-20261020/synthetic/dev.episodes.jsonl",
+      "sha256": "e723e43735fadaceaec9020de6a9734df59cf14ffdeb87e6f237f817de74304f"
+    },
+    {
+      "path": "data/recall-contract-20261020/synthetic/calibration.episodes.jsonl",
+      "sha256": "4e97a4520d165510d7495287c75dff3f4c2c0028674cd88262edd0218778db6e"
+    },
+    {
+      "path": "data/recall-contract-20261020/synthetic/test.episodes.jsonl",
+      "sha256": "b4ad53bffcdb7eb7b5eb94b8f0e30e25a8ddd31ecba21a4c6063ec9902b4972f"
+    },
+    {
+      "path": "data/extraction-recall-20261020/dev.episodes.jsonl",
+      "sha256": "b099ec2966d06605b6e85adca71392aac1f9c90fb784264bf1076d96c62048e2"
+    }
+  ],
+  "dev": "data/extraction-recall-20261020/dev.episodes.jsonl"
+}

@@ -60,14 +60,13 @@ uv run --no-sync python -m tractor.document_sources \
   --output data/my-public-documents --validate --model models/tractor
 ```
 
-The source registry pins revisions and file hashes for CORD, Kleister NDA,
+The source registry pins revisions and file hashes for Kleister NDA,
 Kleister Charity and VRDU. DocILE remains conditional on its provider download
 credentials. Code licensing does not establish data redistribution rights; resolve
 registry restrictions before publishing data.
 
 Adapters use supplied text/OCR as input, never images as an extraction task.
-CORD's available annotated OCR lines are a restricted text view, not complete raw
-receipt OCR. Literal fields are projected to original offsets. Normalized-only
+Literal fields are projected to original offsets. Normalized-only
 Kleister labels are excluded and logged, not converted into invented spans or
 negative examples. Official source splits remain separated. Text windows use
 boundaries independent of gold answers. Unsupported record crossings and native
@@ -178,7 +177,7 @@ checks still use masked similarity.
 
 Mixture qualification counts actual record tasks with at least two fields, not
 just a document's `artifact` label. There is no mandatory public table/record source count. Only explicitly
-described text records are eligible; CORD/VRDU position parsing is excluded.
+described text records are eligible; VRDU position parsing is excluded.
 Missing real evidence for in-scope text records remains explicit and cannot be
 replaced with a table benchmark. A representative record window takes priority over a
 header-only window from the same source. Public replay is capped at eight
@@ -289,7 +288,7 @@ private until quality, regression and export/reload checks justify promotion.
 Table parsing and reconstruction of PDF/OCR columns are outside the product.
 Run `python -m tractor.document_text_scope` on both qualified corpus inputs before
 building a mixture. The filter preserves text, spans and split memberships, removes
-public CORD/VRDU record tasks and quarantines structurally tabular synthetic record
+public VRDU record tasks and quarantines structurally tabular synthetic record
 tasks. Header fields remain eligible. Removed tasks are recorded in a sidecar audit.
 A structural filter is conservative, not a semantic proof; ambiguous text records
 require review. Generation and independent review must enforce the same boundary.

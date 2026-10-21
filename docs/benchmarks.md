@@ -7,8 +7,8 @@ normalization, field assignment and issue handling.
 
 ## Evaluation contract
 
-Evaluation uses 4,483 frozen Dev documents: 3,228 synthetic documents with teacher
-annotations, 1,000 real documents with deterministic annotations, and 255 real
+Evaluation uses 4,429 frozen Dev documents: 3,228 synthetic documents with teacher
+annotations, 1,000 real documents with deterministic annotations, and 201 real
 documents with human annotations. A document can contain several extraction tasks.
 This Dev set selected the checkpoint. It is not an independent held-out test.
 Calibration and test remain unused; thresholds 0.5 for fields and 0.3 for records
@@ -69,11 +69,14 @@ texts. They are reported separately from human labels.
 | Companies and contacts | Deterministic | 200 | 79.15% |
 | Contracts | Human | 54 | 71.03% |
 | Document metadata | Human | 143 | 85.71% |
-| Invoices and receipts | Human | 58 | 92.67% |
+| Advertising-order headers (VRDU; insufficient support) | Human | 4 | 100.00% |
 
 Real product references are incomplete, so no aggregate product F1 is claimed.
 Human-annotated evidence is missing for most domains and for repeated records.
-Counts are modest, especially for contracts and invoices.
+Counts are modest. The four VRDU requests are insufficient evidence for the invoice domain.
+CORD is excluded from every split, including receipt headers and derived windows.
+All displayed scores use the retained 4,429 documents; no failed request from an
+allowed source was removed. Existing predictions were rescored without new inference.
 
 ## Issues and remaining limitations
 
@@ -88,7 +91,7 @@ complete-request scores would have different denominators as answers change,
 so they are not presented as a universal accuracy number.
 
 The current version was explicitly selected for its broader generalist behavior.
-The strict quality gate and 12 regression checks remain failed; publication does
+The strict quality gate and 10 regression checks remain failed; publication does
 not turn those failures into passes. Remaining weaknesses include full record
 completion, restaurant cuisine (60.00% field F1), real product prices (70.59%),
 company names and real contracts. Real product prices are an individually scored
@@ -110,7 +113,8 @@ test membership stays separate; no sampling or per-domain quotas replaced the
 full training corpus. Technical validation is not an exhaustive human semantic audit.
 
 The [private dataset](https://huggingface.co/datasets/mayflowergmbh/tractor/tree/b07be20e73f60237ebb5a8aa37be4400a2d92097)
-contains the native requests, provenance, identities and exclusion audit. The
+records the completed training run. The local corpus now excludes CORD from all
+heldout splits; this cleanup has not been uploaded to that pinned Hub revision. The
 [release targets](../release/targets.json) pin the published model revision and
 weight checksum. The bundle source lock records the pipeline implementation,
 dataset revision, training exposure and selection provenance.

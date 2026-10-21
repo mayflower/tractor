@@ -2,10 +2,10 @@
   "release_version": "2026.10.21",
   "weights_sha256": "f9b177aa18d1f968cf8e2b3a99cff8938c096be8570064182f84c5a16488b90a",
   "split": "dev",
-  "dev_documents": 4483,
+  "dev_documents": 4429,
   "evaluation_contract": "production-extraction-pipeline-v5: repaired source contracts, reviewed text equivalence, incomplete references explicit; final typed values and issues",
   "reference_policy": "reviewed-text-equivalence-v1",
-  "input_sha256": "37e7015bcaa591b3ff4c3b63a5d530d8cc79d06ea1e7a901f1feff11899e6ea5",
+  "input_sha256": "b099ec2966d06605b6e85adca71392aac1f9c90fb784264bf1076d96c62048e2",
   "policy_sha256": "9fe02ce8d0358dec80ff9b0a748e6a2cbd648771504fec2fbc807f07c1902c8f",
   "threshold": 0.5,
   "record_threshold": 0.3,
@@ -16,32 +16,32 @@
     "inference_mode": true
   },
   "counts": {
-    "requests": 4483,
+    "requests": 4429,
     "errors": 5,
-    "gold_records": 5258,
-    "predicted_records": 5263,
-    "fields": 20777,
-    "exact_fields": 19831,
-    "tp": 19049,
-    "fp": 450,
-    "fn": 718,
-    "field_tp": 18826,
-    "field_fp": 409,
-    "field_fn": 887,
-    "answered": 19235,
-    "answerable": 19713,
-    "covered": 19199,
+    "gold_records": 5204,
+    "predicted_records": 5209,
+    "fields": 20563,
+    "exact_fields": 19639,
+    "tp": 18855,
+    "fp": 441,
+    "fn": 698,
+    "field_tp": 18634,
+    "field_fp": 400,
+    "field_fn": 865,
+    "answered": 19034,
+    "answerable": 19499,
+    "covered": 18998,
     "absent": 629,
     "false_absent": 14,
-    "issue_fields": 20741,
-    "issue_correct": 20130,
-    "issue_mismatches": 611,
+    "issue_fields": 20527,
+    "issue_correct": 19929,
+    "issue_mismatches": 598,
     "expected_rejections": 399,
     "correct_rejections": 393,
     "rejected_with_value": 0,
-    "exact_records": 4052,
-    "exact_requests": 3441,
-    "scored_requests": 3912,
+    "exact_records": 4015,
+    "exact_requests": 3404,
+    "scored_requests": 3858,
     "unscored_requests": 571,
     "unscored_fields": 604,
     "reviewed_equivalence_fields": 250,
@@ -1328,47 +1328,47 @@
     },
     "shape:single_object:real/human": {
       "counts": {
-        "requests": 255,
+        "requests": 201,
         "errors": 0,
-        "gold_records": 255,
-        "predicted_records": 255,
-        "fields": 543,
-        "exact_fields": 456,
-        "tp": 486,
-        "fp": 54,
-        "fn": 75,
-        "field_tp": 456,
-        "field_fp": 49,
-        "field_fn": 87,
-        "answered": 505,
-        "answerable": 543,
-        "covered": 505,
+        "gold_records": 201,
+        "predicted_records": 201,
+        "fields": 329,
+        "exact_fields": 264,
+        "tp": 292,
+        "fp": 45,
+        "fn": 55,
+        "field_tp": 264,
+        "field_fp": 40,
+        "field_fn": 65,
+        "answered": 304,
+        "answerable": 329,
+        "covered": 304,
         "absent": 0,
         "false_absent": 0,
-        "issue_fields": 543,
-        "issue_correct": 505,
-        "issue_mismatches": 38,
+        "issue_fields": 329,
+        "issue_correct": 304,
+        "issue_mismatches": 25,
         "expected_rejections": 0,
         "correct_rejections": 0,
         "rejected_with_value": 0,
-        "exact_records": 181,
-        "exact_requests": 181,
-        "scored_requests": 255,
+        "exact_records": 144,
+        "exact_requests": 144,
+        "scored_requests": 201,
         "unscored_requests": 0
       },
-      "field_precision": 0.902970297029703,
-      "field_recall": 0.8397790055248618,
-      "field_f1": 0.8702290076335878,
-      "element_f1": 0.8828337874659401,
-      "request_exact": 0.7098039215686275,
+      "field_precision": 0.868421052631579,
+      "field_recall": 0.8024316109422492,
+      "field_f1": 0.8341232227488151,
+      "element_f1": 0.8538011695906432,
+      "request_exact": 0.7164179104477612,
       "reference_complete": true,
-      "record_precision": 0.7098039215686275,
-      "record_recall": 0.7098039215686275,
-      "answer_rate": 0.9300184162062615,
-      "answerable_coverage": 0.9300184162062615,
+      "record_precision": 0.7164179104477612,
+      "record_recall": 0.7164179104477612,
+      "answer_rate": 0.9240121580547113,
+      "answerable_coverage": 0.9240121580547113,
       "false_answer_rate_absent": null,
       "rejection_accuracy": null,
-      "issue_accuracy": 0.9300184162062615,
+      "issue_accuracy": 0.9240121580547113,
       "error_rate": 0.0
     },
     "domain:metadata:real/human": {
@@ -1418,53 +1418,53 @@
     },
     "domain:invoices:real/human": {
       "counts": {
-        "requests": 58,
+        "requests": 4,
         "errors": 0,
-        "gold_records": 58,
-        "predicted_records": 58,
-        "fields": 218,
-        "exact_fields": 196,
-        "tp": 198,
-        "fp": 9,
-        "fn": 20,
-        "field_tp": 196,
-        "field_fp": 9,
-        "field_fn": 22,
-        "answered": 205,
-        "answerable": 218,
-        "covered": 205,
+        "gold_records": 4,
+        "predicted_records": 4,
+        "fields": 4,
+        "exact_fields": 4,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "field_tp": 4,
+        "field_fp": 0,
+        "field_fn": 0,
+        "answered": 4,
+        "answerable": 4,
+        "covered": 4,
         "absent": 0,
         "false_absent": 0,
-        "issue_fields": 218,
-        "issue_correct": 205,
-        "issue_mismatches": 13,
+        "issue_fields": 4,
+        "issue_correct": 4,
+        "issue_mismatches": 0,
         "expected_rejections": 0,
         "correct_rejections": 0,
         "rejected_with_value": 0,
-        "exact_records": 41,
-        "exact_requests": 41,
-        "scored_requests": 58,
+        "exact_records": 4,
+        "exact_requests": 4,
+        "scored_requests": 4,
         "unscored_requests": 0
       },
-      "field_precision": 0.9560975609756097,
-      "field_recall": 0.8990825688073395,
-      "field_f1": 0.9267139479905437,
-      "element_f1": 0.9317647058823529,
-      "request_exact": 0.7068965517241379,
+      "field_precision": 1.0,
+      "field_recall": 1.0,
+      "field_f1": 1.0,
+      "element_f1": 1.0,
+      "request_exact": 1.0,
       "reference_complete": true,
-      "record_precision": 0.7068965517241379,
-      "record_recall": 0.7068965517241379,
-      "answer_rate": 0.9403669724770642,
-      "answerable_coverage": 0.9403669724770642,
+      "record_precision": 1.0,
+      "record_recall": 1.0,
+      "answer_rate": 1.0,
+      "answerable_coverage": 1.0,
       "false_answer_rate_absent": null,
       "rejection_accuracy": null,
-      "issue_accuracy": 0.9403669724770642,
+      "issue_accuracy": 1.0,
       "error_rate": 0.0
     }
   },
   "checks": {
     "domain:invoices:real/human:field_f1": {
-      "score": 0.9267139479905437,
+      "score": 1.0,
       "passed": true
     },
     "domain:invoices:synthetic/teacher:field_f1": {
@@ -1592,7 +1592,7 @@
       "passed": true
     },
     "shape:single_object:real/human:field_f1": {
-      "score": 0.8702290076335878,
+      "score": 0.8341232227488151,
       "passed": true
     },
     "shape:single_object:synthetic/teacher:field_f1": {
@@ -2495,78 +2495,6 @@
       "reference_complete": true,
       "status": "insufficient_evidence"
     },
-    "invoices:header:sub_total_discount_price:real/human": {
-      "score": 0.6666666666666666,
-      "positive_support": 2,
-      "reference_complete": true,
-      "status": "insufficient_evidence"
-    },
-    "invoices:header:sub_total_service_price:real/human": {
-      "score": 0.7272727272727273,
-      "positive_support": 6,
-      "reference_complete": true,
-      "status": "insufficient_evidence"
-    },
-    "invoices:header:sub_total_subtotal_price:real/human": {
-      "score": 0.9841269841269841,
-      "positive_support": 32,
-      "reference_complete": true,
-      "status": "pass"
-    },
-    "invoices:header:sub_total_tax_price:real/human": {
-      "score": 1.0,
-      "positive_support": 20,
-      "reference_complete": true,
-      "status": "insufficient_evidence"
-    },
-    "invoices:header:total_cashprice:real/human": {
-      "score": 0.9714285714285714,
-      "positive_support": 35,
-      "reference_complete": true,
-      "status": "pass"
-    },
-    "invoices:header:total_changeprice:real/human": {
-      "score": 0.918918918918919,
-      "positive_support": 37,
-      "reference_complete": true,
-      "status": "pass"
-    },
-    "invoices:header:total_creditcardprice:real/human": {
-      "score": 0.8888888888888888,
-      "positive_support": 9,
-      "reference_complete": true,
-      "status": "insufficient_evidence"
-    },
-    "invoices:header:total_emoneyprice:real/human": {
-      "score": 0.6666666666666666,
-      "positive_support": 3,
-      "reference_complete": true,
-      "status": "insufficient_evidence"
-    },
-    "invoices:header:total_menuqty_cnt:real/human": {
-      "score": 0.7,
-      "positive_support": 13,
-      "reference_complete": true,
-      "status": "insufficient_evidence"
-    },
-    "invoices:header:total_menutype_cnt:real/human": {
-      "score": 0.6666666666666666,
-      "positive_support": 2,
-      "reference_complete": true,
-      "status": "insufficient_evidence"
-    },
-    "invoices:header:total_total_etc:real/human": {
-      "score": 0.0,
-      "positive_support": 3,
-      "reference_complete": true,
-      "status": "insufficient_evidence"
-    },
-    "invoices:header:total_total_price:real/human": {
-      "score": 0.9615384615384616,
-      "positive_support": 52,
-      "reference_complete": true,
-      "status": "pass"
-    },
     "invoices:records:code:synthetic/teacher": {
       "score": 0.9230769230769231,
       "positive_support": 7,
@@ -3294,11 +3222,6 @@
         "after": 0.8630952380952381,
         "allowed_drop": 0.02
       },
-      "field_checks:invoices:header:total_cashprice:real/human": {
-        "before": 1.0,
-        "after": 0.9714285714285714,
-        "allowed_drop": 0.02
-      },
       "field_checks:operations:document:technician:synthetic/teacher": {
         "before": 0.9941176470588236,
         "after": 0.9731343283582089,
@@ -3332,11 +3255,6 @@
       "domain:contracts:real/human": {
         "before": 0.7663551401869159,
         "after": 0.7102803738317757,
-        "allowed_drop": 0.005
-      },
-      "domain:invoices:real/human": {
-        "before": 0.9441860465116279,
-        "after": 0.9267139479905437,
         "allowed_drop": 0.005
       }
     }
@@ -3414,5 +3332,7 @@
   "known_smoke_limitations": [
     "Short label/value quantity can yield unsupported_number_format.",
     "Repeated equivalent quantity fields can yield not_found."
-  ]
+  ],
+  "source_exclusion": "CORD excluded from every split. Current local Dev metrics rescore the same predictions; published Hub artifacts have not been updated.",
+  "scoring_source_sha256": "568c7600ec182eaddc9086d9da74b03cb6d15b11cb5aea8e81896a34cd7f3e7c"
 }
