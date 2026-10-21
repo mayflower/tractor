@@ -21,8 +21,10 @@ Field types are `text`, `quantity`, `number`, `money`, `date`, `address`,
 to the field. A quantity field also requires a target `unit`. Without an anchor, extraction is document-wide. With an anchor, each
 occurrence identifies a record, including repeated product names.
 
-Responses contain only `data` and `issues`. Unresolved
-scalar fields are null; list cardinalities return empty arrays. Issues identify the field and a code such as `not_found` or
+Responses contain only `data` and `issues`. Missing
+scalar fields are null; list cardinalities return empty arrays. A scalar field with several distinct competing
+candidates returns all of them as an array, in source order, together with the issue `ambiguous_value`.
+Issues identify the field and a code such as `not_found` or
 `ambiguous_value`; array responses include the affected record index. Do not treat
 null as zero. SDK fractional values use Decimal.
 

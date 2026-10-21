@@ -306,10 +306,13 @@ def make_row(rng, split, index, language, family, scenario):
                 spans["quantity"]["start"] += len(prefix)
                 spans["quantity"]["text"] = token
             found = [] if absent else [spans["quantity"]]
+            competing_value = None
             if scenario in {"competing", "repeated_equal"} and si == 0:
-                other = (
-                    token if scenario == "repeated_equal" else "2 " + rng.choice(SOURCES[dim])[0]
-                )
+                if scenario == "competing":
+                    other_unit, other_factor = rng.choice(SOURCES[dim])
+                    other = "2 " + other_unit
+                else:
+                    other = token
                 extra, more = render(
                     "; {label}: {quantity}", {"label": label, "quantity": other}, len(chunk)
                 )
@@ -317,8 +320,12 @@ def make_row(rng, split, index, language, family, scenario):
                 found.append(more["quantity"])
                 if scenario == "competing":
                     issue = "ambiguous_value"
+                    competing_value = converted(Decimal(2), other_factor, target_factor)
             pieces.append((key, chunk, found))
             values[key] = None if issue or absent else converted(value, factor, target_factor)
+            if competing_value is not None:
+                # Both candidates stay in the final data, in source order, next to the issue.
+                values[key] = [converted(value, factor, target_factor), competing_value]
             if issue or absent:
                 codes[key] = "not_found" if absent else issue
         rng.shuffle(pieces)

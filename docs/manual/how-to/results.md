@@ -1,7 +1,7 @@
 # Handle normalized results and issues
 
 Every extraction returns `data` and `issues`. Inspect both before storing results.
-Missing or ambiguous scalar values are null; list fields use empty arrays.
+Missing scalar values are null; list fields use empty arrays. A scalar with distinct competing candidates returns all of them as an array together with `ambiguous_value`, so check the issues before using a scalar as a single value.
 A null amount is not zero. An issue names the affected field and a stable code;
 repeated records also include an index.
 

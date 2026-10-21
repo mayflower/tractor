@@ -134,7 +134,8 @@ validate deliverability. For example, use `country="DE"` for components of
 ## Scalars, lists and repeated records
 
 Fields default to `cardinality: "optional_one"`: a value or null. Distinct
-competing normalized values produce null and an ambiguity issue.
+competing normalized values are all returned as an array, in source order,
+together with an `ambiguous_value` issue. Nothing is dropped and no candidate is picked.
 `required_one` additionally reports a missing required value.
 `unique_list` returns all distinct normalized values, or an empty list.
 `one_or_more` additionally reports an empty result. The `list` type always

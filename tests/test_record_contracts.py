@@ -90,7 +90,7 @@ def test_normalized_record_values_preserve_duplicates_and_detect_conflicts():
             {'name': [span(text, 'Max')], 'length': [span(text, '12 cm', 20), span(text, '13 cm')]}]
     result = resolve(request, rows)
     assert result['data'][0]['length'] == 120
-    assert result['data'][1]['length'] is None
+    assert result['data'][1]['length'] == [120, 130]
     assert {'field': 'length', 'index': 1, 'code': 'ambiguous_value'} in result['issues']
 
 

@@ -70,7 +70,8 @@ def resolve(request, records, *, _diagnostics=False):
         for key, field in request.fields.items():
             multiple = field.cardinality in {"unique_list", "one_or_more"}
             found = row[key]
-            values[key] = found if multiple else found[0] if len(found) == 1 else None
+            # A scalar with several distinct candidates returns all of them with `ambiguous_value`.
+            values[key] = found if multiple or len(found) > 1 else found[0] if found else None
             spans = evidence_row[key]
             source = spans if multiple else spans[0].copy() if spans else None
             if not multiple and len(spans) > 1:

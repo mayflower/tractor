@@ -95,6 +95,8 @@ failures or optional additions outside the product objective.
   an implicit legacy list default must not overwrite a declared scalar. Conflicting
   explicit scalar declarations fail. Scalar means one normalized value, not one
   source occurrence: retain equivalent mentions and detect conflicting values.
+  Conflicting scalar candidates are returned together, in source order, with
+  ambiguous_value; never silently picked and never reduced to null.
   For scalar fields in repeated records, native decoding assigns each selected
   occurrence exclusively to its scored record. Separate occurrences of the same
   title remain available to separate people. This does not implement resolution

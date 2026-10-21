@@ -59,14 +59,14 @@ def test_streets_without_numbers_and_no_city_guess():
     assert 'city' not in address_parts('Spencer Road EC1A 9BU', 'street')
 
 
-def test_scalar_ambiguity_preserves_evidence_and_never_picks_first():
+def test_scalar_ambiguity_returns_every_candidate_and_flags_it():
     text = '001 002'
     req = DocumentRequest(text=text, tasks=[{'id': 'doc', 'kind': 'entities',
         'description': 'Numbers', 'fields': {'id': 'Registration identifier'}}],
         processing={'doc': {'id': {'kind': 'identifier', 'cardinality': 'optional_one'}}}, include_details=True)
     raw = {'entities': {'id': [{'text': '001', 'start': 0, 'end': 3}, {'text': '002', 'start': 4, 'end': 7}]}}
     result = resolve_document(req, raw)
-    assert result['data']['doc']['id'] == []
+    assert result['data']['doc']['id'] == ['001', '002']
     assert result['issues'][0]['code'] == 'ambiguous_value'
     assert len(result['details']['doc']['id']) == 2
 

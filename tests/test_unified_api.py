@@ -84,7 +84,7 @@ def test_distinct_normalized_values_remain_ambiguous():
     text = "12 cm; 13 cm"
     request = ExtractRequest(text=text, fields={"length": Quantity("Length", unit="mm")})
     result = extract(Evidence(text, [{"length": [span(text, "12 cm"), span(text, "13 cm")]}]), request)
-    assert result == {"data": {"length": None}, "issues": [{"field": "length", "code": "ambiguous_value"}]}
+    assert result == {"data": {"length": [120, 130]}, "issues": [{"field": "length", "code": "ambiguous_value"}]}
 
 
 def test_evaluation_and_http_share_record_service_and_preserve_records():

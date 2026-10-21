@@ -261,7 +261,8 @@ def generate_row(rng, family, index, split):
             v2 = b * Decimal(factor) / Decimal(target_factor)
             context.prec = 34
             v1, v2 = +v1, +v2
-        data = {product_key: product, qkey: None if issue else v1, qkey2: v2}
+        # Competing candidates are both returned, in source order, with the issue.
+        data = {product_key: product, qkey: [v1, v2] if competing else None if issue else v1, qkey2: v2}
         outputs.append({k: data[k] for k in fields})
         if issue:
             entry = {"field": qkey, "code": issue}

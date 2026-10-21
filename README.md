@@ -102,8 +102,8 @@ with Client("http://127.0.0.1:8000") as client:
 ```
 
 The result contains separate Alpha and Beta records with widths 100 and 120 mm.
-Details retain original character offsets. Missing or ambiguous quantities produce
-`null` and structured issues. The SDK imports no ML libraries; `just setup-sdk`
+Details retain original character offsets. Missing quantities produce
+`null` and a structured issue; competing candidates are all returned with `ambiguous_value`. The SDK imports no ML libraries; `just setup-sdk`
 installs its development dependencies without the model stack.
 
 ## Evaluation and limits

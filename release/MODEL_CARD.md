@@ -99,8 +99,8 @@ and real CPU HTTP, SDK, Unicode offsets, token rejection and one-encoder checks 
 Long record lists, wide schemas and competing values remain fallible. There are
 150 incorrect complete responses in the acceptance set and 390 in the regression
 set. OCR, arbitrary tables, other languages and unrestricted documents are not
-validated. The joint schema/text limit is 512 tokens. Missing or ambiguous values
-produce null plus a structured issue; unsupported quantities are not guessed.
+validated. The joint schema/text limit is 512 tokens. Missing values produce
+null plus a structured issue; competing candidates for a scalar field are all returned together with `ambiguous_value`; unsupported quantities are not guessed.
 
 ## Technical provenance
 

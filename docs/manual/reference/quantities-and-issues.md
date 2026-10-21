@@ -39,7 +39,7 @@ round-half-even. Unit incompatibility is an issue, not an inferred conversion.
 | Code | Meaning and usual action |
 |---|---|
 | `not_found` | No selected field span or no anchor record; review missing information. |
-| `ambiguous_value` | Multiple independent candidates; resolve source ambiguity. |
+| `ambiguous_value` | Multiple independent candidates. The field returns all distinct candidates as an array, in source order; resolve the source ambiguity. |
 | `ambiguous_record` | Single-record request detected multiple anchors; request many or narrow the input. |
 | `invalid_span` | Candidate does not match its original source indices; treat as unresolved and investigate. |
 | `non_scalar_quantity` | Range, tolerance, bound, approximation, or chained dimension. |

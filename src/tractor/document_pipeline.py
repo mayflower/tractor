@@ -154,7 +154,7 @@ def resolve_document(request, raw):
                         used.append(span)
                 cardinality = rule.cardinality if rule else task.cardinalities.get(key, "unique_list")
                 if cardinality in {"required_one", "optional_one"} and len(unique(value, rule.kind if rule else None)) > 1:
-                    value = []
+                    # Competing candidates stay in the result, in source order; the issue marks them unresolved.
                     issues.append({"task": task.id, "index": index, "field": key, "code": "ambiguous_value"})
                 if cardinality in {"required_one", "one_or_more"} and not value:
                     issues.append({"task": task.id, "index": index, "field": key, "code": "missing_required_value"})

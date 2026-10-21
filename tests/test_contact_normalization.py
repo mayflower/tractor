@@ -92,6 +92,10 @@ def test_only_declared_equivalences_deduplicate(field, values, expected, ambiguo
     backend = Backend(text, [{"value": [span(text, value) for value in values]}])
     request = ExtractRequest(text=text, fields={"value": field})
     response = extract(backend, request)
+    if ambiguous:
+        # Competing candidates are all returned, each exactly as it normalizes on its own.
+        expected = [extract(Backend(v, [{"value": [span(v, v)]}]), ExtractRequest(text=v, fields={"value": field}))["data"]["value"]
+                    for v in values]
     assert response["data"] == {"value": expected}
     assert response["issues"] == ([{"field": "value", "code": "ambiguous_value"}] if ambiguous else [])
     assert set(response) == {"data", "issues"}

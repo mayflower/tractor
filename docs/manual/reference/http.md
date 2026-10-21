@@ -39,7 +39,7 @@ be JSON booleans, not strings such as `"true"`.
 
 `data` is a field-keyed object, or an array of such objects when `many=true`.
 Every record contains all requested keys. Values are source strings, normalized
-JSON numbers, or null; list cardinalities return arrays of values. Equivalent numbers may use exponent notation or trailing
+JSON numbers, or null; list cardinalities return arrays of values. A scalar field with distinct competing candidates also returns an array, together with an `ambiguous_value` issue. Equivalent numbers may use exponent notation or trailing
 zeroes; compare numeric values rather than the literal response text. `issues` is always an array and may be empty.
 
 An issue contains `field` (a key or null) and `code`. Field-level issues for array

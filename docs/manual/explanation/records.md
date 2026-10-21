@@ -23,6 +23,7 @@ Within a field, exact duplicate spans at the same offsets are deduplicated and
 contained spans are removed in favor of maximal spans. Multiple independent
 candidates produce `ambiguous_value`, even when their normalized numeric values
 would be equal. Two separate `10 cm` occurrences are still two candidate sources.
+The field then holds every distinct normalized candidate in source order.
 This conservatism helps avoid silently making an association the system cannot
 resolve under its contract.
 
