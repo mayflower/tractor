@@ -53,7 +53,7 @@ extraction request.
 The file [scalar.json](../../../examples/manual/scalar.json) asks for the width in mm:
 
 ```json
-{"text":"Breite: 12,5 cm.","locale":"de-DE","fields":{"width_mm":{"type":"quantity","description":"Breite","unit":"mm"}}}
+{"text":"Die Breite beträgt 12,5 cm.","locale":"de-DE","fields":{"width_mm":{"type":"quantity","description":"Breite","unit":"mm"}}}
 ```
 
 ```sh

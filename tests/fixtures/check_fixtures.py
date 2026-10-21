@@ -101,25 +101,33 @@ def check_api() -> int:
         data = gold['response']['data']
         assert isinstance(data, list) if many else isinstance(data, dict)
         out_records = data if many else [data]
-        for record in out_records:
+        for index, record in enumerate(out_records):
             assert set(record) == set(fields)
             for name, value in record.items():
                 if value is None:
                     continue
-                if fields[name]['type'] == 'text':
-                    assert isinstance(value, str)
-                else:
-                    assert isinstance(value, (int, Decimal)) and not isinstance(value, bool)
-                    assert Decimal(value).is_finite()
+                candidates = value if isinstance(value, list) else [value]
+                if isinstance(value, list):
+                    assert len(value) > 1 and len(set(value)) == len(value)
+                    assert any(issue['code'] == 'ambiguous_value' and issue['field'] == name
+                               and issue.get('index', 0) == index for issue in gold['response']['issues'])
+                for candidate in candidates:
+                    if fields[name]['type'] == 'text':
+                        assert isinstance(candidate, str)
+                    else:
+                        assert isinstance(candidate, (int, Decimal)) and not isinstance(candidate, bool)
+                        assert Decimal(candidate).is_finite()
         for issue in gold['response']['issues']:
             assert issue['code'] in ISSUES
             name = issue['field']
             assert name is None or name in fields
             if 'index' in issue:
                 assert many and 0 <= issue['index'] < len(data)
-                assert data[issue['index']][name] is None
+                value = data[issue['index']][name]
+                assert isinstance(value, list) and len(value) > 1 if issue['code'] == 'ambiguous_value' else value is None
             elif name is not None and not many:
-                assert data[name] is None
+                value = data[name]
+                assert isinstance(value, list) and len(value) > 1 if issue['code'] == 'ambiguous_value' else value is None
     # Independent arithmetic check for the two locale-variant regression rows.
     assert rows[6]['gold']['response']['data']['range_km'] == Decimal('1.234') * Decimal('1.609344')
     assert rows[7]['gold']['response']['data']['range_km'] == Decimal('1234') * Decimal('1.609344')

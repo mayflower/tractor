@@ -1,37 +1,33 @@
 # Understanding accuracy and performance
 
-The released tractor system is trained for a particular extraction contract. Its
-synthetic acceptance results measure complete responses, including records, fields,
-quantity conversions, and issue conventions. Field F1 measures extraction at a
-finer level; it is not interchangeable with complete-response correctness.
+Tractor is evaluated as a complete extraction and normalization pipeline. Final
+typed values, record assignment and issue codes determine correctness. Raw spans
+are diagnostic evidence, not the product score.
 
-On the frozen 680-request comparison, tractor has 94.41% exact complete responses,
-compared with 24.85% for Haiku 5.5 and 54.71% for GPT-6 Luna. Median HTTP response
-times are 330 ms on local CPU, 1,424 ms for Haiku's cloud API, and 1,873 ms for Luna's
-cloud API. The [benchmark report](../../benchmarks.md) contains rounding-tolerant
-scores, failure counts, hardware, model hashes, and the reproducible request set.
+The current model is selected using 4,483 Dev documents. Synthetic, real/human
+and real/deterministic evidence is reported separately. Field F1 scores individual
+fields; complete-record F1 requires the whole record to be correct. On synthetic
+Dev, these are 90.30% and 57.61% respectively for repeated records. A high field
+score does not imply that a complete record is safe to accept automatically.
+See the [current report](../../benchmarks.md) for all measured domains.
 
-These are task-specific results. Tractor combines learned extraction with a
-purpose-built normalizer; the LLM baselines generate their responses and arithmetic
-from a shared prompt. Reasoning, tool use, provider structured-output modes, retries,
-and answer repair were disabled. The comparison does not measure an optimized LLM
-workflow or a general ranking of intelligence. Local-versus-cloud timings include
-network overhead; GPU latency was not measured for the released bundle.
+Equivalent source-supported answers are accepted through reviewed offline
+annotations after normalization. Incomplete references leave unresolved answers
+unscored; they are neither successes nor confirmed errors. Changing reference
+coverage can change the denominator of exact-request scores. Report coverage
+alongside scores, and do not compare changing denominators as if they were fixed.
 
-Synthetic texts are useful for controlled coverage of units, missing fields, and
-record patterns. They do not establish accuracy on customer documents, OCR noise,
-new domains, or different languages. Shared template families can make samples
-correlated even when the literal texts are disjoint from training. The full 2,048
-acceptance requests and the 680-request comparison subset are not independent tests.
+Dev selection does not establish independent test accuracy. Calibration and test
+are separate, held-out splits; the current thresholds remain provisional. The
+owner selected this model for broader generalist behavior while accepting known
+regressions. The strict quality checks remain failed and are published as such.
+Missing real evidence cannot be replaced by high synthetic scores.
 
-A practical release gate combines a frozen acceptance set, failure review, and
-end-to-end downstream checks. Measure the cost of wrong accepted values as well as
-abstentions. A model extraction score is not a calibrated probability of correctness;
-a valid JSON response is not evidence that the source was understood correctly.
-
-For latency, choose the deployment you actually intend to use, wait for readiness,
-separate startup from per-request work, and measure representative schemas and text
-lengths. Report concurrent load, failure rate, median and tail latency together.
-A bounded queue deliberately rejects excess work rather than accumulating it forever.
+No latency or Haiku/Luna comparison has been measured for the current weights.
+To assess performance, measure the deployment and schema distribution you intend
+to use. Separate startup from requests and report hardware, concurrency, failures,
+median and tail latency. A specialized model plus normalization has a different
+execution path from prompted LLM generation; numerical advantages require a
+matched benchmark of the actual released bundle.
 
 [Manual home](../index.md)

@@ -14,7 +14,7 @@ sha256sum models/tractor/model.safetensors
 The released weights must have SHA-256:
 
 ```text
-209a62ad03f559d7fd21fca9e44c4daad597825b1b6520df72545823bbc9c61b
+f9b177aa18d1f968cf8e2b3a99cff8938c096be8570064182f84c5a16488b90a
 ```
 
 Transfer the whole model directory to the serving machine. Copy the tokenizer,

@@ -4,14 +4,14 @@
 
 **Text in. Structured data out. Ready for your application.**
 
-tractor is Mayflower’s **System One Extraction Model**: a specialized model and API
-for turning German and English text into product fields, separate records and
-normalized quantities. Describe the fields you need. Get JSON your code can use.
+tractor is Mayflower’s **System One Extraction Model**: a specialized German/English
+model and API for turning readable text into typed fields, separate records and
+normalized values. Describe the fields you need. Get JSON your code can use.
 
-Built for the extraction calls inside catalog imports, supplier integrations and
-operational workflows, tractor combines learned language understanding with exact
-unit conversion and an explicit API contract. Run it on your own infrastructure,
-with CPU or GPU inference and an HTTP API that works with any language.
+Extract names, contact details, identifiers, dates, amounts and quantities from
+business documents, messages and other prose. Learned extraction combines with
+programmatic normalization using established Python libraries. Run the complete
+pipeline on your own infrastructure, on CPU or GPU.
 
 [User manual](docs/manual/index.md) · [Get started](#start-the-api) · [API](docs/api.md) ·
 [Benchmarks](docs/benchmarks.md) · [Model card](release/MODEL_CARD.md)
@@ -21,42 +21,44 @@ with CPU or GPU inference and an HTTP API that works with any language.
 | Your application needs | tractor provides |
 |---|---|
 | Fields from messy text | Source-span extraction with field descriptions in plain language |
-| Consistent measurements | Locale-aware parsing and deterministic Decimal unit conversion |
-| Multiple products in one request | Anchored records with values associated with each product |
+| Consistent typed values | Library-backed parsing, validation and deterministic normalization |
+| Repeated records in prose | Anchored records with fields assigned to each explicitly described entry |
 | Explicit outcomes | Missing-value, normalization and ambiguity issues |
 | Control over deployment | Local, offline serving with CPU or GPU support |
 | A small integration surface | One HTTP endpoint and a lightweight Python SDK |
 
-A single encoder pass finds the relevant spans. Code assembles the response and
-normalizes quantities. That focused path makes tractor a practical alternative to
-calling Haiku 5.5 or GPT-6 Luna for repeated, well-defined extraction tasks.
-See the [evaluation results and supported scope](docs/benchmarks.md).
+A single encoder pass finds the relevant spans; deterministic code parses and
+normalizes the results. Keep repeated extraction local, with one public API and
+explicit handling of missing or ambiguous values.
 
 ## Specialized extraction, measured
 
-**94.41% complete-response accuracy. 330 ms median response time on CPU.**
+**99.09% field F1 on synthetic single-object Dev requests. 90.30% on fields in
+repeated prose records.**
 
-On 680 identical synthetic extraction requests, tractor was **4.3× faster
-than Haiku 5.5** and **5.7× faster than GPT-6 Luna** by median HTTP response
-time, with higher complete-response accuracy than both prompt-only baselines.
+Version **2026.10.21** uses the selected checkpoint from complete training on
+**341,237 German/English episodes**. Evaluation covers **4,483 Dev documents**
+through the full API pipeline. Complete-record F1 is **57.61%**: strong field
+extraction does not mean every record is complete. Real human-annotated Dev field
+F1 ranges from **71.03% for contracts to 92.67% for invoices** in the measured sets.
 
-![Extraction accuracy and median response times](docs/brand/comparison.svg)
+![Current pipeline Dev results by output form](docs/brand/comparison.svg)
 
-CPU loopback versus remote cloud APIs, reasoning disabled, no retries or answer
-repair. Results apply to this extraction contract and synthetic workload; they
-include network overhead and do not measure optimized LLM pipelines.
-[Full results, rounding-tolerant scores and reproducible evidence](docs/benchmarks.md).
+Dev selected the checkpoint; these are not independent test results. Strict
+quality and regression gates are not all met. See [results, evidence and known
+limitations](docs/benchmarks.md). No latency or Haiku/Luna comparison is claimed
+for these weights.
 
-## From supplier text to application data
+## From source text to application data
 
-A supplier writes **“Die Breite beträgt 12,5 cm.”** Your system needs millimeters.
-tractor returns **`125`** under your field name. For multiple products, it returns
-separate records. Structured issues identify missing or ambiguous values for review.
+A message says **“Die Breite beträgt 12,5 cm.”** Your system needs millimeters.
+tractor returns **`125`** under your field name. Other declared field types select
+their own parsers and normalizers. Repeated records preserve their field assignments;
+missing or ambiguous values produce structured issues.
 
-Use it to populate catalog attributes, normalize dimensions from short technical
-specifications, or provide an extraction step inside a larger agent workflow.
-The supported scope is short German/English text within a 512-token joint
-text/schema budget; validate your own workload before automating decisions.
+Use it for document metadata, CRM fields, explicitly named contract parties,
+contact details, product attributes and measurements. Inputs and schemas share
+a 512-token budget. Validate the complete pipeline on your own workload.
 
 ## Start the API
 
@@ -67,7 +69,7 @@ bundle and start the API:
 ```sh
 nix develop
 just setup
-uv run --no-sync hf download mayflowergmbh/tractor --local-dir models/tractor
+uv run --no-sync hf download mayflowergmbh/tractor --revision v2026.10.21 --local-dir models/tractor
 tractor serve --model models/tractor --device cuda
 ```
 
@@ -102,21 +104,18 @@ with Client("http://127.0.0.1:8000") as client:
 ```
 
 The result contains separate Alpha and Beta records with widths 100 and 120 mm.
-Details retain original character offsets. Missing quantities produce
-`null` and a structured issue; competing candidates are all returned with `ambiguous_value`. The SDK imports no ML libraries; `just setup-sdk`
+The public response contains only `data` and `issues`. Missing values produce
+`null`; competing scalar candidates are returned together with `ambiguous_value`. The SDK imports no ML libraries; `just setup-sdk`
 installs its development dependencies without the model stack.
 
 ## Evaluation and limits
 
-On 2,048 synthetic acceptance requests, 92.68% of complete responses are correct
-(Field F1 0.9876). A separate 20,000-request synthetic suite reaches 98.05%
-(Field F1 0.9974). All 32 authored API regression cases pass. These datasets have
-different distributions; see [methodology and limitations](docs/benchmarks.md).
-
-Real-world accuracy is unmeasured. Long record lists, wide schemas and competing
-values can still fail. The joint text/schema budget is 512 tokens. Unsupported or
-ambiguous values are rejected rather than guessed. CPU response times and the cloud API comparison are
-reported above; GPU latency has not been measured for this bundle.
+The selected model improves generalist coverage, with remaining weaknesses in
+complete records, restaurant cuisine, product prices and some company/contract
+fields. 12 regression checks remain failed. Real evidence is missing for many
+domains, and incomplete references are reported as unscored. Calibration and test
+remain held out. See [the full evaluation](docs/benchmarks.md) and
+[model card](release/MODEL_CARD.md).
 
 ## Development
 

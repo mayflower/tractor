@@ -15,7 +15,7 @@ SOURCE_FILES = (
 SOURCE_DIRS = ('src', 'tests', 'scripts', 'examples', 'docs', 'configs', 'release', 'benchmarks', 'schemas', 'deploy')
 MODEL_FILES = (
     'model.safetensors', 'config.json', 'tokenizer.json', 'tokenizer_config.json',
-    'thresholds.json', 'normalization.json', 'source-lock.json', 'README.md', 'metrics.json',
+    'thresholds.json', 'native-policy.json', 'normalization.json', 'source-lock.json', 'README.md', 'metrics.json',
     'tractor.svg', 'comparison.svg',
 )
 

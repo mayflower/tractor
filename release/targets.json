@@ -6,9 +6,13 @@
   "github_private": true,
   "huggingface_private": true,
   "local_bundle": "models/tractor",
-  "weights_sha256": "209a62ad03f559d7fd21fca9e44c4daad597825b1b6520df72545823bbc9c61b",
+  "weights_sha256": "f9b177aa18d1f968cf8e2b3a99cff8938c096be8570064182f84c5a16488b90a",
   "license": null,
-  "publication_status": "private_source_and_model_published",
+  "publication_status": "private_full_training_generalist",
   "metrics": "release/metrics.json",
-  "huggingface_revision": "c36fd6e5bd0171c64c32e6124182d0d428f6844b"
+  "huggingface_revision": "b0dbb004b1a625eb5e17517c1e78dd335d9cb11d",
+  "version": "2026.10.21",
+  "huggingface_tag": "v2026.10.21",
+  "strict_release_gates_passed": false,
+  "promotion_basis": "Owner-approved generalist promotion with disclosed limitations"
 }

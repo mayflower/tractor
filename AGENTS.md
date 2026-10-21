@@ -33,7 +33,10 @@ The authoritative scope and implementation requirements are in reqs.md.
   Decoder-only repairs freeze all other weights before optimizer creation and
   verify them afterwards. Preserve native training proposal injection. Apply
   declared per-field and rejection regression guards before accepting a checkpoint;
-  a better aggregate alone is insufficient.
+  a better aggregate alone is insufficient. An explicit owner decision may promote
+  a checkpoint despite disclosed regression failures. Preserve the failed checks
+  and missing evidence in published metrics; promotion does not imply that strict
+  quality gates passed. Do not re-block an explicitly authorized promotion.
   Evaluate both final data and expected field/record issue codes. Correct rejection
   of invalid or ambiguous evidence is a valid outcome; not_found is not a substitute
   for recognizing invalid present evidence. Expected issues are offline answer

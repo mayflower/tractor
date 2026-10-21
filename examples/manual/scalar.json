@@ -1,5 +1,5 @@
 {
-  "text": "Breite: 12,5 cm.",
+  "text": "Die Breite beträgt 12,5 cm.",
   "fields": {
     "width_mm": {
       "type": "quantity",
