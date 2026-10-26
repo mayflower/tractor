@@ -3,7 +3,7 @@ default:
 
 # Experimental BiQwen backend, same public API. Explicit download, pinned revision.
 prepare-biqwen:
-    uv sync --locked --extra biqwen --extra dev
+    uv sync --locked --extra biqwen-fast --extra train --extra dev
     uv run --no-sync python scripts/prepare-biqwen.py
 
 serve-biqwen:

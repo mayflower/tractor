@@ -10,9 +10,12 @@ inputs, budgets and policies. Calibration/test remain untouched.
 
 The hybrid mode changes the eight full-attention layers only; the 24 DeltaNet
 layers retain directed recurrence. A passed kernel or gradient test is not
-evidence of extraction quality. The completed bounded diagnostic supports a full hybrid run: 93.4% versus
-89.9% normalized Dev field F1, with disclosed entity-list regression. A new full
-run requires the complete FLA baseline and its verified GPU preflight first. Preserve the immutable pinned base bundle.
+evidence of extraction quality. The completed bounded diagnostic supports a full
+hybrid run: 93.4% versus 89.9% normalized Dev field F1, with disclosed entity-list
+regression. The complete FLA baseline and real GPU preflight both passed their
+execution checks; the baseline itself does not meet release quality gates.
+Preserve the immutable pinned base bundle. Install the pinned FLA dependency with
+`just prepare-biqwen` (biqwen-fast extra) before running the fast recipe.
 
 tractor is the System One Extraction Model and its local HTTP API/Python SDK.
 The sole release bundle is models/tractor. Keep publication files focused on the
