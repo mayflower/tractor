@@ -46,16 +46,22 @@ Ein technischer Nachweis ersetzt dabei keinen Qualitätsnachweis.
   ohne Gewichtsupdates. Der vollständige Trainings-Preflight ist bestanden.
 - Softwareprüfungen sind keine Qualitätsmessung. Das Volltraining läuft; vollständige Epochen, Modellauswahl und Abschnitt 9
   sind noch nicht abgeschlossen.
-- Die Nachbearbeitung für Abschnitt 9 ist separat vorbereitet: Commits `1d906ef`
-  und anschließend `2be9c7e`
+- Die Nachbearbeitung für Abschnitt 9 ist separat vorbereitet: Commits `1d906ef`,
+  `2be9c7e` und `34f2faf` in dieser Reihenfolge
   im Worktree `/scratch/johann-peter.hartmann/tractor-biqwen-v2/post-training`.
-  920 Softwaretests sowie Lint und Dokumentationsprüfung bestehen. Enthalten sind
+  923 Softwaretests sowie Lint und Dokumentationsprüfung bestehen. Enthalten sind
   die Sperre vor vollständigem Training/Dev-Auswahl, Kalibrierung über die
   Produktionspipeline, ein gebundenes Inferenz-Bundle und der eingefrorene
   Abschlusstest. Der Record-Replay wurde mit echten parametrisierten Köpfen und
   PyTorch-Inferenztensoren geprüft. Reale Kalibrierung und Test sind noch offen.
   Diese Commits erst nach Ende des Trainings übernehmen: Der laufende Trainer
   prüft die unveränderten Hashes seines ursprünglichen Implementierungsstands.
+- Der HTTP-Smoke-Test verwendet jetzt den normalen Backend-Lader und die
+  ausdrücklich gewählte Präzision. Er prüft konkrete normalisierte DE/EN-Werte,
+  Unicode-Offsets, Konflikt-/Fehlwert-Issues, Kontakt-Records, die tatsächliche
+  Kontextgrenze und die einzige öffentliche POST-API. Der Testpfad ist mit einem
+  echten lokalen HTTP-Server und kontrollierten Testbelegen geprüft; die Prüfung
+  mit dem ausgewählten Volltrainings-Checkpoint steht weiterhin aus.
 - Die korrigierte Offline-Fehleranalyse wurde auf allen 4.429 gespeicherten
   Dev-Vorhersagen der typisierten Ausgangsgewichte ausgeführt. Sie trennt 97
   ungeklärte Antworten bei unvollständigen Referenzen und 457 nicht bewertbare
