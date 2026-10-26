@@ -7,7 +7,11 @@ import pytest
 import torch
 
 from tractor.biqwen import BiQwenExtractor, decode_multiple, load_runtime
+from tractor.biqwen_attention import BIDIRECTIONAL, CAUSAL, attention_contract, install_attention
 from tractor.biqwen_training import (
+    BIDIRECTIONAL_RECIPE,
+    FAST_RECIPE,
+    RECIPE,
     IndexedJSONL,
     configure_training_model,
     epoch_order,
@@ -109,7 +113,9 @@ def test_indexed_corpus_keeps_utf8_offsets_and_all_rows(tmp_path):
     dataset.close()
 
 
-def test_cpu_training_checkpoint_roundtrip_and_multi_value_gradient(tmp_path, monkeypatch):
+@pytest.mark.parametrize('fast', [False, True])
+@pytest.mark.parametrize('attention_mode', [CAUSAL, BIDIRECTIONAL])
+def test_cpu_training_checkpoint_roundtrip_and_multi_value_gradient(tmp_path, monkeypatch, attention_mode, fast):
     # Real pinned extraction code and tiny random Qwen layers: software test only.
     path = Path('models/biqwen-extract-decide-4b').resolve()
     if not (path / 'tractor_qwen/model.py').exists():
@@ -118,7 +124,10 @@ def test_cpu_training_checkpoint_roundtrip_and_multi_value_gradient(tmp_path, mo
     from tokenizers import Tokenizer, models, pre_tokenizers, trainers
     from transformers import PreTrainedTokenizerFast
 
-    from tractor import biqwen_training
+    from tractor import biqwen_acceleration, biqwen_training
+    fast_runtime = {'gdn_backend': 'fla', 'max_microbatch': 3,
+                    'padded_token_budget': 1024, 'checkpointing_above_tokens': 512}
+    monkeypatch.setattr(biqwen_acceleration, 'select_gdn', lambda *args: {'fixture': 'CPU reference'})
 
     bootstrap, runtime, encoding = load_runtime(path)
     bootstrap.configure_gdn('torch')
@@ -146,6 +155,7 @@ def test_cpu_training_checkpoint_roundtrip_and_multi_value_gradient(tmp_path, mo
     backend.model.backbone = get_peft_model(backend.model.backbone, LoraConfig(
         task_type=TaskType.FEATURE_EXTRACTION, target_modules=['q_proj', 'v_proj'], r=4, lora_alpha=8))
     model = configure_training_model(backend)
+    install_attention(model.backbone, attention_mode)
     model._decode_example = MethodType(decode_multiple, model)
     model.train()
     encoded = encode_example(raw, encoding, tokenizer, limits)
@@ -168,12 +178,19 @@ def test_cpu_training_checkpoint_roundtrip_and_multi_value_gradient(tmp_path, mo
         assert next(iter(trace.requests.values()))['fields']
     assert backend.candidates(request) == expected
     state = {'step': 1, 'epoch': 0, 'cursor': 1, 'coverage': bytearray([1, 0]), 'best_metric': None}
-    pointer = save_checkpoint(tmp_path, backend, optimizer, state, {'fixture': True}, {'model': str(path)})
+    checkpoint_config = {'model': str(path), 'recipe': RECIPE}
+    if attention_mode == BIDIRECTIONAL:
+        checkpoint_config.update(recipe=BIDIRECTIONAL_RECIPE, attention_mode=attention_mode)
+    if fast:
+        checkpoint_config = loads(Path('configs/biqwen-full.json').read_text())
+        checkpoint_config.update(model=str(path), recipe=FAST_RECIPE, attention_mode=attention_mode, runtime=fast_runtime)
+    pointer = save_checkpoint(tmp_path, backend, optimizer, state, {'fixture': True}, checkpoint_config)
     checkpoint = tmp_path / pointer['checkpoint']
     saved = torch.load(checkpoint / 'training-state.pt', map_location='cpu', weights_only=True)
     assert saved['coverage'] == state['coverage'] and saved['cursor'] == 1
     monkeypatch.setattr(biqwen_training, 'BiQwenExtractor', lambda *args: fresh())
     restored = load_checkpoint(checkpoint, trainable=True)
+    assert attention_contract(restored.model.backbone) == attention_contract(model.backbone)
     for name, value in model.state_dict().items():
         assert torch.equal(value, restored.model.state_dict()[name]), name
     restored.model.eval()
@@ -188,6 +205,8 @@ def test_cpu_training_checkpoint_roundtrip_and_multi_value_gradient(tmp_path, mo
     from tractor.document_sources import envelope
 
     config = loads(Path('configs/biqwen-full.json').read_text())
+    if attention_mode == BIDIRECTIONAL:
+        config.update(recipe=BIDIRECTIONAL_RECIPE, attention_mode=attention_mode)
     work = tmp_path / 'runner'
     (work / 'configs').mkdir(parents=True)
     (work / 'data').mkdir()
@@ -205,6 +224,8 @@ def test_cpu_training_checkpoint_roundtrip_and_multi_value_gradient(tmp_path, mo
     config.update(model='base', dataset={'path': 'data'}, output_dir='run', num_epochs=2,
                   batch_size=2, gradient_accumulation=2, checkpoint_updates=1,
                   gradient_checkpointing=False, policy='policy.json', baseline='baseline.json')
+    if fast:
+        config.update(recipe=FAST_RECIPE, attention_mode=attention_mode, runtime=fast_runtime, gradient_checkpointing=True)
     (work / 'configs/run.json').write_text(dumps(config))
     (work / 'configs/active-training.json').write_text(dumps({
         'backend': 'biqwen', 'binding': config['dataset'], 'training_config': 'configs/run.json'}))

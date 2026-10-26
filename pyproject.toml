@@ -12,6 +12,7 @@ dependencies = ["httpx>=0.28,<1", "pydantic>=2,<3", "simplejson>=3.20,<4"]
 
 [project.optional-dependencies]
 biqwen = ["tractor[server]", "transformers==5.20.1", "peft==0.21.2"]
+biqwen-fast = ["tractor[biqwen]", "fla-core==0.5.2"]
 server = [
   "fastapi>=0.115,<1",
   "uvicorn>=0.34,<1",

@@ -1,14 +1,18 @@
 # tractor
 
-Current work: the user authorized a short matched causal/hybrid feasibility
-comparison and training-throughput optimization on 2026-10-26. The old full run
-is interrupted (last durable checkpoint: step 1000); its automatic follow-up
-is cancelled. Implementation lives in the sibling worktree
-/scratch/johann-peter.hartmann/tractor-biqwen-v2/bidirectional on branch
-experiment/biqwen-hybrid-bidirectional. The diagnostic selects 512 train requests
-and 128 separate Dev documents; never describe it as full training. Do not resume
-the old full run or cancelled queue. Full training still requires every eligible
-DE/EN request; calibration/test remain untouched during this experiment.
+The user explicitly authorized a bounded matched causal/hybrid feasibility trial
+and training-throughput optimization on 2026-10-26. The old causal full run was
+interrupted; its last durable checkpoint is step 1000. The old automatic follow-up
+is cancelled and must not restart. Use tractor.biqwen_feasibility for the separate
+diagnostic; never describe its 512-request selection as full training. Compare
+final normalized API results on separate Dev, with identical starting weights,
+inputs, budgets and policies. Calibration/test remain untouched.
+
+The hybrid mode changes the eight full-attention layers only; the 24 DeltaNet
+layers retain directed recurrence. A passed kernel or gradient test is not
+evidence of extraction quality. The completed bounded diagnostic supports a full hybrid run: 93.4% versus
+89.9% normalized Dev field F1, with disclosed entity-list regression. A new full
+run requires the complete FLA baseline and its verified GPU preflight first. Preserve the immutable pinned base bundle.
 
 tractor is the System One Extraction Model and its local HTTP API/Python SDK.
 The sole release bundle is models/tractor. Keep publication files focused on the
@@ -17,7 +21,7 @@ Both release targets must remain private: mayflower/tractor and mayflowergmbh/tr
 
 The authoritative scope and implementation requirements are in reqs.md.
 
-On the BiQwen branch, the next full run is configs/biqwen-full.json, selected by
+On this branch, the next full run is configs/biqwen-fast-full.json, selected by
 configs/active-training.json. Use `just check-biqwen-full`, then `just train-full`
 or `just resume-full` when training is requested. Never invoke the bundled notebook
 trainer or substitute extract-de-en's sampled training selection. Compile the full
