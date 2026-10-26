@@ -10,8 +10,8 @@ from .model import native_example
 from .pipeline_evaluation import typed_requests_for
 
 
-def examples(episode):
-    """One training request per API task; final annotations never supervise spans."""
+def supervised_requests(episode):
+    """Backend-independent public requests and original source-span targets."""
     requests = typed_requests_for(episode)
     accepted, rejected = [], []
     for task in episode.tasks:
@@ -42,9 +42,15 @@ def examples(episode):
                     (answer.items or (answer.answer_alternatives[0] if answer.answer_alternatives else []))]
                     for key, answer in row.items()} for row in gold.records]
         request = requests[task.id]
-        native = native_example({'request': request.model_dump(), 'gold': {'records': records}})
-        accepted.append((task.id, request, native))
+        accepted.append((task.id, request, records))
     return accepted, rejected
+
+
+def examples(episode):
+    """One GLiNER training request per API task; no final-value supervision."""
+    requests, rejected = supervised_requests(episode)
+    return [(task, request, native_example({'request': request.model_dump(), 'gold': {'records': records}}))
+            for task, request, records in requests], rejected
 
 
 def validate(request, native, extractor, collator):

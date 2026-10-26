@@ -1,45 +1,39 @@
 {
-  "status": "completed",
-  "dataset": "data/full-training-de-en-native",
+  "status": "prepared",
+  "backend": "biqwen",
+  "dataset": "data/biqwen-full-de-en",
   "source_episodes": "data/full-training-de-en",
   "selection_config": "configs/full-training-data.json",
-  "training_config": "configs/extraction-full.json",
+  "training_config": "configs/biqwen-full.json",
   "binding": {
-    "path": "data/full-training-de-en-native",
-    "manifest_sha256": "df7a6eb49bb4ee5fa4f194e0441a7039e9292ab9e8c0cb96678d4d93c5f80b98",
-    "unique_train_episodes": 341237,
-    "native_train_requests": 343502
+    "path": "data/biqwen-full-de-en",
+    "manifest_sha256": "6c1de1e38095aecff5f3811ba18999fd5adba2143b85ec701be91449adaedbe7",
+    "unique_train_episodes": 339949,
+    "native_train_requests": 342147
   },
   "languages": {
-    "de": 16149,
-    "en": 325088
+    "de": 15940,
+    "en": 324009
   },
   "sampling": false,
   "quotas": false,
-  "training_started": true,
-  "coverage_report": "data/full-training-de-en-native/coverage.json",
+  "training_started": false,
+  "training_complete": false,
+  "coverage_report": "data/biqwen-full-de-en/manifest.json",
+  "run_status": "/scratch/johann-peter.hartmann/tractor-biqwen-full-20261026/status.json",
+  "preflight_report": "reports/biqwen-full-preparation-20261026/plan.json",
   "huggingface_dataset": {
-    "repo": "mayflowergmbh/tractor",
-    "revision": "b07be20e73f60237ebb5a8aa37be4400a2d92097",
-    "private": true,
-    "verified": true,
     "local_matches_published_revision": false,
-    "source_cleanup_uploaded": false
-  },
-  "training_complete": true,
-  "run_status": "reports/full-training-20261020/run-status.json",
-  "completed_training_binding": {
-    "path": "data/full-training-de-en-native",
-    "manifest_sha256": "a6b119cdaea8e247d595c74b466911a05ecad97c65914731843f542d26ce09fd",
-    "unique_train_episodes": 341237,
-    "native_train_requests": 343502
+    "source_cleanup_uploaded": false,
+    "new_biqwen_native_dataset_uploaded": false
   },
   "source_exclusion": {
     "source": "cord",
-    "all_splits": true,
-    "removed_dev_episodes": 54,
-    "training_files_byte_identical": true,
-    "audit": "reports/cord-removal-20261021/purge.json"
+    "all_splits": true
   },
-  "evaluation_report": "reports/cord-removal-20261021/tractor/metrics.json"
+  "evaluation": {
+    "full_dev_documents": 4429,
+    "production_pipeline": true,
+    "calibration_and_test_used_for_selection": false
+  }
 }

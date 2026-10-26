@@ -7,6 +7,15 @@ onto code systems are excluded. Grouping of explicitly described text records is
 support more task types internally; that does not make those types product goals.
 Training uses the same typed `POST /v1/extract` contract as inference.
 
+## Active full training on the BiQwen branch
+
+The active next run is [`configs/biqwen-full.json`](../../../configs/biqwen-full.json),
+selected in `configs/active-training.json`. The complete dataset has already been
+compiled and checked. Use the [BiQwen full-training instructions](biqwen.md#full-training)
+for its exact counts, exclusions, verification, start and resume commands.
+The data-authoring and GLiNER examples below are separate workflows, not the active
+BiQwen training recipe.
+
 ## Prepare realistic document data
 
 Run commands inside `nix develop`. The document pipeline has separate planning,

@@ -4,6 +4,10 @@ from pathlib import Path
 
 
 def load_extractor(path, device="cpu", precision="fp32"):
+    if Path(path, "checkpoint.json").is_file():
+        from .biqwen_training import load_checkpoint
+
+        return load_checkpoint(path, device, precision)
     if Path(path, "model/extractor_config.json").is_file():
         from .biqwen import BiQwenExtractor
 

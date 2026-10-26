@@ -9,6 +9,19 @@ prepare-biqwen:
 serve-biqwen:
     OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 uv run --no-sync tractor serve --model models/biqwen-extract-decide-4b --device cuda --precision bf16 --port 8002
 
+# Full corpus only. Preparation/preflight never start GPU training.
+prepare-biqwen-full:
+    OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false uv run --no-sync python -m tractor.biqwen_training_data
+
+check-biqwen-full:
+    uv run --no-sync python -m tractor.biqwen_training --config configs/biqwen-full.json
+
+train-full:
+    OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 TOKENIZERS_PARALLELISM=false uv run --no-sync python -m tractor.biqwen_training --config configs/biqwen-full.json --train
+
+resume-full:
+    OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 TOKENIZERS_PARALLELISM=false uv run --no-sync python -m tractor.biqwen_training --config configs/biqwen-full.json --train --resume
+
 # Lightweight SDK dependencies and developer tools.
 setup-sdk:
     uv sync --locked --extra dev

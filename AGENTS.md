@@ -7,6 +7,20 @@ Both release targets must remain private: mayflower/tractor and mayflowergmbh/tr
 
 The authoritative scope and implementation requirements are in reqs.md.
 
+On the BiQwen branch, the next full run is configs/biqwen-full.json, selected by
+configs/active-training.json. Use `just check-biqwen-full`, then `just train-full`
+or `just resume-full` when training is requested. Never invoke the bundled notebook
+trainer or substitute extract-de-en's sampled training selection. Compile the full
+assembled DE/EN source through tractor.biqwen_training_data; preserve every supported
+request and list every technical exclusion. Training uses the API's exact per-task
+schemas and multi-positive record-assignment targets, with no decision tasks.
+Each epoch covers all accepted requests once, including its final partial batch.
+Only complete epochs may select a checkpoint, using all Dev through normalization.
+Prepared data, CPU software tests and completed GPU training are distinct states.
+LoRA checkpoints require the pinned merged BiQwen base; loading them on the original
+Qwen base silently loses previous learning and is forbidden. Never modify the pinned
+upstream bundle in place to change the training recipe.
+
 CORD is permanently excluded from ALL training, Dev, calibration and test data,
 including receipt headers, derived windows and native examples. Do not download,
 reimport or restore it through archived corpora. Its Indonesian receipts are not

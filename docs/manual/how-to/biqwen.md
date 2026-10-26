@@ -135,3 +135,78 @@ Only text and the declared schema reach the model; native gold annotations do no
 The default comparison uses the saved CORD-free API predictions from before the
 quantity-description fix, reproducing the control experiment. Use `--baseline`
 to provide a fresh full-pipeline run if the serving implementation changes.
+
+## Full training
+
+The next run uses `configs/biqwen-full.json` and `data/biqwen-full-de-en`.
+It continues the pinned merged BiQwen weights with LoRA plus extraction heads.
+Decision and reference-resolution heads are frozen and have no training objectives.
+The supplied notebook trainer is not used.
+
+The compiler consumed **all 341,429 eligible DE/EN source documents**, before the
+GLiNER-specific context exclusions. It produced **342,147 training requests from
+339,949 documents**: 15,940 German and 324,009 English. There are 337,410 entity/object
+requests and 4,737 record requests. No source quotas, sampling or product replay
+are applied. Schemas, descriptions and per-task request boundaries are identical
+to the public API. Multiple source occurrences remain separate training targets;
+record assignment learns every positive occurrence against the ABSENT score.
+
+Every source task is accounted for. Of 343,694 training tasks, 1,547 are quarantined:
+
+| Technical exclusion | Tasks |
+|---|---:|
+| Source span splits a Qwen tokenizer token | 1,228 |
+| Source span exceeds the model's 48-token proposal width | 316 |
+| Too many source occurrences for a field's candidate capacity | 3 |
+
+The compiler never widens annotations, drops only the difficult field, or converts
+an unrepresentable present value into an absent target. The per-task ledger is
+`data/biqwen-full-de-en/rejections.jsonl`. This is complete technical validation;
+it is not a new exhaustive human semantic review of all source annotations.
+
+All **4,429 Dev documents** remain in the final pipeline evaluation, including
+requests that cannot be compiled into native training targets. Calibration and
+test IDs, groups and normalized text hashes are excluded from training and never
+used to select a checkpoint. CORD remains excluded from every split.
+
+Verify the frozen data, runtime, compiler, regression baseline and update schedule:
+
+```sh
+nix develop -c just check-biqwen-full
+```
+
+This performs no model inference or optimization. The planned run has four complete
+epochs, batch size 2 and gradient accumulation 8: **21,385 updates per epoch,
+85,540 updates and 1,368,588 request presentations in total**. The final partial
+batch is retained. There is no maximum-step cutoff, Dev subset or early stopping.
+
+Start the actual GPU run explicitly:
+
+```sh
+nix develop -c just train-full
+```
+
+The runner refuses an existing output directory unless resumed explicitly:
+
+```sh
+nix develop -c just resume-full
+```
+
+The configured output directory contains `status.json`, the frozen plan/config,
+periodic checkpoints, `epoch-N-coverage.json`, and full Dev predictions/metrics.
+Every completed epoch must prove that every accepted request was seen exactly once.
+Mid-epoch checkpoints retain optimizer state, random state, cursor and coverage.
+An interruption remains incomplete, and resume requires unchanged data and code.
+`configs/active-training.json` records the actual run status too.
+
+Only complete epochs may become `best.json`, using the normalized production
+pipeline and the existing field/domain/rejection regression guard. Completing
+training does not imply passing the general reliability gate or authorize release.
+The checkpoint stores adapters and heads, with an exact binding to the merged
+BiQwen base; it must not be loaded on the original Qwen base. The same API can load
+these local checkpoints with `tractor serve --model <checkpoint-directory>`.
+
+For a new source revision, rebuild with `just prepare-biqwen-full` into a fresh
+output directory (the module also accepts `--output`), then bind its manifest hash
+and exact counts in both configuration files. A prepared corpus or a passing CPU
+software test is not a completed GPU training run.
