@@ -561,8 +561,15 @@ automatische Folgeplanung ist abgebrochen und darf nicht wieder anlaufen.
   abgeschlossen und an das neue Rezept gebunden. Die Baseline ist keine
   Releasefreigabe (`passed: false`); ihre vollständigen Ergebnisse sind die
   Vergleichsbasis für die spätere Epochenauswahl.
-- [ ] Neuen vollständigen Lauf mit 342.147 Requests pro Epoche und vier Epochen
-  starten; ersten tatsächlichen Optimizer-Fortschritt und Checkpoint prüfen.
+- [x] Neuen vollständigen Lauf im Arbeitsbranch gestartet: 342.147 Requests pro
+  Epoche, vier Epochen, 85.540 Optimizer-Updates und 1.368.588 Präsentationen,
+  vollständiges Dev mit 4.429 Dokumenten. GPU-Fortschritt bei mindestens Schritt
+  10 / 160 Requests verifiziert. Startcheckpoint Schritt 0 vollständig
+  hashgeprüft; weitere Updates werden periodisch gespeichert. Nachweis:
+  `reports/biqwen-correction-20261026/fast-full-start-audit.json`.
+  Trainer-PID `2755522`, Laufverzeichnis `tractor-biqwen-v2/fast-full-run`.
+- [ ] Vier vollständige Epochen, Abdeckungsnachweise und vollständige
+  Dev-Auswertungen abschließen. Der gestartete Lauf ist noch nicht abgeschlossen.
 
 Diese Stichprobe ist ausdrücklich **kein Volltraining** und keine Freigabe.
 Der vollständige Korpus bleibt bei 342.147 geeigneten Requests. Ein neues
