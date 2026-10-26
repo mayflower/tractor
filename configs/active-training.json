@@ -16,7 +16,7 @@
   "gpu_preflight": "reports/biqwen-correction-20261026/fast-full-preflight/report.json",
   "full_dev_baseline": "reports/biqwen-correction-20261026/fast-full-baseline/metrics.json",
   "num_epochs": 4,
-  "step": 1140,
+  "step": 1290,
   "epoch": 0,
-  "cursor": 18240
+  "cursor": 20640
 }
