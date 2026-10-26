@@ -12,6 +12,27 @@ Schritt ausgeführt und sein Ergebnis nachgewiesen wurde. Vorhandene Vorbereitun
 Softwaretests, GPU-Prüfung, abgeschlossenes Training und erreichte Modellqualität
 sind getrennte Zustände.
 
+## Ausgangsproblem und Korrekturstrategie
+
+Die geprüfte Architektur besteht aus einem kausalen Qwen-Backbone, einer
+Projektion von 2.560 auf 512 Dimensionen, zwei bidirektionalen Adapter-Schichten
+und GLiNER-artigen Extraktionsköpfen. Anschließend verarbeitet die bestehende
+Tractor-Pipeline die extrahierten Werte. Das ist technisch eine mögliche
+Extraktionsarchitektur; der gesamte Qwen-Backbone wird dadurch nicht bidirektional.
+
+| Befund der Machbarkeitsprüfung | Geplante Korrektur | Verbindlicher Nachweis |
+| --- | --- | --- |
+| Feldtypen beeinflussen bisher nur die Normalisierung, nicht unmittelbar den Modelleingang. | Gemeinsames typisiertes Schema-Encoding für Compiler und Inferenz (Abschnitt 1). | Unterschiedliche Typen erzeugen unterschiedliche Eingaben; Training und API verwenden identische Eingaben. |
+| Der additive Record-Scorer kann die Besitzerpräferenz einer Fundstelle nicht feldabhängig umkehren. | Gemeinsame nichtlineare Verarbeitung von Anker und Feld (Abschnitt 2). | Ausdrucksfähigkeit, Gradienten und Checkpoint-Roundtrip prüfen; den Qualitätsgewinn anschließend auf vollständigem Dev messen. |
+| Gesamt-Loss verdeckt fehlende Vorschläge und ausgelassene Zuordnungsziele. | Komponentenverluste und Kandidatenabdeckung dauerhaft erfassen (Abschnitt 3). | Abdeckung vor Gold-Injektion und endgültige Pipelinefehler getrennt ausweisen. |
+| Vollständige Datenabdeckung bedeutet keine ausgewogenen Fähigkeiten. | Alle geeigneten Daten erhalten; Sprache, Domäne und Ausgabeform getrennt bewerten (Abschnitte 4, 8 und 9). | Keine versteckten Quoten; eventuelle Loss-Gewichtung ausdrücklich konfigurieren und auf Dev prüfen. |
+| CPU-Tests belegen nicht die Speicherverträglichkeit des tatsächlichen 4B-Trainings. | Echte GPU-Forward/Backward-Prüfung vor dem Volltraining (Abschnitte 6 und 7). | Unterstützte Eingabegrenzen, endliche Gradienten und unveränderte Gewichte ohne Optimizer-Updates nachweisen. |
+| Die Kapazität des bidirektionalen Adapters ist als Fehlerursache bislang nicht isoliert. | Backbone zunächst erhalten; einen Umbau nur aus verbleibenden Fehlern ableiten (Abschnitt 9). | Keine Kapazitätsbehauptung allein aus Gesamt-F1 oder bestandenen Softwaretests ableiten. |
+
+Die Abschnitte 0 bis 7 schaffen die Startbedingungen, Abschnitt 8 führt das
+vollständige Training durch und Abschnitt 9 prüft die tatsächliche Verbesserung.
+Ein technischer Nachweis ersetzt dabei keinen Qualitätsnachweis.
+
 ## Aktueller Nachweisstand
 
 - Architektur und Typ-Encoding umgesetzt; vollständige Baselines verglichen.
@@ -25,6 +46,15 @@ sind getrennte Zustände.
   ohne Gewichtsupdates. Der vollständige Trainings-Preflight ist bestanden.
 - Softwareprüfungen sind keine Qualitätsmessung. Das Volltraining läuft; vollständige Epochen, Modellauswahl und Abschnitt 9
   sind noch nicht abgeschlossen.
+- Die Nachbearbeitung für Abschnitt 9 ist separat vorbereitet: Commit `1d906ef`
+  im Worktree `/scratch/johann-peter.hartmann/tractor-biqwen-v2/post-training`.
+  913 Softwaretests sowie Lint und Dokumentationsprüfung bestehen. Enthalten sind
+  die Sperre vor vollständigem Training/Dev-Auswahl, Kalibrierung über die
+  Produktionspipeline, ein gebundenes Inferenz-Bundle und der eingefrorene
+  Abschlusstest. Der Record-Replay wurde mit echten parametrisierten Köpfen und
+  PyTorch-Inferenztensoren geprüft. Reale Kalibrierung und Test sind noch offen.
+  Diesen Commit erst nach Ende des Trainings übernehmen: Der laufende Trainer
+  prüft die unveränderten Hashes seines ursprünglichen Implementierungsstands.
 
 ## Verbindliche Leitplanken
 
