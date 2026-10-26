@@ -499,6 +499,48 @@ bleiben getrennte Entscheidungen.
 
 ## Reihenfolge und Ergebnisnachweise
 
+### Ergänzung: automatisch anschließende bidirektionale Variante
+
+Auf ausdrücklichen Auftrag wird nach dem laufenden kausalen Volltraining eine
+zweite Variante automatisch trainiert. Die endgültige Modellauswahl erfolgt auf
+Dev nach beiden Läufen; Kalibrierung und Abschlusstest bleiben bis dahin offen.
+
+- [x] Separaten Branch `experiment/biqwen-hybrid-bidirectional` und Worktree
+  `/scratch/johann-peter.hartmann/tractor-biqwen-v2/bidirectional` angelegt.
+  Implementierungs-Commit: `a68fa65`.
+- [x] Versioniertes Attention-Verhalten implementiert: acht Full-Attention-Schichten
+  bidirektional, 24 DeltaNet-Schichten weiterhin mit gerichtetem Algorithmus.
+  Kein vollständig bidirektionaler Backbone; keine globale Bibliotheksänderung.
+- [x] Verhalten für Training, Speichern, Laden und Wiederaufnahme vereinheitlicht.
+  Zukunftskontext, Padding-Isolation, Batch-Isolation, Gradienten und abgelehnte
+  inkrementelle Caches mit tatsächlichen kleinen Qwen3.5-Schichten geprüft.
+- [x] `just check` im separaten Worktree bestanden: 908 Tests, Lint,
+  Fixture- und Dokumentationsprüfung. Nachweis:
+  `reports/biqwen-correction-20261026/bidirectional-check.log`.
+- [x] Automatischen Folgelauf gestartet und seinen lebenden Prozess verifiziert:
+  PID `2718293`, Status `waiting`, gebunden an Vorgänger-PID `2611833` und dessen
+  Prozessstartzeit. Nachweis: `reports/biqwen-correction-20261026/bidirectional-followup/status.json`.
+- [x] Folgerezept auf denselben vollständigen Korpus mit 342.147 Requests,
+  dieselben gepinnten zusammengeführten Ausgangsgewichte und vier volle Epochen
+  gebunden. Frischer Optimizer; keine Stichprobe und kein Schrittlimit.
+- [ ] Nach vollständig beendetem Vorgänger alle vier Abdeckungsnachweise und
+  sämtliche Dev-Vorhersagen verifizieren; bei Fehlern keinen Folgelauf starten.
+- [ ] Echte GPU-Prüfung der neuen Variante einschließlich Zukunftskontext im
+  Backbone und unterstützter Eingabegrenzen bestehen. CPU-Tests ersetzen sie nicht.
+- [ ] Anschließend vier vollständige Epochen der bidirektionalen Variante
+  durchführen. Die Anpassung wird mit den Extraktionszielen gelernt; ein
+  Masked-Language-Model-/MNTP-Vortraining ist nicht implementiert.
+- [ ] Beide vollständig trainierten Varianten auf identischem Dev und anhand
+  der endgültigen normalisierten API-Ausgaben vergleichen und auswählen.
+- [ ] Erst danach die ausgewählte Variante kalibrieren, auf dem gehaltenen
+  Testsplit prüfen und durch die reale HTTP-API verifizieren.
+
+Der bisherige Trainingsprozess und seine 102 gebundenen Quelldateien wurden
+bei Aktivierung unverändert geprüft. Der wartende Folgelauf ist noch kein
+begonnenes oder abgeschlossenes bidirektionales GPU-Training. Änderungen an
+seinem eingefrorenen Code, seiner Konfiguration oder seinen Daten erfordern eine
+ausdrückliche Neuvorbereitung; der automatische Ablauf lehnt veränderte Bindungen ab.
+
 `Ausgangszustand → Typkodierung → Record-Scorer → Diagnostik → vollständiger
 Datenaufbau → Baselines → GPU-Prüfung → Startbedingungen → Volltraining →
 Kalibrierung und Abschlussbewertung`
