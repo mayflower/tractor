@@ -395,6 +395,108 @@ ausgewiesen und wird nicht automatisch zum Release.
 hat und welche Ziele offen bleiben. Upload, Push und Veröffentlichung sind keine
 automatischen Schritte dieses Plans.
 
+## 10. Abschluss in ausführbarer Reihenfolge nachweisen
+
+Die folgenden Punkte konkretisieren die noch offenen Schritte aus Abschnitt 8
+und 9. Sie bleiben offen, bis die jeweiligen Ergebnisdateien tatsächlich
+vorliegen und geprüft sind. Vorbereitete Programme oder erfolgreiche Fixture-Tests
+erfüllen diese Punkte nicht.
+
+### 10.1 Volltraining und Wiederaufnahme absichern
+
+- [ ] `configs/active-training.json`, `configs/biqwen-full.json` und den im
+  Lauf gespeicherten Plan auf übereinstimmende Daten-, Modell- und Rezeptbindung
+  prüfen. Laufstatus immer aus dem tatsächlichen Prozess und seinen Artefakten
+  ableiten, nicht aus einem älteren Fortschrittsbericht.
+- [x] Den ersten regulären Wiederaufnahme-Checkpoint auf vollständige
+  Adapter-/Kopfgewichte, Optimizerzustand, Schritt, Datencursor und Prüfsummen
+  kontrollieren. Den laufenden Prozess dafür nicht unterbrechen.
+  Nachweis: `reports/biqwen-correction-20261026/first-periodic-checkpoint-audit.json`.
+  Schritt 1.000 enthält exakt die ersten 16.000 Requests der festgelegten
+  Epochenreihenfolge; alle fünf Dateiprüfsummen stimmen. Die neun nur bei
+  Record-Aufgaben aktualisierten Kopfparameter haben 195 Updates, passend zu
+  den 195 Update-Batches mit Records. Die übrigen 55 Kopfparameter und 496
+  Backbone-Adapterparameter haben jeweils 1.000 Updates. Dies ist eine lesende
+  CPU-Zustandsprüfung, kein tatsächlicher Neustart und keine Modellauswahl.
+- [ ] Pro vollständiger Epoche die Abdeckung aller 342.147 akzeptierten Requests
+  anhand der Identitäten prüfen: keine Auslassung, keine doppelte Präsentation
+  innerhalb der Epoche, letzter Teilbatch enthalten.
+- [ ] Für die derzeit gebundene Konfiguration vier vollständige Epochen,
+  85.540 Optimizer-Updates und 1.368.588 Request-Präsentationen nachweisen.
+  Bei einer ausdrücklich geänderten Konfiguration diese Sollwerte neu berechnen.
+- [ ] Zu jeder Epoche vollständige Dev-Ergebnisse für alle 4.429 Dokumente
+  einschließlich fehlgeschlagener Requests, Qualitätsregeln und Auswahlentscheidung
+  sichern. Ein periodischer Zwischencheckpoint ist kein vollständiger Kandidat.
+- [ ] Terminalen Trainingsstatus und Abdeckungsnachweise gemeinsam prüfen;
+  ein beendeter Prozess allein beweist kein erfolgreiches Volltraining.
+
+**Ergebnis:** Vollständiger Lauf mit überprüfbaren Epochennachweisen und einer
+begründeten Dev-Auswahl. Falls kein Kandidat die Auswahlbedingungen erfüllt,
+diesen Zustand ausdrücklich festhalten und die Bedingungen nicht nachträglich
+still lockern.
+
+### 10.2 Vorbereitete Abschlusswerkzeuge integrieren
+
+- [ ] Erst nach Ende des Trainings die vorbereiteten Commits `1d906ef`,
+  `2be9c7e` und `34f2faf` in dieser Reihenfolge übernehmen. Während des Laufs
+  den vom Trainer gebundenen Quellcode unverändert lassen.
+- [ ] Lokale Änderungen an der aktiven Laufkonfiguration dabei erhalten;
+  keine fremden oder laufzeitbedingten Änderungen überschreiben.
+- [ ] Nach der Integration Software-, Lint- und Dokumentationsprüfungen im
+  Nix-Environment ausführen und das tatsächliche Ergebnis protokollieren.
+- [ ] Prüfen, dass die Abschlusswerkzeuge unvollständige Läufe, abweichende
+  Daten-/Modellbindungen und unzulässige Checkpoints vor jeder Heldout-Auswertung
+  ablehnen.
+
+**Ergebnis:** Geprüfte Abschlusswerkzeuge im verwendeten Arbeitsstand, ohne
+Änderung der bereits trainierten Gewichte oder rückwirkende Änderung des Rezepts.
+
+### 10.3 Ausgewählten Checkpoint bewerten und einfrieren
+
+- [ ] Die gespeicherten Dev-Vorhersagen des ausgewählten Checkpoints mit
+  `tractor.biqwen_post_training review-dev` vollständig analysieren.
+- [ ] Bestätigte Pipelinefehler, unvollständige Referenzen und nicht bewertbare
+  Annotationen getrennt zählen. Rohspan-Abweichungen nur dann einem Produktfehler
+  zuordnen, wenn auch das endgültige Ergebnis falsch ist.
+- [ ] Mit `tractor.biqwen_post_training calibrate` ausschließlich den separaten
+  Kalibrierungssplit verwenden; keine erneute Checkpoint-Auswahl durchführen.
+- [ ] Überschneidungen über Identitäten, Quell-/Ableitungsgruppen und Text-Hashes
+  prüfen und Ausschlüsse bilanzieren. Grenzen dieses Leakage-Nachweises benennen.
+- [ ] Gewählten Checkpoint, Schwellen, Produktionscode, Normalisierung,
+  Präzision und Qualitätsregeln vor dem Abschlusstest per Hash binden.
+- [ ] Das erzeugte Inferenz-Bundle auf vollständige Gewichte und gebundene
+  Inferenzregeln prüfen; die Abhängigkeit vom exakt gepinnten, bereits
+  zusammengeführten BiQwen-Basismodell dokumentieren.
+- [ ] Mit `tractor.biqwen_post_training test` den vollständigen zulässigen
+  Testsplit einmal durch die eingefrorene Pipeline auswerten. Testergebnisse
+  nicht zur nachträglichen Schwellen- oder Modellauswahl verwenden.
+
+**Ergebnis:** Nachvollziehbare Dev-Auswahl, getrennte Kalibrierung und unabhängiger
+Abschlusstest unter einem unveränderten API-Vertrag.
+
+### 10.4 Tatsächliche API-Funktion und Qualitätsgrenzen belegen
+
+- [ ] Den HTTP-Smoke-Test mit dem ausgewählten Inferenz-Bundle und derselben
+  Präzision ausführen; kontrollierte Test-Doubles reichen dafür nicht aus.
+- [ ] Konkrete DE/EN-Extraktionen einschließlich Mengen-/Einheitenumrechnung,
+  Unicode, fehlender Werte, widersprüchlicher Werte und Kontakt-Records prüfen.
+- [ ] Gleichheit von SDK und HTTP sowie die einzige öffentliche Extraktionsroute
+  und das Antwortformat `data`/`issues` nachweisen.
+- [ ] Ungültige und zu lange Requests auf die vorgesehenen Fehler prüfen;
+  keine stillschweigende Kürzung oder zusätzliche öffentliche Diagnosefelder.
+- [ ] Abschließende Ergebnistabelle nach Sprache, Domäne, Ausgabeform und
+  Herkunft der Annotationen erstellen; Fallzahlen und Referenzabdeckung angeben.
+- [ ] Für jedes Qualitätsziel ausdrücklich „erreicht“, „verfehlt“ oder
+  „nicht ausreichend belegt“ ausweisen. Fehlende reale Evidenz bleibt offen.
+- [ ] Verbleibende Fehler mit Beispielen und einer evidenzbasierten nächsten
+  Maßnahme dokumentieren; unbekannte Ursachen als unbekannt kennzeichnen.
+- [ ] Alle Leitplanken und Abnahmekriterien dieser Datei abschließend gegen
+  die tatsächlichen Artefakte prüfen und erst danach die zugehörigen Haken setzen.
+
+**Ergebnis:** Nachgewiesene Funktionsfähigkeit und ehrlich abgegrenzte Qualität
+der vollständigen API. Trainingserfolg, Qualitätsfreigabe und Veröffentlichung
+bleiben getrennte Entscheidungen.
+
 ## Reihenfolge und Ergebnisnachweise
 
 `Ausgangszustand → Typkodierung → Record-Scorer → Diagnostik → vollständiger
