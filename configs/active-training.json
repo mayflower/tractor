@@ -1,5 +1,5 @@
 {
-  "status": "prepared",
+  "status": "running",
   "backend": "biqwen",
   "training_config": "configs/biqwen-fast-full.json",
   "binding": {
@@ -9,11 +9,14 @@
     "native_train_requests": 342147
   },
   "attention_mode": "qwen3.5-hybrid-bidirectional-v1",
-  "training_started": false,
+  "training_started": true,
   "training_complete": false,
   "selection_reason": "Matched bounded Dev: hybrid 93.40% vs causal 89.92% normalized field F1; full training selected, no release qualification",
   "feasibility": "/scratch/johann-peter.hartmann/tractor-biqwen-v2/feasibility-v2/comparison.json",
   "gpu_preflight": "reports/biqwen-correction-20261026/fast-full-preflight/report.json",
   "full_dev_baseline": "reports/biqwen-correction-20261026/fast-full-baseline/metrics.json",
-  "num_epochs": 4
+  "num_epochs": 4,
+  "step": 1140,
+  "epoch": 0,
+  "cursor": 18240
 }

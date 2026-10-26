@@ -571,6 +571,46 @@ automatische Folgeplanung ist abgebrochen und darf nicht wieder anlaufen.
 - [ ] Vier vollständige Epochen, Abdeckungsnachweise und vollständige
   Dev-Auswertungen abschließen. Der gestartete Lauf ist noch nicht abgeschlossen.
 
+### Frühe Qualitätskontrolle und Speicherreserve
+
+- [x] Separaten CPU-Monitor gestartet, ohne den GPU-Trainer, seine gebundenen
+  Quelldateien oder den vollständigen Trainingsumfang zu ändern.
+  Implementierung: `scripts/monitor-biqwen-training.py`; Laufverzeichnis:
+  `/scratch/johann-peter.hartmann/tractor-biqwen-v2/early-dev`.
+- [x] Feste, vorhersageunabhängige Dev-Auswahl eingefroren: 256 Dokumente,
+  128 echte und 128 synthetische Texte, 65 DE / 191 EN; alle 102 vorhandenen
+  Kombinationen aus Sprache, Domäne, Ausgabeform und Herkunft vertreten.
+  Echte deutsche Dev-Texte fehlen in diesem Korpus weiterhin. Kleine Gruppen
+  und unvollständige Referenzen bleiben als solche sichtbar.
+- [x] Gleiche hybride Startarchitektur und identische CPU-FP32-/PyTorch-
+  Einstellungen für Schritt 0 und spätere Checkpoints. API-Normalisierung,
+  Feld-/Record-Werte, Issue-Prüfungen und Referenzregeln werden wiederverwendet.
+  Vergleiche nach Domäne/Ausgabeform/Herkunft, zusätzlich Sprachberichte.
+  Diese CPU-Diagnose wird nicht gegen die GPU-Baseline als identische Messung
+  ausgegeben und ersetzt keine vollständige Dev-Auswertung.
+- [x] Checkpoints ab Schritt 1.000 werden automatisch beobachtet. Eine aktive
+  Auswertung und höchstens zwei wartende Snapshots; bei Rückstand bleiben der
+  älteste wartende und der neueste Stand erhalten. Übersprungene Schritte
+  stehen in `status.json`. Kein automatischer Trainingsabbruch oder Neustart.
+- [x] Reale CPU-Inferenz gestartet und erste zehn Dokumente ohne Ausführungsfehler
+  verarbeitet. Sechs Tests prüfen Auswahl, Herkunftsverteilung, Hashbindung,
+  Erhalt bei Trainer-Pruning, frühe Auswertung, begrenzte Warteschlange und
+  den Umgang mit unvollständigen Referenzen. Ruff bestanden.
+- [ ] Erste vollständige CPU-Baseline und erster trainierter Checkpoint-Vergleich
+  abgeschlossen; Ergebnisse aus `latest-comparison.json` fachlich prüfen.
+- [x] Tatsächliche ZFS-Benutzerquote geprüft: vor Bereinigung nur etwa 7 GiB frei,
+  trotz 407 GiB im übergeordneten Scratch-Pool. 95 Dateien früherer inaktiver
+  Recall-Versuche (etwa 13 GiB) auf den großen persistenten Datenspeicher
+  verschoben, SHA-256 einzeln verglichen, alten Pfad als Symlink erhalten.
+  Danach knapp 20 GiB innerhalb der Scratch-Benutzerquote frei.
+- [x] Speicherbudget konservativ geprüft: etwa 0,87 GiB pro trainiertem
+  Adapter-/Head-/Optimizer-Checkpoint desselben Aufbaus; höchstens 6,1 GiB für
+  drei Trainer-Checkpoints, einen Schreibvorgang und drei Monitor-Snapshots,
+  zuzüglich 2 GiB Berichte/Logs und 10 GiB freie Reserve. Hardlinks und
+  Dateisystemkompression reduzieren den tatsächlichen Bedarf weiter.
+  Nachweise: `reports/biqwen-correction-20261026/early-dev-storage.json` und
+  `storage-archive-audit.json`. Der Monitor prüft freien Platz laufend.
+
 Diese Stichprobe ist ausdrücklich **kein Volltraining** und keine Freigabe.
 Der vollständige Korpus bleibt bei 342.147 geeigneten Requests. Ein neues
 Volltraining muss weiterhin alle diese Requests in jeder der vier Epochen sehen

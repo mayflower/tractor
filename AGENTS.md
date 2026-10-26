@@ -17,6 +17,29 @@ execution checks; the baseline itself does not meet release quality gates.
 Preserve the immutable pinned base bundle. Install the pinned FLA dependency with
 `just prepare-biqwen` (biqwen-fast extra) before running the fast recipe.
 
+The active full run also has a separate CPU early-Dev monitor implemented in
+scripts/monitor-biqwen-training.py, running under
+/scratch/johann-peter.hartmann/tractor-biqwen-v2/early-dev. It uses 256 fixed Dev
+documents (128 real, 128 synthetic), all 102 observed language/domain/output/origin
+strata, and identical CPU FP32/PyTorch settings for the step-zero hybrid baseline
+and subsequent checkpoints. It observes checkpoints from step 1000 onward without
+changing training, selecting release weights, or touching calibration/test. This
+diagnostic subset is not full Dev evidence. Missing real DE coverage remains
+missing. Full GPU Dev evaluation and selection still happen after complete epochs.
+Inspect status.json, evaluations/*/summary.json and latest-comparison.json; a
+running baseline is not a completed trained-checkpoint comparison. The monitor
+keeps one active and at most two pending checkpoints; skipped steps are explicit.
+Never edit the running trainer's bound source/configuration to add monitoring.
+
+Disk checks must target the actual user dataset, not /scratch or /work parents:
+ZFS refquotas apply separately. On 2026-10-26 inactive tractor-recall-20261020
+artifacts were archived with verified hashes under
+/data/users/johann-peter.hartmann/tractor-archive/tractor-recall-20261020; the old
+scratch path remains a symlink. Roughly 20 GiB scratch space was available after
+archiving. Trainer retains two latest checkpoints plus best, not every step.
+The monitor hard-links immutable checkpoint files to survive pruning, removes
+finished snapshots, and stops itself below 10 GiB available without stopping training.
+
 tractor is the System One Extraction Model and its local HTTP API/Python SDK.
 The sole release bundle is models/tractor. Keep publication files focused on the
 current product; do not add experiment histories, predecessor models or local paths.
