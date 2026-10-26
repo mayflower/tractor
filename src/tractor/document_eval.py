@@ -10,7 +10,7 @@ from .jsonio import dumps, loads
 from .pipeline_evaluation import evaluate_pipeline, infer
 
 
-def run(model, episodes, output, device='cuda', policy='configs/extraction-quality.json', threshold=None, record_threshold=None, precision='fp32'):
+def run(model, episodes, output, device='cuda', policy='configs/extraction-quality.json', threshold=None, record_threshold=None, precision='fp32', biqwen_typed_baseline=False):
     for value in (threshold, record_threshold):
         if value is not None and (isinstance(value, bool) or not 0 < float(value) <= 1):
             raise ValueError('Provisional Dev threshold must be in (0, 1]')
@@ -29,7 +29,7 @@ def run(model, episodes, output, device='cuda', policy='configs/extraction-quali
                     'identifier_normalization.py', 'address_normalization.py', 'episodes.py', 'episode_metrics.py', 'document_eval.py',
                     'inference_context.py', 'record_contracts.py', 'evaluation_reference.py', 'document_quality.py',
                     'backends.py', 'biqwen.py', 'biqwen-lock.json', 'source_policy.py',
-                    'biqwen_training.py', 'biqwen_training_data.py')
+                    'biqwen_training.py', 'biqwen_training_data.py', 'biqwen_architecture.py')
     source_hashes = {name: sha(Path(__file__).with_name(name)) for name in source_names}
     # Keep the exact implementation reviewable alongside the frozen predictions.
     snapshot = root / 'pipeline-source'
@@ -38,6 +38,11 @@ def run(model, episodes, output, device='cuda', policy='configs/extraction-quali
         (snapshot / name).write_bytes(Path(__file__).with_name(name).read_bytes())
     native = load_extractor(model, device, precision)
     biqwen = hasattr(native, 'weights_hashes')
+    if biqwen_typed_baseline:
+        from .biqwen import LEGACY_SCHEMA, TYPED_SCHEMA
+        if not biqwen or native.schema_version != LEGACY_SCHEMA:
+            raise ValueError('Typed baseline requires the unchanged legacy BiQwen architecture')
+        native.schema_version = TYPED_SCHEMA
     if biqwen and (threshold is not None or record_threshold is not None):
         raise ValueError('GLiNER threshold overrides do not apply to BiQwen')
     if threshold is not None:
@@ -67,6 +72,8 @@ def run(model, episodes, output, device='cuda', policy='configs/extraction-quali
                   input_sha256=sha(Path(episodes)),
                   weights_sha256=native.weights_hashes if biqwen else sha(Path(model)/'model.safetensors'),
                   backend=getattr(native, 'backend', 'gliner2'), model_revision=native.model_revision,
+                  schema_version=getattr(native, 'schema_version', None),
+                  biqwen_typed_baseline=biqwen_typed_baseline,
                   threshold=native.model.config.source_threshold if biqwen else native.native_threshold,
                   threshold_override=threshold is not None,
                   record_threshold=native.model.config.anchor_threshold if biqwen else native.native_record_threshold,
@@ -96,4 +103,6 @@ if __name__ == '__main__':
     parser.add_argument('--policy', default='configs/extraction-quality.json')
     parser.add_argument('--threshold', type=float, help='Provisional Dev-only sensitivity test; bundle unchanged')
     parser.add_argument('--record-threshold', type=float, help='Provisional threshold for records only; entity fields keep --threshold')
+    parser.add_argument('--biqwen-typed-baseline', action='store_true',
+                        help='Dev-only new input encoding on unchanged BiQwen weights')
     run(**vars(parser.parse_args()))

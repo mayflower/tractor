@@ -13,12 +13,14 @@ import time
 from pathlib import Path
 from types import MethodType
 
-from .jsonio import loads
+from .jsonio import dumps, loads
 from .model import field_ids
 from .types import TractorError
 
 LOCK = Path(__file__).with_name("biqwen-lock.json")
 DECODER_VERSION = "biqwen-multiple-evidence-v1"
+LEGACY_SCHEMA = "biqwen-descriptions-v1"
+TYPED_SCHEMA = "biqwen-types-v2"
 
 
 def verify_bundle(path):
@@ -55,16 +57,41 @@ def load_runtime(path):
     )
 
 
-def schema_for(request):
+def field_description(field, request_locale=None):
+    """Encode the declared contract, separating source selection from processing.
+
+    No facts or context are inferred. Output transformations cannot require the
+    source to already use the requested representation. Group is internal address
+    assembly metadata, not a semantic type or a source-selection instruction.
+    """
+    options = field.model_dump(exclude={'description', 'type', 'group', 'cardinality'},
+                               exclude_none=True, exclude_defaults=True)
+    selection = {key: options.pop(key) for key in ['component'] if key in options}
+    if request_locale is not None and 'locale' not in options:
+        options['locale'] = request_locale
+    result = field.description + '\nType: ' + field.type
+    if selection:
+        result += '; source: ' + dumps(selection, sort_keys=True)
+    if options:
+        result += '; processing (not source spelling): ' + dumps(options, sort_keys=True)
+    if field.type == 'quantity':
+        result += '; retain source units'
+    return result
+
+
+def schema_for(request, version=LEGACY_SCHEMA):
     """Preserve descriptions as in BiQwen training; types still select normalizers.
 
     GLiNER's quantity-description suffix is a model-specific training convention,
     not part of the public field contract or BiQwen's training input format.
     """
+    if version not in {LEGACY_SCHEMA, TYPED_SCHEMA}:
+        raise ValueError('Unsupported BiQwen schema version')
     ids = field_ids(request)
     fields = []
     for name, field in request.fields.items():
-        spec = {"id": ids[name], "kind": "span", "description": field.description,
+        description = field.description if version == LEGACY_SCHEMA else field_description(field, request.locale)
+        spec = {"id": ids[name], "kind": "span", "description": description,
                 "multiple": not bool(request.anchor), "resolve_references": False}
         if request.anchor:
             spec["table_id"] = "record"
@@ -153,6 +180,7 @@ def decode_multiple(self, meta, pools, queries, global_anchor, options):
 
 class BiQwenExtractor:
     backend = DECODER_VERSION
+    schema_version = LEGACY_SCHEMA
 
     def __init__(self, path, device="cpu", precision="fp32"):
         import torch
@@ -187,7 +215,7 @@ class BiQwenExtractor:
         started = time.perf_counter()
         try:
             encoded = self.encoding.encode(
-                {"text": request.text, "schema": schema_for(request)}, self.model.tokenizer,
+                {"text": request.text, "schema": schema_for(request, self.schema_version)}, self.model.tokenizer,
                 self.input_limit, schema_prefix=self.model.config.schema_prefix,
             )
         except self.encoding.CapacityError as exc:

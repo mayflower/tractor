@@ -17,6 +17,16 @@ schemas and multi-positive record-assignment targets, with no decision tasks.
 Each epoch covers all accepted requests once, including its final partial batch.
 Only complete epochs may select a checkpoint, using all Dev through normalization.
 Prepared data, CPU software tests and completed GPU training are distinct states.
+The corrected BiQwen recipe uses biqwen-types-v2 and biqwen-joint-record-v2.
+Keep schema encoding identical between native compilation and checkpoint inference.
+Legacy base bundles retain their legacy descriptions; never silently change their
+input contract. Record ownership must jointly condition on anchor and field, with
+the same scorer for candidate and ABSENT logits. Persist architecture/schema
+versions and all new head parameters. Span-stage diagnostics are observations only:
+gold is consulted after inference and exact span misses never replace normalized
+pipeline correctness or reviewed answer alternatives. Track implementation and
+training evidence in abhakliste.md; an unchecked quality gate remains open after
+successful software checks or a completed run.
 LoRA checkpoints require the pinned merged BiQwen base; loading them on the original
 Qwen base silently loses previous learning and is forbidden. Never modify the pinned
 upstream bundle in place to change the training recipe.

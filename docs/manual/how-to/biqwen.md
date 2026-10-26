@@ -138,7 +138,7 @@ to provide a fresh full-pipeline run if the serving implementation changes.
 
 ## Full training
 
-The next run uses `configs/biqwen-full.json` and `data/biqwen-full-de-en`.
+The next run uses `configs/biqwen-full.json` and `data/biqwen-full-de-en-v2`.
 It continues the pinned merged BiQwen weights with LoRA plus extraction heads.
 Decision and reference-resolution heads are frozen and have no training objectives.
 The supplied notebook trainer is not used.
@@ -151,6 +151,36 @@ are applied. Schemas, descriptions and per-task request boundaries are identical
 to the public API. Multiple source occurrences remain separate training targets;
 record assignment learns every positive occurrence against the ABSENT score.
 
+The corrected recipe encodes each field's simple type alongside its description.
+Declared processing parameters are distinguished from source selection: requesting
+millimetres still permits extracting a source value expressed in centimetres.
+The record scorer adds a jointly anchor/field-conditioned nonlinear residual,
+initialized to preserve the old scores. Both candidate and ABSENT logits use this
+same condition. Base bundles retain their legacy input encoding; new checkpoints
+explicitly bind `biqwen-types-v2` and `biqwen-joint-record-v2`.
+
+The internal encoding preserves the description and adds `Type: <simple type>`.
+Parameter handling is fixed across all types:
+
+| Parameter | Internal meaning |
+|---|---|
+| Address `component` | Declared source selection |
+| Identifier `format` | Validation/output standard; `isbn13` also permits an ISBN-10 source for conversion |
+| Quantity `unit`, money `currency` | Processing/output contract; source spelling and units are retained |
+| `country`, field/request `locale`, `date_order` | Explicit processing context; missing context is never supplied |
+| `allow_partial`, `include_adjacent_year`, `prefixes`, identifier `uppercase`/`remove_spaces`, list `separator` | Declared processing options; non-default values are encoded |
+| `cardinality` | Final API contract; does not suppress competing source occurrences |
+| Address `group` | Internal assembly binding, not neural source-selection text |
+
+Types without parameters receive their type and description only. Non-null
+request locale is used when there is no explicit field locale. Optional defaults
+are omitted to avoid unnecessarily consuming the joint 4,096-token context.
+
+Head loss weights are explicit in the recipe. The causal Qwen backbone and the
+two-layer bidirectional adapter are retained; increasing their capacity is not
+assumed to improve quality. The [implementation checklist](../../../abhakliste.md)
+records outstanding work and the evidence required before full training.
+
 Every source task is accounted for. Of 343,694 training tasks, 1,547 are quarantined:
 
 | Technical exclusion | Tasks |
@@ -161,7 +191,7 @@ Every source task is accounted for. Of 343,694 training tasks, 1,547 are quarant
 
 The compiler never widens annotations, drops only the difficult field, or converts
 an unrepresentable present value into an absent target. The per-task ledger is
-`data/biqwen-full-de-en/rejections.jsonl`. This is complete technical validation;
+`data/biqwen-full-de-en-v2/rejections.jsonl`. This is complete technical validation;
 it is not a new exhaustive human semantic review of all source annotations.
 
 All **4,429 Dev documents** remain in the final pipeline evaluation, including
@@ -180,6 +210,18 @@ epochs, batch size 2 and gradient accumulation 8: **21,385 updates per epoch,
 85,540 updates and 1,368,588 request presentations in total**. The final partial
 batch is retained. There is no maximum-step cutoff, Dev subset or early stopping.
 
+The real-model memory/gradient check is a separate operation without optimizer
+updates or latency measurements. Use a fresh report directory:
+
+```sh
+nix develop -c uv run --no-sync python -m tractor.biqwen_preflight \
+  --config configs/biqwen-full.json --output reports/biqwen-gpu-preflight
+```
+
+It covers short DE/EN requests, multiple records, dense evidence, the full input
+length and 32 fields. It checks that weights remain unchanged. Passing this check
+establishes technical feasibility for those shapes, not extraction quality.
+
 Start the actual GPU run explicitly:
 
 ```sh
@@ -194,6 +236,13 @@ nix develop -c just resume-full
 
 The configured output directory contains `status.json`, the frozen plan/config,
 periodic checkpoints, `epoch-N-coverage.json`, and full Dev predictions/metrics.
+`diagnostics.json` and `epoch-N-diagnostics.json` retain loss numerators and
+denominators, proposal recall before gold injection, injected spans and missing
+assignment targets, grouped by language, domain, source and output form. Those
+counters resume with the optimizer and coverage state. Dev additionally records
+span-stage diagnostics from the ordinary production invocation without injecting
+gold. Exact source-boundary mismatches remain diagnostic and do not override
+correct normalized values or reviewed answer alternatives.
 Every completed epoch must prove that every accepted request was seen exactly once.
 Mid-epoch checkpoints retain optimizer state, random state, cursor and coverage.
 An interruption remains incomplete, and resume requires unchanged data and code.

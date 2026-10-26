@@ -1,13 +1,13 @@
 {
-  "status": "prepared",
+  "status": "running",
   "backend": "biqwen",
-  "dataset": "data/biqwen-full-de-en",
+  "dataset": "data/biqwen-full-de-en-v2",
   "source_episodes": "data/full-training-de-en",
   "selection_config": "configs/full-training-data.json",
   "training_config": "configs/biqwen-full.json",
   "binding": {
-    "path": "data/biqwen-full-de-en",
-    "manifest_sha256": "6c1de1e38095aecff5f3811ba18999fd5adba2143b85ec701be91449adaedbe7",
+    "path": "data/biqwen-full-de-en-v2",
+    "manifest_sha256": "849ecce3bac822494cd3d9e0442a61b21c3c28371aa8c7cfc1bba4a5b65db452",
     "unique_train_episodes": 339949,
     "native_train_requests": 342147
   },
@@ -17,11 +17,11 @@
   },
   "sampling": false,
   "quotas": false,
-  "training_started": false,
+  "training_started": true,
   "training_complete": false,
-  "coverage_report": "data/biqwen-full-de-en/manifest.json",
-  "run_status": "/scratch/johann-peter.hartmann/tractor-biqwen-full-20261026/status.json",
-  "preflight_report": "reports/biqwen-full-preparation-20261026/plan.json",
+  "coverage_report": "data/biqwen-full-de-en-v2/manifest.json",
+  "run_status": "/scratch/johann-peter.hartmann/tractor-biqwen-v2/run/status.json",
+  "preflight_report": "reports/biqwen-correction-20261026/plan.json",
   "huggingface_dataset": {
     "local_matches_published_revision": false,
     "source_cleanup_uploaded": false,
@@ -35,5 +35,9 @@
     "full_dev_documents": 4429,
     "production_pipeline": true,
     "calibration_and_test_used_for_selection": false
-  }
+  },
+  "readiness_report": "reports/biqwen-correction-20261026/readiness-evidence.json",
+  "step": 10,
+  "epoch": 0,
+  "cursor": 160
 }

@@ -9,7 +9,7 @@ from itertools import batched
 from pathlib import Path
 
 from .api_training import supervised_requests
-from .biqwen import load_runtime, schema_for, verify_bundle
+from .biqwen import TYPED_SCHEMA, load_runtime, schema_for, verify_bundle
 from .coverage_assembly import sha
 from .episodes import Episode, text_key
 from .extraction_scope import in_scope
@@ -17,7 +17,10 @@ from .jsonio import dumps, loads
 from .model import field_ids
 from .source_policy import excluded_source
 
-VERSION = 'biqwen-api-multiple-evidence-v1'
+VERSION = 'biqwen-api-typed-multiple-evidence-v2'
+COMPILER_FILES = ['src/tractor/biqwen_training_data.py', 'src/tractor/api_training.py',
+                  'src/tractor/biqwen.py', 'src/tractor/pipeline_evaluation.py',
+                  'src/tractor/types.py', 'src/tractor/field_contracts.py']
 _runtime = None
 _tokenizer = None
 _limits = None
@@ -61,13 +64,15 @@ def native_example(request, records):
                 raise UnsuitableEvidence('duplicate_record_anchor')
             anchors.add(tuple(anchor[0]))
             output.append({'table_id': 'record', 'anchor': anchor[0], 'fields': spans})
-    return {'format': VERSION, 'text': request.text, 'schema': schema_for(request),
+    return {'format': VERSION, 'schema_version': TYPED_SCHEMA, 'text': request.text,
+            'schema': schema_for(request, TYPED_SCHEMA),
             'evidence': {'fields': {k: sorted(v) for k, v in fields.items()}, 'records': output}}
 
 
 def encode_example(example, encoding, tokenizer, limits):
     """Build exact token targets, preserving all occurrences and record bindings."""
-    if example.get('format') != VERSION or example['schema'].get('choices'):
+    if (example.get('format') != VERSION or example.get('schema_version') != TYPED_SCHEMA
+            or example['schema'].get('choices')):
         raise ValueError('Expected extraction-only public API supervision')
     try:
         encoded = encoding.encode({'text': example['text'], 'schema': example['schema']}, tokenizer,
@@ -102,6 +107,7 @@ def encode_example(example, encoding, tokenizer, limits):
         fields = {fid: [pair(v) for v in values] for fid, values in row['fields'].items()}
         records.append({'table_id': row['table_id'], 'anchor': pair(row['anchor']), 'fields': fields})
     encoded['gold'] = {'links': links, 'records': records, 'choices': {}, 'choice_targets': {}}
+    encoded['identity'] = example.get('identity', {})
     return encoded
 
 
@@ -133,7 +139,8 @@ def compile_batch(lines):
                 continue
             identity = {'id': episode.id, 'task': task, 'split': episode.split,
                         'source_group': episode.source_group, 'source': episode.source,
-                        'language': episode.language}
+                        'language': episode.language, 'domain': episode.family,
+                        'form': 'records' if example['schema']['tables'] else 'entities'}
             example['id'] = hashlib.sha256(dumps([episode.id, task]).encode()).hexdigest()
             example['identity'] = identity
             example['tokens'] = len(encoded['input_ids'])
@@ -183,6 +190,7 @@ def verify_source(source, selection):
 
 def build(source, output, model, selection='configs/full-training-data.json', workers=4):
     source, root, model = Path(source), Path(output), Path(model).resolve()
+    compiler_hashes = {p: sha(Path(p)) for p in COMPILER_FILES}
     manifest = verify_source(source, Path(selection))
     lock = verify_bundle(model)
     root.mkdir(parents=True, exist_ok=False)
@@ -222,7 +230,10 @@ def build(source, output, model, selection='configs/full-training-data.json', wo
     if counts['train_input_episodes'] != manifest['unique_train_episodes']:
         raise ValueError('Incomplete full corpus consumption')
     (root / 'dev.episodes.jsonl').write_bytes((source / 'dev.episodes.jsonl').read_bytes())
+    if compiler_hashes != {p: sha(Path(p)) for p in COMPILER_FILES}:
+        raise ValueError('Compiler changed during the full build; output is not training-ready')
     report = {'status': 'complete', 'training_ready': True, 'full_corpus': True, 'format': VERSION,
+              'schema_version': TYPED_SCHEMA,
               'source': str(source), 'source_manifest_sha256': sha(source / 'manifest.json'),
               'model_revision': lock['revision'], 'selection_sha256': sha(Path(selection)),
               'counts': dict(counts), 'unique_train_episodes': counts['train_accepted_episodes'],
@@ -231,8 +242,7 @@ def build(source, output, model, selection='configs/full-training-data.json', wo
               'rejections_by_reason': dict(reasons), 'sampling': False, 'quotas': False,
               'model_inference_performed': False, 'training_started': False,
               'semantic_audit': 'Existing source qualification retained; exhaustive technical checks are not human semantic review.',
-              'compiler_sha256': {p: sha(Path(p)) for p in ['src/tractor/biqwen_training_data.py',
-                 'src/tractor/api_training.py', 'src/tractor/biqwen.py', 'src/tractor/pipeline_evaluation.py']},
+              'compiler_sha256': compiler_hashes,
               'files': {p.name: sha(p) for p in root.glob('*.jsonl')}}
     (root / 'manifest.json').write_text(dumps(report, indent=2) + '\n')
     print(dumps(report, indent=2), flush=True)
@@ -242,7 +252,7 @@ def build(source, output, model, selection='configs/full-training-data.json', wo
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', default='data/full-training-de-en')
-    parser.add_argument('--output', default='data/biqwen-full-de-en')
+    parser.add_argument('--output', default='data/biqwen-full-de-en-v2')
     parser.add_argument('--model', default='models/biqwen-extract-decide-4b')
     parser.add_argument('--selection', default='configs/full-training-data.json')
     parser.add_argument('--workers', type=int, default=4)

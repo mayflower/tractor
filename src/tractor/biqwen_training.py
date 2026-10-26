@@ -9,17 +9,19 @@ from itertools import batched
 from pathlib import Path
 from types import MethodType
 
-from .biqwen import BiQwenExtractor
+from .biqwen import LEGACY_SCHEMA, TYPED_SCHEMA, BiQwenExtractor
+from .biqwen_architecture import ARCHITECTURE, LEGACY_ARCHITECTURE, install_architecture
 from .biqwen_training_data import VERSION, encode_example
 from .coverage_assembly import sha
 from .document_training import regression_guard, selection_score
 from .generalist_data import read_episodes
-from .inference_context import evaluation_precision
+from .inference_context import EVALUATION_PRECISION, evaluation_precision
 from .jsonio import dumps, loads
-from .pipeline_evaluation import evaluate_pipeline, infer
+from .pipeline_evaluation import evaluate_pipeline
 from .training_corpus import verify_training_binding
 
-RECIPE = 'biqwen-full-epochs-multiple-assignment-v1'
+LEGACY_RECIPE = 'biqwen-full-epochs-multiple-assignment-v1'
+RECIPE = 'biqwen-full-epochs-typed-joint-v2'
 TARGETS = ['q_proj', 'k_proj', 'v_proj', 'o_proj', 'in_proj_qkv', 'in_proj_z',
            'in_proj_b', 'in_proj_a', 'out_proj', 'gate_proj', 'up_proj', 'down_proj']
 
@@ -35,6 +37,8 @@ def multiple_losses(self, meta, pools, queries, global_anchor, marginal, sample_
         return
     if meta['schema']['choices'] or any(f.get('resolve_references') for f in meta['schema']['fields']):
         raise ValueError('Extraction-only training cannot contain decisions or reference resolution')
+    before = {name: len(terms) for name, terms in totals.items()}
+    missing_before = {k: diagnostics[k] for k in ['record_anchor_gold_missing', 'assignment_gold_missing']}
 
     def bce(logits, target):
         weights = torch.where(target > 0, 1., .25)
@@ -70,15 +74,42 @@ def multiple_losses(self, meta, pools, queries, global_anchor, marginal, sample_
             target = torch.tensor([pair in positive for pair in pool['pairs']],
                                   dtype=torch.float32, device=self.device)
             totals['assignment'].append(bce(logits[1:] - logits[0], target))
+    if hasattr(self, 'training_observations'):
+        counts = {'requests': 1, 'gold_records': len(gold['records']),
+                  'gold_assignment_cells': sum(len(r['fields']) for r in gold['records'])}
+        for key in ['proposal_hits', 'proposal_total', 'proposal_count', 'injected']:
+            counts[key] = sum(pool.get(key, 0) for pool in pools.values())
+        counts.update({k: diagnostics[k] - value for k, value in missing_before.items()})
+        for name, terms in totals.items():
+            current = terms[before[name]:]
+            counts[name + '_terms'] = len(current)
+            counts[name + '_sum'] = float(torch.stack(current).detach().sum()) if current else 0.
+        self.training_observations.append({'identity': meta.get('identity', {}), 'counts': counts})
 
 
-def configure_training_model(backend):
-    model = backend.model
+def accumulate_observations(groups, observations):
+    """Resumable numerators/denominators; exact counts, never averages of averages."""
+    for observation in observations:
+        identity = observation['identity']
+        keys = ['all'] + [f'{dimension}:{identity[dimension]}'
+                          for dimension in ['language', 'domain', 'form', 'source'] if dimension in identity]
+        for key in keys:
+            target = groups.setdefault(key, {})
+            for name, value in observation['counts'].items():
+                target[name] = target.get(name, 0) + value
+
+
+def configure_training_model(backend, loss_weights=None):
+    model = install_architecture(backend)
+    if loss_weights is not None:
+        for name, value in loss_weights.items():
+            setattr(model.config, name + '_loss_weight', float(value))
     model._losses_for_example = MethodType(multiple_losses, model)
     for name, parameter in model.named_parameters():
         if name.startswith(('ref_query.', 'ref_value.', 'ref_null.', 'choice_classifier.')):
             parameter.requires_grad_(False)
     model.temperatures = dict.fromkeys(model.temperatures, 1.)
+    model.training_observations = []
     return model
 
 
@@ -130,7 +161,7 @@ def validate_config(config):
                 'batch_size', 'gradient_accumulation', 'seed', 'head_lr', 'backbone_lr', 'weight_decay',
                 'max_grad_norm', 'lora_rank', 'lora_alpha', 'lora_dropout', 'gradient_checkpointing',
                 'gold_injection_final', 'checkpoint_updates', 'policy', 'baseline', 'baseline_sha256',
-                'sampling', 'quotas', 'max_steps', 'early_stopping', 'validation_limit'}
+                'sampling', 'quotas', 'max_steps', 'early_stopping', 'validation_limit', 'loss_weights'}
     if set(config) != required or config['recipe'] != RECIPE or config['backend'] != 'biqwen':
         raise ValueError('Expected the explicit BiQwen full-training recipe')
     if (config['sampling'] is not False or config['quotas'] is not False or config['max_steps'] is not None
@@ -144,6 +175,9 @@ def validate_config(config):
             raise ValueError(f'Invalid {key}')
     if not 0 <= config['lora_dropout'] < 1 or not 0 <= config['gold_injection_final'] <= 1:
         raise ValueError('Invalid dropout or gold-injection probability')
+    if set(config['loss_weights']) != {'boundary', 'source', 'assignment'} or any(
+            not math.isfinite(v) or v <= 0 for v in config['loss_weights'].values()):
+        raise ValueError('Explicit positive boundary/source/assignment loss weights required')
 
 
 def prepare_plan(config):
@@ -164,11 +198,23 @@ def prepare_plan(config):
     data = Path(config['dataset']['path'])
     if baseline['input_sha256'] != sha(data / 'dev.episodes.jsonl'):
         raise ValueError('Baseline and full Dev differ')
+    if baseline.get('schema_version') != TYPED_SCHEMA or manifest.get('schema_version') != TYPED_SCHEMA:
+        raise ValueError('Full training requires the same typed schema for data and baseline')
+    model_config = loads(Path(config['model'], 'model/extractor_config.json').read_text())['config']
+    if (baseline.get('policy_sha256') != sha(Path(config['policy']))
+            or baseline.get('threshold') != model_config['source_threshold']
+            or baseline.get('record_threshold') != model_config['anchor_threshold']
+            or baseline.get('evaluation_precision') != {**EVALUATION_PRECISION,
+                                                       'backbone_dtype': 'bf16', 'heads_dtype': 'fp32'}
+            or baseline.get('weights_sha256') != {k: v for k, v in lock['files'].items()
+                                                 if k.endswith('.safetensors')}):
+        raise ValueError('Baseline policy, thresholds, precision or initial weights differ')
     count = manifest['native_requests']['train']
     updates = math.ceil(math.ceil(count / config['batch_size']) / config['gradient_accumulation'])
     fingerprint = hashlib.sha256(dumps(config, sort_keys=True).encode()).hexdigest()
     sources = {str(p): sha(p) for p in sorted(Path(__file__).parent.glob('*.py'))}
-    sources.update({p: sha(Path(p)) for p in ['uv.lock', 'configs/extraction-quality.json']})
+    sources.update({p: sha(Path(p)) for p in ['uv.lock', 'configs/extraction-quality.json',
+                                           'flake.lock', 'flake.nix', 'configs/libpostal-data.sha256']})
     return {'status': 'prepared', 'training_started': False, 'training_complete': False,
             'dataset_manifest_sha256': config['dataset']['manifest_sha256'], 'config_sha256': fingerprint,
             'dataset_files': manifest['files'],
@@ -179,25 +225,33 @@ def prepare_plan(config):
             'total_request_presentations': count * config['num_epochs'],
             'full_dev_episodes': manifest['counts']['dev_input_episodes'],
             'sampling': False, 'step_limit': None, 'choice_training': False,
+            'architecture': ARCHITECTURE, 'schema_version': TYPED_SCHEMA,
             'record_assignment': 'multi-positive candidate-versus-ABSENT BCE',
             'checkpoint_selection': 'complete epochs only; full normalized Dev pipeline and regression guard'}
 
 
 def evaluate_dev(backend, rows, policy, output):
+    from .biqwen_diagnostics import infer_with_diagnostics
+
     predictions = {}
+    stages = {}
     backend.model.eval()
-    with evaluation_precision(), Path(output).open('w') as stream:
+    with evaluation_precision(), Path(output).open('w') as stream, \
+            Path(str(output) + '.stages.jsonl').open('w') as diagnostics:
         for index, row in enumerate(rows):
-            try:
-                result = {'prediction': infer(backend, row)}
-            except Exception as exc:
-                result = {'error': type(exc).__name__, 'message': str(exc)[:400]}
+            result, trace = infer_with_diagnostics(backend, row)
+            accumulate_observations(stages, [{'identity': {'language': row.language, 'domain': row.family,
+                                                          'source': row.source}, 'counts': trace['counts']}])
+            diagnostics.write(dumps({'id': row.id, **trace}) + '\n')
             predictions[row.id] = result
             stream.write(dumps({'id': row.id, **result}) + '\n')
             if (index + 1) % 100 == 0:
                 stream.flush()
                 print(dumps({'phase': 'full_dev', 'completed': index + 1, 'total': len(rows)}), flush=True)
-    return evaluate_pipeline(rows, predictions, policy)
+    report = evaluate_pipeline(rows, predictions, policy)
+    report['span_stage_diagnostics'] = stages
+    report['span_stage_diagnostics_scope'] = 'Exact annotated spans, not final-value correctness or selection criteria'
+    return report
 
 
 def save_checkpoint(root, backend, optimizer, state, plan, config):
@@ -217,6 +271,8 @@ def save_checkpoint(root, backend, optimizer, state, plan, config):
                 'cuda_rng': torch.cuda.get_rng_state_all(), 'python_rng': random.getstate(),
                 'plan': plan}, temporary / 'training-state.pt')
     metadata = {'format': RECIPE, 'base_model': str(Path(config['model']).resolve()),
+                'architecture': getattr(model, 'tractor_architecture', LEGACY_ARCHITECTURE),
+                'schema_version': backend.schema_version,
                 'base_revision': backend.model_revision, 'base_weights': backend.weights_hashes,
                 'config': config, 'step': state['step'], 'epoch': state['epoch'], 'cursor': state['cursor'],
                 'temperatures': model.temperatures,
@@ -236,8 +292,13 @@ def load_checkpoint(path, device='cpu', precision='fp32', trainable=False):
 
     path = Path(path)
     metadata = loads((path / 'checkpoint.json').read_text())
-    if metadata['format'] != RECIPE:
+    if metadata['format'] not in {LEGACY_RECIPE, RECIPE}:
         raise ValueError('Unsupported BiQwen training checkpoint')
+    if metadata['format'] == RECIPE and (metadata.get('architecture') != ARCHITECTURE
+                                       or metadata.get('schema_version') != TYPED_SCHEMA):
+        raise ValueError('Checkpoint architecture/schema contract differs')
+    if trainable and metadata['format'] == LEGACY_RECIPE:
+        raise ValueError('Legacy checkpoints cannot resume the new full-training recipe')
     for name, digest in metadata['files'].items():
         if sha(path / name) != digest:
             raise ValueError(f'Checkpoint artifact changed: {name}')
@@ -245,6 +306,10 @@ def load_checkpoint(path, device='cpu', precision='fp32', trainable=False):
     if backend.model_revision != metadata['base_revision'] or backend.weights_hashes != metadata['base_weights']:
         raise ValueError('Checkpoint requires its exact merged BiQwen base, not original Qwen weights')
     model = backend.model
+    if metadata['format'] == RECIPE:
+        model = install_architecture(backend, metadata['architecture'])
+    else:
+        backend.schema_version = LEGACY_SCHEMA
     model.backbone = PeftModel.from_pretrained(model.backbone, path / 'adapter', is_trainable=trainable)
     heads = load_file(str(path / 'heads.safetensors'))
     if set(heads) != {k for k in model.state_dict() if not k.startswith('backbone.')}:
@@ -270,6 +335,8 @@ def train(config, resume=False):
                'max_grad_norm', 'lora_dropout', 'gold_injection_final']}
     active_path = Path('configs/active-training.json')
     active = loads(active_path.read_text())
+    if active.get('status') == 'requires_revision':
+        raise ValueError('Full-training preparation still requires revision')
     if (active.get('backend') != 'biqwen' or active['binding'] != config['dataset']
             or loads(Path(active['training_config']).read_text()) != config):
         raise ValueError('Activate this exact full-training recipe before starting')
@@ -292,8 +359,9 @@ def train(config, resume=False):
             task_type=TaskType.FEATURE_EXTRACTION, r=config['lora_rank'], lora_alpha=config['lora_alpha'],
             lora_dropout=numeric['lora_dropout'], target_modules=TARGETS, bias='none'))
         state = {'step': 0, 'epoch': 0, 'cursor': 0,
-                 'coverage': bytearray(plan['native_requests_per_epoch']), 'best_metric': None}
-    model = configure_training_model(backend)
+                 'coverage': bytearray(plan['native_requests_per_epoch']), 'best_metric': None,
+                 'diagnostics': {}}
+    model = configure_training_model(backend, config['loss_weights'])
     model.backbone.config.use_cache = False
     if config['gradient_checkpointing']:
         model.backbone.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
@@ -360,22 +428,32 @@ def train(config, resume=False):
                 optimizer.zero_grad(set_to_none=True)
                 total_samples = sum(len(b) for b in batches)
                 loss_total = 0.
+                observations = []
                 for indices in batches:
                     examples = [encode_example(dataset[i], backend.encoding, model.tokenizer, limits) for i in indices]
+                    model.training_observations = []
                     output = model(backend.encoding.collate(examples, model.tokenizer.pad_token_id), decode=False)
                     loss = output['loss'] * (len(indices) / total_samples)
                     if not torch.isfinite(loss):
                         raise FloatingPointError('Non-finite training loss; no skipped batch')
                     loss.backward()
                     loss_total += float(loss.detach())
+                    observations.extend(model.training_observations)
                 torch.nn.utils.clip_grad_norm_([*head, *backbone], numeric['max_grad_norm'], error_if_nonfinite=True)
                 optimizer.step()
+                accumulate_observations(state['diagnostics'], observations)
                 record_coverage(coverage, [i for batch in batches for i in batch])
                 state['cursor'] += total_samples
                 state['step'] += 1
                 if state['step'] % 10 == 0:
                     print(dumps({'phase': 'train', 'epoch': epoch + 1, 'step': state['step'],
-                                 'seen': state['cursor'], 'total': len(dataset), 'loss': loss_total}), flush=True)
+                                 'seen': state['cursor'], 'total': len(dataset), 'loss': loss_total,
+                                 'gold_injection_probability': model.gold_injection_probability,
+                                 'diagnostics': state['diagnostics'].get('all', {})}), flush=True)
+                    pending = root / 'diagnostics.json.writing'
+                    pending.write_text(dumps({'step': state['step'], 'epoch': epoch + 1,
+                                              'groups': state['diagnostics']}, indent=2) + '\n')
+                    pending.replace(root / 'diagnostics.json')
                     persist_status()
                 if state['step'] % config['checkpoint_updates'] == 0 and state['cursor'] < len(dataset):
                     save_checkpoint(root, backend, optimizer, state, plan, config)
@@ -393,6 +471,8 @@ def train(config, resume=False):
                        'identity_sha256': sha(data / 'train.identities.jsonl'),
                        'coverage_sha256': hashlib.sha256(coverage).hexdigest()}
             (root / f'epoch-{epoch + 1}-coverage.json').write_text(dumps(summary, indent=2) + '\n')
+            (root / f'epoch-{epoch + 1}-diagnostics.json').write_text(dumps(state['diagnostics'], indent=2) + '\n')
+            model.training_observations = []
             report = evaluate_dev(backend, dev, policy, root / f'epoch-{epoch + 1}-dev.predictions.jsonl')
             report['regression_guard'] = regression_guard(report, baseline)
             score = selection_score(report)
@@ -401,7 +481,7 @@ def train(config, resume=False):
                 state['best_metric'] = score
             report.update(epoch=epoch + 1, selection_metric=score, selected=improved)
             (root / f'epoch-{epoch + 1}-dev.json').write_text(dumps(report, indent=2) + '\n')
-            state.update(epoch=epoch + 1, cursor=0, coverage=bytearray(len(dataset)))
+            state.update(epoch=epoch + 1, cursor=0, coverage=bytearray(len(dataset)), diagnostics={})
             pointer = save_checkpoint(root, backend, optimizer, state, plan, config)
             if improved:
                 pending = root / 'best.json.writing'

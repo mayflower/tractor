@@ -69,7 +69,7 @@ def test_training_preserves_competing_values_and_exclusive_occurrences():
     request = record_request()
     records = targets(request)
     example = native_example(request, records)
-    assert example['schema']['fields'][1]['description'] == 'Width'
+    assert example['schema']['fields'][1]['description'].startswith('Width\nType: quantity;')
     assert example['evidence']['records'][0]['fields']['f1'] == [(7, 12), (14, 19)]
     records[1]['width'].append(records[0]['width'][0])
     with pytest.raises(UnsuitableEvidence, match='shared_record_occurrence'):
@@ -158,6 +158,15 @@ def test_cpu_training_checkpoint_roundtrip_and_multi_value_gradient(tmp_path, mo
     assert any(p.grad is not None and torch.count_nonzero(p.grad) for n, p in model.named_parameters() if 'lora_' in n)
     assert all(p.grad is None for n, p in model.named_parameters() if n.startswith('choice_classifier.'))
     optimizer.step()
+    # Observing proposals must leave production decoding unchanged and never
+    # pass the training gold into inference.
+    from tractor.biqwen_diagnostics import EvidenceTrace
+    model.eval()
+    expected = backend.candidates(request)
+    with EvidenceTrace(backend) as trace:
+        assert trace.candidates(request) == expected
+        assert next(iter(trace.requests.values()))['fields']
+    assert backend.candidates(request) == expected
     state = {'step': 1, 'epoch': 0, 'cursor': 1, 'coverage': bytearray([1, 0]), 'best_metric': None}
     pointer = save_checkpoint(tmp_path, backend, optimizer, state, {'fixture': True}, {'model': str(path)})
     checkpoint = tmp_path / pointer['checkpoint']
@@ -167,6 +176,8 @@ def test_cpu_training_checkpoint_roundtrip_and_multi_value_gradient(tmp_path, mo
     restored = load_checkpoint(checkpoint, trainable=True)
     for name, value in model.state_dict().items():
         assert torch.equal(value, restored.model.state_dict()[name]), name
+    restored.model.eval()
+    assert restored.candidates(request) == expected
     (checkpoint / 'heads.safetensors').write_bytes(b'corrupt')
     with pytest.raises(ValueError, match='artifact changed'):
         load_checkpoint(checkpoint)
@@ -230,3 +241,5 @@ def test_cpu_training_checkpoint_roundtrip_and_multi_value_gradient(tmp_path, mo
     for epoch in [1, 2]:
         coverage = loads(Path(f'run/epoch-{epoch}-coverage.json').read_text())
         assert coverage['seen_requests'] == 5 and coverage['all_requests_seen_exactly_once']
+        diagnostics = loads(Path(f'run/epoch-{epoch}-diagnostics.json').read_text())
+        assert diagnostics['all']['requests'] == 5
