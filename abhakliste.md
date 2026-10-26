@@ -46,15 +46,26 @@ Ein technischer Nachweis ersetzt dabei keinen Qualitätsnachweis.
   ohne Gewichtsupdates. Der vollständige Trainings-Preflight ist bestanden.
 - Softwareprüfungen sind keine Qualitätsmessung. Das Volltraining läuft; vollständige Epochen, Modellauswahl und Abschnitt 9
   sind noch nicht abgeschlossen.
-- Die Nachbearbeitung für Abschnitt 9 ist separat vorbereitet: Commit `1d906ef`
+- Die Nachbearbeitung für Abschnitt 9 ist separat vorbereitet: Commits `1d906ef`
+  und anschließend `2be9c7e`
   im Worktree `/scratch/johann-peter.hartmann/tractor-biqwen-v2/post-training`.
-  913 Softwaretests sowie Lint und Dokumentationsprüfung bestehen. Enthalten sind
+  920 Softwaretests sowie Lint und Dokumentationsprüfung bestehen. Enthalten sind
   die Sperre vor vollständigem Training/Dev-Auswahl, Kalibrierung über die
   Produktionspipeline, ein gebundenes Inferenz-Bundle und der eingefrorene
   Abschlusstest. Der Record-Replay wurde mit echten parametrisierten Köpfen und
   PyTorch-Inferenztensoren geprüft. Reale Kalibrierung und Test sind noch offen.
-  Diesen Commit erst nach Ende des Trainings übernehmen: Der laufende Trainer
+  Diese Commits erst nach Ende des Trainings übernehmen: Der laufende Trainer
   prüft die unveränderten Hashes seines ursprünglichen Implementierungsstands.
+- Die korrigierte Offline-Fehleranalyse wurde auf allen 4.429 gespeicherten
+  Dev-Vorhersagen der typisierten Ausgangsgewichte ausgeführt. Sie trennt 97
+  ungeklärte Antworten bei unvollständigen Referenzen und 457 nicht bewertbare
+  Annotationen von 2.005 nachgewiesenen Feldabweichungen der Pipeline. Unter den
+  Abweichungen sind 412 fehlende Werte und 87 Fälle mit anderen Verarbeitungs-Issues;
+  diese Symptome belegen nicht automatisch einen Normalisierer- oder Modellfehler.
+  Nachweis: `reports/biqwen-correction-20261026/typed-baseline-error-review.json`.
+  Der neue Befehl `biqwen_post_training review-dev` bindet die spätere Analyse an
+  den gewählten vollständigen Trainings-Checkpoint und seine Dev-Vorhersagen.
+  Die Fehleranalyse des fertig trainierten Modells bleibt offen.
 
 ## Verbindliche Leitplanken
 
