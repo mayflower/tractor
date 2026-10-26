@@ -1,5 +1,20 @@
 # tractor
 
+On experiment/biqwen-hybrid-bidirectional, the separately queued follow-up uses
+configs/biqwen-bidirectional-full.json after the current causal full run completes.
+The backbone mode qwen3.5-hybrid-bidirectional-v1 changes ONLY the eight full
+attention layers; the 24 DeltaNet layers retain their directed algorithm.
+Do not call the whole backbone fully bidirectional. It is adapted by supervised
+extraction training over all 342,147 eligible requests for four complete epochs;
+there is no masked-language-model or MNTP stage. Keep mode restoration in the
+checkpoint loader, no incremental caches and no global Transformers monkeypatch.
+The follow-up watcher uses its own worktree/config and exact predecessor PID/start
+time, verifies complete epochs/Dev, and requires its own real 4B GPU preflight.
+Do not change queued source/config/data without explicitly replacing that job;
+the watcher rejects changed hashes. Do not interrupt the causal comparison run.
+Use just train-full configs/biqwen-bidirectional-full.json only with its matching
+active configuration; do not manually start a second copy of the queued run.
+
 tractor is the System One Extraction Model and its local HTTP API/Python SDK.
 The sole release bundle is models/tractor. Keep publication files focused on the
 current product; do not add experiment histories, predecessor models or local paths.

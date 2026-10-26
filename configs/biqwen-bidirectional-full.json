@@ -1,0 +1,41 @@
+{
+  "recipe": "biqwen-full-epochs-hybrid-bidirectional-v3",
+  "backend": "biqwen",
+  "model": "models/biqwen-extract-decide-4b",
+  "model_revision": "96184881677b03adbf28ed5ba18a17548f8fb861",
+  "dataset": {
+    "path": "data/biqwen-full-de-en-v2",
+    "manifest_sha256": "849ecce3bac822494cd3d9e0442a61b21c3c28371aa8c7cfc1bba4a5b65db452",
+    "unique_train_episodes": 339949,
+    "native_train_requests": 342147
+  },
+  "output_dir": "/scratch/johann-peter.hartmann/tractor-biqwen-v2/bidirectional-run",
+  "num_epochs": 4,
+  "batch_size": 2,
+  "gradient_accumulation": 8,
+  "seed": 42,
+  "head_lr": 0.0001,
+  "loss_weights": {
+    "boundary": 1.0,
+    "source": 1.0,
+    "assignment": 1.0
+  },
+  "backbone_lr": 1e-05,
+  "weight_decay": 0.01,
+  "max_grad_norm": 1.0,
+  "lora_rank": 32,
+  "lora_alpha": 64,
+  "lora_dropout": 0.05,
+  "gradient_checkpointing": true,
+  "gold_injection_final": 0.25,
+  "checkpoint_updates": 1000,
+  "policy": "configs/extraction-quality.json",
+  "baseline": "reports/biqwen-correction-20261026/typed-baseline-final/metrics.json",
+  "baseline_sha256": "35fe2ba3efb120d69df5a8c29c74131264f286e29dc3b244ec1feddbf61bd9ee",
+  "sampling": false,
+  "quotas": false,
+  "max_steps": null,
+  "early_stopping": false,
+  "validation_limit": null,
+  "attention_mode": "qwen3.5-hybrid-bidirectional-v1"
+}

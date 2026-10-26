@@ -11,6 +11,7 @@ from types import MethodType
 
 from .biqwen import LEGACY_SCHEMA, TYPED_SCHEMA, BiQwenExtractor
 from .biqwen_architecture import ARCHITECTURE, LEGACY_ARCHITECTURE, install_architecture
+from .biqwen_attention import BIDIRECTIONAL, CAUSAL, attention_contract, install_attention
 from .biqwen_training_data import VERSION, encode_example
 from .coverage_assembly import sha
 from .document_training import regression_guard, selection_score
@@ -22,6 +23,7 @@ from .training_corpus import verify_training_binding
 
 LEGACY_RECIPE = 'biqwen-full-epochs-multiple-assignment-v1'
 RECIPE = 'biqwen-full-epochs-typed-joint-v2'
+BIDIRECTIONAL_RECIPE = 'biqwen-full-epochs-hybrid-bidirectional-v3'
 TARGETS = ['q_proj', 'k_proj', 'v_proj', 'o_proj', 'in_proj_qkv', 'in_proj_z',
            'in_proj_b', 'in_proj_a', 'out_proj', 'gate_proj', 'up_proj', 'down_proj']
 
@@ -162,7 +164,12 @@ def validate_config(config):
                 'max_grad_norm', 'lora_rank', 'lora_alpha', 'lora_dropout', 'gradient_checkpointing',
                 'gold_injection_final', 'checkpoint_updates', 'policy', 'baseline', 'baseline_sha256',
                 'sampling', 'quotas', 'max_steps', 'early_stopping', 'validation_limit', 'loss_weights'}
-    if set(config) != required or config['recipe'] != RECIPE or config['backend'] != 'biqwen':
+    if config.get('recipe') == BIDIRECTIONAL_RECIPE:
+        required.add('attention_mode')
+        if config.get('attention_mode') != BIDIRECTIONAL:
+            raise ValueError('The bidirectional recipe requires its explicit attention contract')
+    if (set(config) != required or config['recipe'] not in {RECIPE, BIDIRECTIONAL_RECIPE}
+            or config['backend'] != 'biqwen'):
         raise ValueError('Expected the explicit BiQwen full-training recipe')
     if (config['sampling'] is not False or config['quotas'] is not False or config['max_steps'] is not None
             or config['early_stopping'] is not False or config['validation_limit'] is not None):
@@ -226,6 +233,7 @@ def prepare_plan(config):
             'full_dev_episodes': manifest['counts']['dev_input_episodes'],
             'sampling': False, 'step_limit': None, 'choice_training': False,
             'architecture': ARCHITECTURE, 'schema_version': TYPED_SCHEMA,
+            'attention_mode': config.get('attention_mode', CAUSAL),
             'record_assignment': 'multi-positive candidate-versus-ABSENT BCE',
             'checkpoint_selection': 'complete epochs only; full normalized Dev pipeline and regression guard'}
 
@@ -270,7 +278,11 @@ def save_checkpoint(root, backend, optimizer, state, plan, config):
     torch.save({**state, 'optimizer': optimizer.state_dict(), 'rng': torch.get_rng_state(),
                 'cuda_rng': torch.cuda.get_rng_state_all(), 'python_rng': random.getstate(),
                 'plan': plan}, temporary / 'training-state.pt')
-    metadata = {'format': RECIPE, 'base_model': str(Path(config['model']).resolve()),
+    contract = attention_contract(model.backbone)
+    if contract['mode'] != config.get('attention_mode', CAUSAL):
+        raise ValueError('Checkpoint attention differs from the training recipe')
+    metadata = {'format': config.get('recipe', RECIPE), 'base_model': str(Path(config['model']).resolve()),
+                'attention': contract,
                 'architecture': getattr(model, 'tractor_architecture', LEGACY_ARCHITECTURE),
                 'schema_version': backend.schema_version,
                 'base_revision': backend.model_revision, 'base_weights': backend.weights_hashes,
@@ -292,9 +304,9 @@ def load_checkpoint(path, device='cpu', precision='fp32', trainable=False):
 
     path = Path(path)
     metadata = loads((path / 'checkpoint.json').read_text())
-    if metadata['format'] not in {LEGACY_RECIPE, RECIPE}:
+    if metadata['format'] not in {LEGACY_RECIPE, RECIPE, BIDIRECTIONAL_RECIPE}:
         raise ValueError('Unsupported BiQwen training checkpoint')
-    if metadata['format'] == RECIPE and (metadata.get('architecture') != ARCHITECTURE
+    if metadata['format'] in {RECIPE, BIDIRECTIONAL_RECIPE} and (metadata.get('architecture') != ARCHITECTURE
                                        or metadata.get('schema_version') != TYPED_SCHEMA):
         raise ValueError('Checkpoint architecture/schema contract differs')
     if trainable and metadata['format'] == LEGACY_RECIPE:
@@ -306,11 +318,17 @@ def load_checkpoint(path, device='cpu', precision='fp32', trainable=False):
     if backend.model_revision != metadata['base_revision'] or backend.weights_hashes != metadata['base_weights']:
         raise ValueError('Checkpoint requires its exact merged BiQwen base, not original Qwen weights')
     model = backend.model
-    if metadata['format'] == RECIPE:
+    if metadata['format'] in {RECIPE, BIDIRECTIONAL_RECIPE}:
         model = install_architecture(backend, metadata['architecture'])
     else:
         backend.schema_version = LEGACY_SCHEMA
     model.backbone = PeftModel.from_pretrained(model.backbone, path / 'adapter', is_trainable=trainable)
+    mode = BIDIRECTIONAL if metadata['format'] == BIDIRECTIONAL_RECIPE else CAUSAL
+    if metadata['config'].get('attention_mode', CAUSAL) != mode:
+        raise ValueError('Checkpoint recipe and attention configuration disagree')
+    install_attention(model.backbone, mode)
+    if metadata.get('attention', {'mode': CAUSAL}) != attention_contract(model.backbone):
+        raise ValueError('Checkpoint attention contract differs from the runtime')
     heads = load_file(str(path / 'heads.safetensors'))
     if set(heads) != {k for k in model.state_dict() if not k.startswith('backbone.')}:
         raise ValueError('Extraction heads do not match the runtime')
@@ -362,6 +380,7 @@ def train(config, resume=False):
                  'coverage': bytearray(plan['native_requests_per_epoch']), 'best_metric': None,
                  'diagnostics': {}}
     model = configure_training_model(backend, config['loss_weights'])
+    install_attention(model.backbone, config.get('attention_mode', CAUSAL))
     model.backbone.config.use_cache = False
     if config['gradient_checkpointing']:
         model.backbone.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .biqwen import TYPED_SCHEMA, BiQwenExtractor
 from .biqwen_architecture import ARCHITECTURE
+from .biqwen_attention import BIDIRECTIONAL, CAUSAL, attention_contract, install_attention
 from .biqwen_training import TARGETS, configure_training_model
 from .biqwen_training_data import encode_example, native_example
 from .coverage_assembly import sha
@@ -99,6 +100,8 @@ def run(config, output, batch_size=None):
             task_type=TaskType.FEATURE_EXTRACTION, r=config['lora_rank'], lora_alpha=config['lora_alpha'],
             lora_dropout=float(config['lora_dropout']), target_modules=TARGETS, bias='none'))
         model = configure_training_model(backend, config['loss_weights'])
+        install_attention(model.backbone, config.get('attention_mode', CAUSAL))
+        report['attention'] = attention_contract(model.backbone)
         if config['gradient_checkpointing']:
             model.backbone.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
             model.backbone.enable_input_require_grads()
@@ -109,6 +112,24 @@ def run(config, output, batch_size=None):
         report['weights_sha256'] = backend.weights_hashes
         report['device'] = torch.cuda.get_device_name()
         before = parameter_hashes(model)
+        if config.get('attention_mode') == BIDIRECTIONAL:
+            # Check the real backbone, before the already bidirectional head
+            # adapter. A head-only check cannot establish backbone direction.
+            model.eval()
+            ids = model.tokenizer('Anna Müller ist für Rechnungen zuständig.', return_tensors='pt')['input_ids']
+            ids = ids.to(model.device)
+            changed = ids.clone()
+            changed[0, -1] = (changed[0, -1] + 1) % model.backbone.config.vocab_size
+            with torch.inference_mode():
+                first = model.backbone(input_ids=ids, use_cache=False).last_hidden_state[0, 0].float()
+                second = model.backbone(input_ids=changed, use_cache=False).last_hidden_state[0, 0].float()
+            difference = float((first - second).abs().max())
+            if not torch.isfinite(first).all() or not torch.isfinite(second).all() or difference == 0:
+                raise ValueError('Future-context probe failed on the actual backbone')
+            report['future_context_probe'] = {'passed': True, 'earlier_state_max_difference': difference,
+                                              'scope': 'backbone before extraction adapter; no optimizer update'}
+            del first, second
+            model.train()
         limits = loads(Path(config['model'], 'model/extractor_config.json').read_text())['config']
         for label, raw in stress_examples(backend):
             model.zero_grad(set_to_none=True)

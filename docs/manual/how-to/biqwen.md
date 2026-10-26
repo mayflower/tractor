@@ -1,5 +1,39 @@
 # Use BiQwen behind the Tractor API
 
+## Bidirectional Qwen3.5 experiment
+
+The `experiment/biqwen-hybrid-bidirectional` branch adds the versioned
+`qwen3.5-hybrid-bidirectional-v1` attention mode. All eight full-attention layers
+can read both preceding and following tokens. The 24 DeltaNet layers retain
+their causal recurrence and convolution; this is a hybrid backbone, not a fully
+bidirectional encoder. The existing bidirectional extraction adapter remains.
+
+Training and checkpoint inference install the same instance-local implementation
+using Transformers' bidirectional and recurrent mask builders. Padding stays
+masked, incremental caches are rejected, and the checkpoint records the mode and
+layer counts. Loading an old checkpoint retains its causal backbone. The public
+API and normalizers do not change.
+
+`configs/biqwen-bidirectional-full.json` specifies four full epochs over all
+342,147 eligible DE/EN requests. Adaptation uses the supervised extraction losses;
+there is no masked-token/MNTP pretraining stage. It starts from the same pinned
+merged BiQwen base as the causal comparison, with a fresh optimizer. Changing
+attention alone does not establish extraction quality.
+
+The automatic follow-up runs in its own worktree. It waits for the exact causal
+trainer process to finish, verifies all four coverage ledgers and complete Dev
+predictions, then runs the actual 4B forward/backward preflight, including a check
+that later input changes an earlier backbone representation. Only a successful
+preflight can start full training. Failures or changed frozen inputs stop the
+follow-up with an error; they never restart the predecessor or shorten training.
+The queue's `status.json` and separate preflight/training logs record each stage.
+
+For manual verification use `nix develop -c just check-biqwen-full
+configs/biqwen-bidirectional-full.json` in that worktree. Do not launch a second
+copy while the automatic follow-up is queued or running. A training completion
+does not promote the model: full-pipeline comparison, calibration, heldout test
+and a real API smoke test are still required.
+
 This experimental branch supports
 [johannhartmann/biqwen-extract-decide-4b](https://huggingface.co/johannhartmann/biqwen-extract-decide-4b)
 at revision `96184881677b03adbf28ed5ba18a17548f8fb861`. The local model directory
