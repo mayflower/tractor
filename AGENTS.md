@@ -1,5 +1,15 @@
 # tractor
 
+Current work: the user authorized a short matched causal/hybrid feasibility
+comparison and training-throughput optimization on 2026-10-26. The old full run
+is interrupted (last durable checkpoint: step 1000); its automatic follow-up
+is cancelled. Implementation lives in the sibling worktree
+/scratch/johann-peter.hartmann/tractor-biqwen-v2/bidirectional on branch
+experiment/biqwen-hybrid-bidirectional. The diagnostic selects 512 train requests
+and 128 separate Dev documents; never describe it as full training. Do not resume
+the old full run or cancelled queue. Full training still requires every eligible
+DE/EN request; calibration/test remain untouched during this experiment.
+
 tractor is the System One Extraction Model and its local HTTP API/Python SDK.
 The sole release bundle is models/tractor. Keep publication files focused on the
 current product; do not add experiment histories, predecessor models or local paths.

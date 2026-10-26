@@ -1,5 +1,5 @@
 {
-  "status": "running",
+  "status": "interrupted_or_failed",
   "backend": "biqwen",
   "dataset": "data/biqwen-full-de-en-v2",
   "source_episodes": "data/full-training-de-en",
@@ -37,7 +37,7 @@
     "calibration_and_test_used_for_selection": false
   },
   "readiness_report": "reports/biqwen-correction-20261026/readiness-evidence.json",
-  "step": 10,
+  "step": 1433,
   "epoch": 0,
-  "cursor": 160
+  "cursor": 22928
 }

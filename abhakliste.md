@@ -501,9 +501,12 @@ bleiben getrennte Entscheidungen.
 
 ### Ergänzung: automatisch anschließende bidirektionale Variante
 
-Auf ausdrücklichen Auftrag wird nach dem laufenden kausalen Volltraining eine
-zweite Variante automatisch trainiert. Die endgültige Modellauswahl erfolgt auf
-Dev nach beiden Läufen; Kalibrierung und Abschlusstest bleiben bis dahin offen.
+**Korrektur nach Nutzerfeedback:** Der automatische Folgelauf wurde vor jedem
+GPU-Training deaktiviert. Zwei vollständige Läufe ohne vorherigen Qualitätsnachweis
+sind keine sinnvolle Machbarkeitsprüfung. Die Implementierung bleibt verfügbar;
+zunächst ist ein ausdrücklich abgegrenzter, kurzer Lern- und Qualitätsvergleich
+zu planen. Kalibrierung und Abschlusstest bleiben unberührt. Der bereits laufende
+kausale Trainingsprozess wurde durch diese Deaktivierung nicht beendet.
 
 - [x] Separaten Branch `experiment/biqwen-hybrid-bidirectional` und Worktree
   `/scratch/johann-peter.hartmann/tractor-biqwen-v2/bidirectional` angelegt.
@@ -517,9 +520,9 @@ Dev nach beiden Läufen; Kalibrierung und Abschlusstest bleiben bis dahin offen.
 - [x] `just check` im separaten Worktree bestanden: 908 Tests, Lint,
   Fixture- und Dokumentationsprüfung. Nachweis:
   `reports/biqwen-correction-20261026/bidirectional-check.log`.
-- [x] Automatischen Folgelauf gestartet und seinen lebenden Prozess verifiziert:
-  PID `2718293`, Status `waiting`, gebunden an Vorgänger-PID `2611833` und dessen
-  Prozessstartzeit. Nachweis: `reports/biqwen-correction-20261026/bidirectional-followup/status.json`.
+- [x] Automatischen Folgelauf vor Trainingsbeginn deaktiviert und Prozessende
+  verifiziert. Ehemalige PID `2718293`, Status `cancelled_before_training`.
+  Nachweis: `reports/biqwen-correction-20261026/bidirectional-followup/status.json`.
 - [x] Folgerezept auf denselben vollständigen Korpus mit 342.147 Requests,
   dieselben gepinnten zusammengeführten Ausgangsgewichte und vier volle Epochen
   gebunden. Frischer Optimizer; keine Stichprobe und kein Schrittlimit.
@@ -536,10 +539,10 @@ Dev nach beiden Läufen; Kalibrierung und Abschlusstest bleiben bis dahin offen.
   Testsplit prüfen und durch die reale HTTP-API verifizieren.
 
 Der bisherige Trainingsprozess und seine 102 gebundenen Quelldateien wurden
-bei Aktivierung unverändert geprüft. Der wartende Folgelauf ist noch kein
-begonnenes oder abgeschlossenes bidirektionales GPU-Training. Änderungen an
-seinem eingefrorenen Code, seiner Konfiguration oder seinen Daten erfordern eine
-ausdrückliche Neuvorbereitung; der automatische Ablauf lehnt veränderte Bindungen ab.
+bei Aktivierung unverändert geprüft. Es wurde kein bidirektionales GPU-Training
+gestartet. Die folgenden automatischen Schritte sind ausgesetzt und bedürfen
+einer überarbeiteten Versuchsplanung; sie dürfen nicht aus dem alten Wartestatus
+heraus erneut gestartet werden.
 
 `Ausgangszustand → Typkodierung → Record-Scorer → Diagnostik → vollständiger
 Datenaufbau → Baselines → GPU-Prüfung → Startbedingungen → Volltraining →
