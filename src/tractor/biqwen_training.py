@@ -24,6 +24,7 @@ from .training_corpus import verify_training_binding
 LEGACY_RECIPE = 'biqwen-full-epochs-multiple-assignment-v1'
 RECIPE = 'biqwen-full-epochs-typed-joint-v2'
 BIDIRECTIONAL_RECIPE = 'biqwen-full-epochs-hybrid-bidirectional-v3'
+FAST_RECIPE = 'biqwen-full-epochs-fast-v4'
 TARGETS = ['q_proj', 'k_proj', 'v_proj', 'o_proj', 'in_proj_qkv', 'in_proj_z',
            'in_proj_b', 'in_proj_a', 'out_proj', 'gate_proj', 'up_proj', 'down_proj']
 
@@ -164,11 +165,22 @@ def validate_config(config):
                 'max_grad_norm', 'lora_rank', 'lora_alpha', 'lora_dropout', 'gradient_checkpointing',
                 'gold_injection_final', 'checkpoint_updates', 'policy', 'baseline', 'baseline_sha256',
                 'sampling', 'quotas', 'max_steps', 'early_stopping', 'validation_limit', 'loss_weights'}
+    if config.get('recipe') == FAST_RECIPE:
+        required.update({'attention_mode', 'runtime'})
+        if config.get('attention_mode') not in {CAUSAL, BIDIRECTIONAL}:
+            raise ValueError('Fast recipe requires an explicit supported attention mode')
+        runtime = config.get('runtime', {})
+        if set(runtime) != {'gdn_backend', 'max_microbatch', 'padded_token_budget', 'checkpointing_above_tokens'}:
+            raise ValueError('Fast recipe requires explicit runtime limits')
+        if runtime['gdn_backend'] != 'fla' or any(type(runtime[k]) is not int or runtime[k] < 1 for k in runtime if k != 'gdn_backend'):
+            raise ValueError('Invalid fast runtime')
+        if not config.get('gradient_checkpointing'):
+            raise ValueError('Fast recipe requires conditional gradient checkpointing for long inputs')
     if config.get('recipe') == BIDIRECTIONAL_RECIPE:
         required.add('attention_mode')
         if config.get('attention_mode') != BIDIRECTIONAL:
             raise ValueError('The bidirectional recipe requires its explicit attention contract')
-    if (set(config) != required or config['recipe'] not in {RECIPE, BIDIRECTIONAL_RECIPE}
+    if (set(config) != required or config['recipe'] not in {RECIPE, BIDIRECTIONAL_RECIPE, FAST_RECIPE}
             or config['backend'] != 'biqwen'):
         raise ValueError('Expected the explicit BiQwen full-training recipe')
     if (config['sampling'] is not False or config['quotas'] is not False or config['max_steps'] is not None
@@ -200,6 +212,8 @@ def prepare_plan(config):
     if lock['revision'] != config['model_revision']:
         raise ValueError('Initial model differs from the pinned full-training plan')
     baseline = loads(Path(config['baseline']).read_text())
+    if config['recipe'] == FAST_RECIPE and baseline.get('gdn_backend') != config['runtime']['gdn_backend']:
+        raise ValueError('Re-score full baseline Dev with the same GDN backend before fast full training')
     if sha(Path(config['baseline'])) != config['baseline_sha256']:
         raise ValueError('Regression baseline changed')
     data = Path(config['dataset']['path'])
@@ -304,9 +318,9 @@ def load_checkpoint(path, device='cpu', precision='fp32', trainable=False):
 
     path = Path(path)
     metadata = loads((path / 'checkpoint.json').read_text())
-    if metadata['format'] not in {LEGACY_RECIPE, RECIPE, BIDIRECTIONAL_RECIPE}:
+    if metadata['format'] not in {LEGACY_RECIPE, RECIPE, BIDIRECTIONAL_RECIPE, FAST_RECIPE}:
         raise ValueError('Unsupported BiQwen training checkpoint')
-    if metadata['format'] in {RECIPE, BIDIRECTIONAL_RECIPE} and (metadata.get('architecture') != ARCHITECTURE
+    if metadata['format'] in {RECIPE, BIDIRECTIONAL_RECIPE, FAST_RECIPE} and (metadata.get('architecture') != ARCHITECTURE
                                        or metadata.get('schema_version') != TYPED_SCHEMA):
         raise ValueError('Checkpoint architecture/schema contract differs')
     if trainable and metadata['format'] == LEGACY_RECIPE:
@@ -318,12 +332,19 @@ def load_checkpoint(path, device='cpu', precision='fp32', trainable=False):
     if backend.model_revision != metadata['base_revision'] or backend.weights_hashes != metadata['base_weights']:
         raise ValueError('Checkpoint requires its exact merged BiQwen base, not original Qwen weights')
     model = backend.model
-    if metadata['format'] in {RECIPE, BIDIRECTIONAL_RECIPE}:
+    if metadata['format'] in {RECIPE, BIDIRECTIONAL_RECIPE, FAST_RECIPE}:
         model = install_architecture(backend, metadata['architecture'])
     else:
         backend.schema_version = LEGACY_SCHEMA
     model.backbone = PeftModel.from_pretrained(model.backbone, path / 'adapter', is_trainable=trainable)
-    mode = BIDIRECTIONAL if metadata['format'] == BIDIRECTIONAL_RECIPE else CAUSAL
+    if metadata['format'] == FAST_RECIPE:
+        validate_config(metadata['config'])
+        mode = metadata['config']['attention_mode']
+        if device == 'cuda':
+            from .biqwen_acceleration import select_gdn
+            select_gdn(backend, metadata['config']['runtime']['gdn_backend'])
+    else:
+        mode = BIDIRECTIONAL if metadata['format'] == BIDIRECTIONAL_RECIPE else CAUSAL
     if metadata['config'].get('attention_mode', CAUSAL) != mode:
         raise ValueError('Checkpoint recipe and attention configuration disagree')
     install_attention(model.backbone, mode)
@@ -381,6 +402,9 @@ def train(config, resume=False):
                  'diagnostics': {}}
     model = configure_training_model(backend, config['loss_weights'])
     install_attention(model.backbone, config.get('attention_mode', CAUSAL))
+    if config['recipe'] == FAST_RECIPE:
+        from .biqwen_acceleration import select_gdn
+        select_gdn(backend, config['runtime']['gdn_backend'])
     model.backbone.config.use_cache = False
     if config['gradient_checkpointing']:
         model.backbone.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
@@ -389,9 +413,10 @@ def train(config, resume=False):
     backbone = [p for p in model.backbone.parameters() if p.requires_grad]
     if not head or not backbone:
         raise ValueError('Both extraction heads and backbone adapters must be trained')
+    optimizer_options = {'fused': head[0].is_cuda} if config['recipe'] == FAST_RECIPE else {}
     optimizer = torch.optim.AdamW([{'params': head, 'lr': numeric['head_lr']},
                                   {'params': backbone, 'lr': numeric['backbone_lr']}],
-                                 weight_decay=numeric['weight_decay'])
+                                 weight_decay=numeric['weight_decay'], **optimizer_options)
     if resume:
         optimizer.load_state_dict(state.pop('optimizer'))
         torch.set_rng_state(state.pop('rng'))
@@ -448,8 +473,20 @@ def train(config, resume=False):
                 total_samples = sum(len(b) for b in batches)
                 loss_total = 0.
                 observations = []
+                prepared = None
+                if config['recipe'] == FAST_RECIPE:
+                    from .biqwen_batching import batch_indices, checkpointing
+                    # Repartition only within this optimizer update. Exact epoch
+                    # membership, effective batch size and tail coverage persist.
+                    prepared = {i: encode_example(dataset[i], backend.encoding, model.tokenizer, limits)
+                                for batch in batches for i in batch}
+                    lengths = {i: len(row['input_ids']) for i, row in prepared.items()}
+                    batches = list(batch_indices(sorted(prepared, key=lengths.get), lengths, config['runtime']))
                 for indices in batches:
-                    examples = [encode_example(dataset[i], backend.encoding, model.tokenizer, limits) for i in indices]
+                    examples = ([prepared[i] for i in indices] if prepared is not None else
+                                [encode_example(dataset[i], backend.encoding, model.tokenizer, limits) for i in indices])
+                    if prepared is not None:
+                        checkpointing(model.backbone, max(len(row['input_ids']) for row in examples), config['runtime'])
                     model.training_observations = []
                     output = model(backend.encoding.collate(examples, model.tokenizer.pad_token_id), decode=False)
                     loss = output['loss'] * (len(indices) / total_samples)

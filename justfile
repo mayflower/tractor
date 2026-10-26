@@ -13,13 +13,13 @@ serve-biqwen:
 prepare-biqwen-full:
     OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false uv run --no-sync python -m tractor.biqwen_training_data
 
-check-biqwen-full config="configs/biqwen-full.json":
+check-biqwen-full config="configs/biqwen-fast-full.json":
     uv run --no-sync python -m tractor.biqwen_training --config {{quote(config)}}
 
-train-full config="configs/biqwen-full.json":
+train-full config="configs/biqwen-fast-full.json":
     OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 TOKENIZERS_PARALLELISM=false uv run --no-sync python -m tractor.biqwen_training --config {{quote(config)}} --train
 
-resume-full config="configs/biqwen-full.json":
+resume-full config="configs/biqwen-fast-full.json":
     OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 TOKENIZERS_PARALLELISM=false uv run --no-sync python -m tractor.biqwen_training --config {{quote(config)}} --train --resume
 
 # Lightweight SDK dependencies and developer tools.

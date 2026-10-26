@@ -1,43 +1,21 @@
 {
-  "status": "running",
+  "status": "requires_revision",
   "backend": "biqwen",
-  "dataset": "data/biqwen-full-de-en-v2",
-  "source_episodes": "data/full-training-de-en",
-  "selection_config": "configs/full-training-data.json",
-  "training_config": "configs/biqwen-full.json",
+  "training_config": "configs/biqwen-bidirectional-full.json",
   "binding": {
     "path": "data/biqwen-full-de-en-v2",
     "manifest_sha256": "849ecce3bac822494cd3d9e0442a61b21c3c28371aa8c7cfc1bba4a5b65db452",
     "unique_train_episodes": 339949,
     "native_train_requests": 342147
   },
-  "languages": {
-    "de": 15940,
-    "en": 324009
-  },
-  "sampling": false,
-  "quotas": false,
-  "training_started": true,
+  "predecessor": "/scratch/johann-peter.hartmann/tractor-biqwen-v2/run",
+  "training_started": false,
   "training_complete": false,
-  "coverage_report": "data/biqwen-full-de-en-v2/manifest.json",
-  "run_status": "/scratch/johann-peter.hartmann/tractor-biqwen-v2/run/status.json",
-  "preflight_report": "reports/biqwen-correction-20261026/plan.json",
-  "huggingface_dataset": {
-    "local_matches_published_revision": false,
-    "source_cleanup_uploaded": false,
-    "new_biqwen_native_dataset_uploaded": false
-  },
-  "source_exclusion": {
-    "source": "cord",
-    "all_splits": true
-  },
-  "evaluation": {
-    "full_dev_documents": 4429,
-    "production_pipeline": true,
-    "calibration_and_test_used_for_selection": false
-  },
-  "readiness_report": "reports/biqwen-correction-20261026/readiness-evidence.json",
-  "step": 10,
-  "epoch": 0,
-  "cursor": 160
+  "reason": "User rejected waiting for two full runs without early quality feasibility evidence.",
+  "active_diagnostic": {
+    "scope": "bounded feasibility, not full training",
+    "path": "/scratch/johann-peter.hartmann/tractor-biqwen-v2/feasibility-v2",
+    "train_requests": 512,
+    "dev_documents": 128
+  }
 }

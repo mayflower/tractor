@@ -1,19 +1,18 @@
 # tractor
 
-On experiment/biqwen-hybrid-bidirectional, the separately queued follow-up uses
-configs/biqwen-bidirectional-full.json after the current causal full run completes.
-The backbone mode qwen3.5-hybrid-bidirectional-v1 changes ONLY the eight full
-attention layers; the 24 DeltaNet layers retain their directed algorithm.
-Do not call the whole backbone fully bidirectional. It is adapted by supervised
-extraction training over all 342,147 eligible requests for four complete epochs;
-there is no masked-language-model or MNTP stage. Keep mode restoration in the
-checkpoint loader, no incremental caches and no global Transformers monkeypatch.
-The follow-up watcher uses its own worktree/config and exact predecessor PID/start
-time, verifies complete epochs/Dev, and requires its own real 4B GPU preflight.
-Do not change queued source/config/data without explicitly replacing that job;
-the watcher rejects changed hashes. Do not interrupt the causal comparison run.
-Use just train-full configs/biqwen-bidirectional-full.json only with its matching
-active configuration; do not manually start a second copy of the queued run.
+The user explicitly authorized a bounded matched causal/hybrid feasibility trial
+and training-throughput optimization on 2026-10-26. The old causal full run was
+interrupted; its last durable checkpoint is step 1000. The old automatic follow-up
+is cancelled and must not restart. Use tractor.biqwen_feasibility for the separate
+diagnostic; never describe its 512-request selection as full training. Compare
+final normalized API results on separate Dev, with identical starting weights,
+inputs, budgets and policies. Calibration/test remain untouched.
+
+The hybrid mode changes the eight full-attention layers only; the 24 DeltaNet
+layers retain directed recurrence. A passed kernel or gradient test is not
+evidence of extraction quality. The completed bounded diagnostic supports a full hybrid run: 93.4% versus
+89.9% normalized Dev field F1, with disclosed entity-list regression. A new full
+run requires the complete FLA baseline and its verified GPU preflight first. Preserve the immutable pinned base bundle.
 
 tractor is the System One Extraction Model and its local HTTP API/Python SDK.
 The sole release bundle is models/tractor. Keep publication files focused on the
@@ -22,7 +21,7 @@ Both release targets must remain private: mayflower/tractor and mayflowergmbh/tr
 
 The authoritative scope and implementation requirements are in reqs.md.
 
-On the BiQwen branch, the next full run is configs/biqwen-full.json, selected by
+On this branch, the next full run is configs/biqwen-fast-full.json, selected by
 configs/active-training.json. Use `just check-biqwen-full`, then `just train-full`
 or `just resume-full` when training is requested. Never invoke the bundled notebook
 trainer or substitute extract-de-en's sampled training selection. Compile the full

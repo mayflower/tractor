@@ -81,7 +81,7 @@ def run(config, output, batch_size=None):
 
     root = Path(output)
     root.mkdir(parents=True, exist_ok=False)
-    batch_size = batch_size or config['batch_size']
+    batch_size = batch_size or config.get('runtime', {}).get('max_microbatch', config['batch_size'])
     if batch_size < 1:
         raise ValueError('Positive microbatch required')
     report = {'status': 'running', 'optimizer_updates': 0, 'latency_measured': False,
@@ -102,6 +102,9 @@ def run(config, output, batch_size=None):
         model = configure_training_model(backend, config['loss_weights'])
         install_attention(model.backbone, config.get('attention_mode', CAUSAL))
         report['attention'] = attention_contract(model.backbone)
+        if 'runtime' in config:
+            from .biqwen_acceleration import select_gdn
+            report['gdn_backend'] = select_gdn(backend, config['runtime']['gdn_backend'])
         if config['gradient_checkpointing']:
             model.backbone.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
             model.backbone.enable_input_require_grads()
@@ -137,8 +140,13 @@ def run(config, output, batch_size=None):
             encoded = encode_example(raw, backend.encoding, model.tokenizer, limits)
             if '4096' in label and len(encoded['input_ids']) != backend.input_limit:
                 raise ValueError('Stress case does not reach the supported input limit')
+            case_batch_size = batch_size
+            if 'runtime' in config:
+                from .biqwen_batching import checkpointing
+                case_batch_size = min(batch_size, max(1, config['runtime']['padded_token_budget'] // len(encoded['input_ids'])))
+                checkpointing(model.backbone, len(encoded['input_ids']), config['runtime'])
             torch.cuda.reset_peak_memory_stats()
-            result = model(backend.encoding.collate([encoded] * batch_size, model.tokenizer.pad_token_id), decode=False)
+            result = model(backend.encoding.collate([encoded] * case_batch_size, model.tokenizer.pad_token_id), decode=False)
             result['loss'].backward()
             nonzero = []
             for name, p in model.named_parameters():
@@ -155,7 +163,7 @@ def run(config, output, batch_size=None):
                 raise ValueError('Joint record scorer received no gradient')
             norm = torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad],
                                                   float(config['max_grad_norm']), error_if_nonfinite=True)
-            report['cases'].append({'case': label, 'tokens': len(encoded['input_ids']),
+            report['cases'].append({'case': label, 'batch_size': case_batch_size, 'tokens': len(encoded['input_ids']),
                                     'loss': float(result['loss'].detach()), 'gradient_norm': float(norm),
                                     'nonzero_gradient_parameters': nonzero,
                                     'peak_allocated_bytes': torch.cuda.max_memory_allocated(),

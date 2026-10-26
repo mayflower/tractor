@@ -1,3 +1,4 @@
+import inspect
 from copy import deepcopy
 
 import pytest
@@ -5,6 +6,16 @@ import torch
 from transformers import Qwen3_5TextConfig, Qwen3_5TextModel
 
 from tractor.biqwen_attention import BIDIRECTIONAL, CAUSAL, attention_contract, install_attention
+
+
+@pytest.fixture(autouse=True)
+def cpu_reference_kernels(monkeypatch):
+    # Optional FLA installation must not dispatch CPU architecture tests to CUDA.
+    from transformers.models.qwen3_5 import modeling_qwen3_5 as qwen
+
+    for name in ['torch_chunk_gated_delta_rule', 'torch_recurrent_gated_delta_rule',
+                 'causal_conv1d_fn', 'causal_conv1d_update']:
+        monkeypatch.setattr(qwen, name, inspect.unwrap(getattr(qwen, name)))
 
 
 def tiny(implementation='sdpa'):

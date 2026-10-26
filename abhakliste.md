@@ -499,47 +499,73 @@ bleiben getrennte Entscheidungen.
 
 ## Reihenfolge und Ergebnisnachweise
 
-### Ergänzung: automatisch anschließende bidirektionale Variante
+### Aktueller Auftrag: kurzer Machbarkeitsvergleich und schnelleres Training
 
-Auf ausdrücklichen Auftrag wird nach dem laufenden kausalen Volltraining eine
-zweite Variante automatisch trainiert. Die endgültige Modellauswahl erfolgt auf
-Dev nach beiden Läufen; Kalibrierung und Abschlusstest bleiben bis dahin offen.
+Der Nutzer hat den begrenzten Vergleich ausdrücklich freigegeben. Der alte
+Volltrainingslauf ist bei Schritt 1.433 beendet; dauerhaft gespeichert ist
+Schritt 1.000. Updates nach diesem Checkpoint sind nicht gesichert. Die frühere
+automatische Folgeplanung ist abgebrochen und darf nicht wieder anlaufen.
 
-- [x] Separaten Branch `experiment/biqwen-hybrid-bidirectional` und Worktree
-  `/scratch/johann-peter.hartmann/tractor-biqwen-v2/bidirectional` angelegt.
-  Implementierungs-Commit: `a68fa65`.
-- [x] Versioniertes Attention-Verhalten implementiert: acht Full-Attention-Schichten
-  bidirektional, 24 DeltaNet-Schichten weiterhin mit gerichtetem Algorithmus.
-  Kein vollständig bidirektionaler Backbone; keine globale Bibliotheksänderung.
-- [x] Verhalten für Training, Speichern, Laden und Wiederaufnahme vereinheitlicht.
-  Zukunftskontext, Padding-Isolation, Batch-Isolation, Gradienten und abgelehnte
-  inkrementelle Caches mit tatsächlichen kleinen Qwen3.5-Schichten geprüft.
-- [x] `just check` im separaten Worktree bestanden: 908 Tests, Lint,
-  Fixture- und Dokumentationsprüfung. Nachweis:
-  `reports/biqwen-correction-20261026/bidirectional-check.log`.
-- [x] Automatischen Folgelauf gestartet und seinen lebenden Prozess verifiziert:
-  PID `2718293`, Status `waiting`, gebunden an Vorgänger-PID `2611833` und dessen
-  Prozessstartzeit. Nachweis: `reports/biqwen-correction-20261026/bidirectional-followup/status.json`.
-- [x] Folgerezept auf denselben vollständigen Korpus mit 342.147 Requests,
-  dieselben gepinnten zusammengeführten Ausgangsgewichte und vier volle Epochen
-  gebunden. Frischer Optimizer; keine Stichprobe und kein Schrittlimit.
-- [ ] Nach vollständig beendetem Vorgänger alle vier Abdeckungsnachweise und
-  sämtliche Dev-Vorhersagen verifizieren; bei Fehlern keinen Folgelauf starten.
-- [ ] Echte GPU-Prüfung der neuen Variante einschließlich Zukunftskontext im
-  Backbone und unterstützter Eingabegrenzen bestehen. CPU-Tests ersetzen sie nicht.
-- [ ] Anschließend vier vollständige Epochen der bidirektionalen Variante
-  durchführen. Die Anpassung wird mit den Extraktionszielen gelernt; ein
-  Masked-Language-Model-/MNTP-Vortraining ist nicht implementiert.
-- [ ] Beide vollständig trainierten Varianten auf identischem Dev und anhand
-  der endgültigen normalisierten API-Ausgaben vergleichen und auswählen.
-- [ ] Erst danach die ausgewählte Variante kalibrieren, auf dem gehaltenen
-  Testsplit prüfen und durch die reale HTTP-API verifizieren.
+- [x] Hybrid-Attention implementiert: acht Full-Attention-Schichten bidirektional,
+  24 DeltaNet-Schichten weiterhin gerichtet. Keine Behauptung vollständiger
+  Bidirektionalität und kein MNTP-Vortraining.
+- [x] Aktiven langsamen PyTorch-DeltaNet-Pfad identifiziert. FLA 0.5.2 als
+  `biqwen-fast`-Extra gepinnt, tatsächliche Dispatch-Auswahl explizit geprüft.
+- [x] Reale 4B-GPU-Prüfung mit Zukunftskontext, endlichen Gradienten in Köpfen und
+  LoRA sowie 4.096 Tokens und 32 Feldern bestanden. Nachweis:
+  `reports/biqwen-correction-20261026/fast-hybrid-preflight.json`.
+- [x] Training ohne dauerndes Gradient-Checkpointing für kurze Eingaben gemessen;
+  lange Eingaben behalten die Speicheroptimierung. Keine Sequenzverkettung.
+- [x] 4-Bit-NF4/QLoRA mit bitsandbytes 0.50.2 tatsächlich gemessen. Bei gleichen
+  acht kurzen Eingaben 8,93 statt 11,07 Requests/s mit BF16/FLA; Batch 16 läuft
+  in den verfügbaren GPU-Speicher nicht hinein. Daher BF16 für den Vergleich.
+  Nachweis: `reports/biqwen-correction-20261026/quantization-speed.json`.
+- [x] Deterministischen Vergleich festgelegt: 512 native Trainingsrequests,
+  genau 256 DE/256 EN und 256 Einzel-/Entitätsrequests/256 Record-Requests;
+  128 getrennte Dev-Dokumente mit 64 DE/64 EN und 64 je Ausgabegruppe.
+  16 einaufgabige Trainingsdokumente für einen gesonderten Lernbarkeitstest.
+  Weder Kalibrierung noch Test werden geöffnet.
+- [x] Beide Varianten starten aus denselben gepinnten zusammengeführten
+  Ausgangsgewichten und identischen trainierbaren Parametern. Der Lernbarkeitstest
+  wird vor dem Generalisierungsversuch vollständig zurückgesetzt; gleicher
+  Optimizer, gleiche Datenreihenfolge und gleiche 1.024 Trainingspräsentationen.
+  Umfang und Codebindungen: `feasibility-v2/experiment.json` unter dem lokalen
+  Trainingsverzeichnis `/scratch/johann-peter.hartmann/tractor-biqwen-v2`.
+- [x] Laufzeitoptimierungen im Diagnose-Runner umgesetzt: vorbereitete Kodierung,
+  längenabhängige Microbatches bis acht, höchstens 2.048 gepaddete Tokens pro
+  Batch (lange Einzelinputs bleiben erlaubt), Checkpointing oberhalb 512 Tokens,
+  fused AdamW. Die effektive Batchgröße bleibt 16.
+- [x] Beide kurzen Lern- und Dev-Vergleiche vollständig beendet. Identische
+  Ausgangsparameter, Auswahl, Präsentationen und Update-Reihenfolge verifiziert.
+  Normalisierte Dev-Feld-F1: kausal 89,92 %, hybrid 93,40 %. Record-Ausgaben
+  (synthetisch): 87,56 % / 92,67 %; Einzelobjekte: 96,33 % / 96,10 %;
+  Entitätenlisten: 90,32 % / 83,87 %. Issue-Genauigkeit: 94,43 % / 96,72 %.
+  DE: 89,97 % / 93,35 %; EN: 89,86 % / 93,46 %. Unvollständige Referenzgruppen
+  sind aus diesen Aggregaten ausgeschlossen. Kleine reale Gruppen und insbesondere
+  reale Karriere-/Forschungsbeispiele bleiben schwach oder unzureichend belegt.
+  Beide Lernbarkeitstests erreichen 99,51 % Feld-F1 nach 32 Updates.
+  Nachweise: `feasibility-v2/comparison.json`, `languages.json`, `executed-source.zip`.
+- [x] Laufzeitoptimierungen in `configs/biqwen-fast-full.json` und den
+  vollständigen Trainer übernommen. Neue Rezeptversion speichert/restauriert
+  Attention und Kernelwahl. Abbruch/Wiederaufnahme und vollständige Epochendeckung
+  einschließlich Restbatch getestet. `just check`: 925 Tests bestanden.
+- [x] Kontrollierter Durchsatzvergleich auf denselben 64 Korpusrequests:
+  2,051 → 4,439 Requests/s, Faktor 2,164. Vorwärts-/Rückwärtslauf ohne Optimizer-
+  Update gemessen; keine Inferenzlatenz. Nachweis: `corpus-training-speed.json`.
+- [x] Reale GPU-Prüfung der vollständigen schnellen Batchstrategie bestanden,
+  einschließlich langer Texte, 32 Felder und mehrerer Records. Alle Gewichte
+  unverändert; Nachweis: `fast-full-preflight/report.json`.
+- [x] Entscheidung: vollständiges Training mit Hybrid-Attention ist durch den
+  getrennten Dev-Vergleich sinnvoll; dies ist keine Qualitäts-/Releasefreigabe.
+- [ ] Vollständige Ausgangsbaseline auf allen 4.429 Dev-Dokumenten mit FLA
+  fertigstellen und an das neue Rezept binden.
+- [ ] Neuen vollständigen Lauf mit 342.147 Requests pro Epoche und vier Epochen
+  starten; ersten tatsächlichen Optimizer-Fortschritt und Checkpoint prüfen.
 
-Der bisherige Trainingsprozess und seine 102 gebundenen Quelldateien wurden
-bei Aktivierung unverändert geprüft. Der wartende Folgelauf ist noch kein
-begonnenes oder abgeschlossenes bidirektionales GPU-Training. Änderungen an
-seinem eingefrorenen Code, seiner Konfiguration oder seinen Daten erfordern eine
-ausdrückliche Neuvorbereitung; der automatische Ablauf lehnt veränderte Bindungen ab.
+Diese Stichprobe ist ausdrücklich **kein Volltraining** und keine Freigabe.
+Der vollständige Korpus bleibt bei 342.147 geeigneten Requests. Ein neues
+Volltraining muss weiterhin alle diese Requests in jeder der vier Epochen sehen
+und das komplette Dev auswerten. Alte automatische Startbedingungen gelten nicht.
 
 `Ausgangszustand → Typkodierung → Record-Scorer → Diagnostik → vollständiger
 Datenaufbau → Baselines → GPU-Prüfung → Startbedingungen → Volltraining →
