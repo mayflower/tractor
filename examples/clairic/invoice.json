@@ -1,0 +1,19 @@
+{
+  "model": "clairic",
+  "state": "Invoice number: INV-2291. Total amount: 1080 USD.",
+  "fields": {
+    "invoice_number": {
+      "type": "text",
+      "instructions": "Extract the explicitly stated invoice number."
+    },
+    "total": {
+      "type": "number",
+      "unit": "USD",
+      "decimals": 2,
+      "instructions": "Extract the explicitly stated total amount."
+    }
+  },
+  "options": {
+    "return_state_text": true
+  }
+}

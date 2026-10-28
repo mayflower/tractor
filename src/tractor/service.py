@@ -16,7 +16,7 @@ def valid_span(text, span):
     )
 
 
-def resolve(request, records, *, _diagnostics=False):
+def resolve(request, records, *, _diagnostics=False, _collector=None):
     issues = []
     empty = dict.fromkeys(request.fields)
     if request.anchor:
@@ -61,7 +61,7 @@ def resolve(request, records, *, _diagnostics=False):
             result[key] = spans
         cleaned.append(result)
     raw = {"result": cleaned} if request.anchor else {"entities": cleaned[0] if cleaned else {}}
-    resolved = resolve_document(internal, raw)
+    resolved = resolve_document(internal, raw, _collector)
     rows = resolved["data"]["result"] if request.anchor else [resolved["data"]["result"]]
     evidence = resolved["details"]["result"] if request.anchor else [resolved["details"]["result"]]
     output, details = [], []
@@ -103,3 +103,37 @@ def extract(extractor, request, *, _diagnostics=False):
     if hasattr(extractor, "last_timings"):
         extractor.last_timings["normalize"] = (time.perf_counter() - started) * 1000
     return result
+
+
+def candidates_with_signals(extractor, request):
+    """One extraction pass; backends without scores contribute no signals."""
+    if hasattr(extractor, "candidates_with_signals"):
+        return extractor.candidates_with_signals(request)
+    return extractor.candidates(request), {}
+
+
+def extract_traced(extractor, request):
+    """The native result plus its request-scoped evidence trace.
+
+    Same candidates, same resolution, same output as `extract`; the trace only
+    observes. Token counts come from this request's own pass, read while the
+    caller still holds the inference worker.
+    """
+    from .evidence import EvidenceCollector
+
+    calls = getattr(extractor, "encoder_calls", None)
+    records, signals = candidates_with_signals(extractor, request)
+    passes = None if calls is None else extractor.encoder_calls - calls
+    started = time.perf_counter()
+    collector = EvidenceCollector()
+    result = resolve(request, records, _collector=collector)
+    timings = dict(getattr(extractor, "last_timings", {}))
+    timings["normalize"] = (time.perf_counter() - started) * 1000
+    if request.anchor:
+        records = sorted(records, key=lambda r: r[request.anchor][0]["start"])
+    kinds = {key: field.processing_rule().kind for key, field in request.fields.items()}
+    tokens = getattr(extractor, "last_tokens", None)
+    trace = collector.build(request, records, signals, result["issues"], kinds=kinds,
+                            input_tokens=tokens if isinstance(tokens, int) and tokens > 0 else None,
+                            backbone_calls=passes, timings=timings)
+    return result, trace

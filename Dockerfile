@@ -15,10 +15,13 @@ RUN mkdir -p /opt/libpostal && \
     done && cd /opt/libpostal && sha256sum -c /tmp/libpostal-data.sha256 && rm /tmp/postal.tar.gz
 WORKDIR /app
 ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy
+# server: GLiNER bundles. biqwen: BiQwen checkpoints and inference bundles (CPU or CUDA).
+# biqwen-fast adds the CUDA-only FLA kernels; never required for CPU serving.
+ARG TRACTOR_EXTRA=server
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen --extra server --no-dev --no-install-project
+RUN uv sync --frozen --extra ${TRACTOR_EXTRA} --no-dev --no-install-project
 COPY src ./src
-RUN uv sync --frozen --extra server --no-dev --no-editable
+RUN uv sync --frozen --extra ${TRACTOR_EXTRA} --no-dev --no-editable
 
 FROM python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/* && useradd --create-home --uid 10001 tractor

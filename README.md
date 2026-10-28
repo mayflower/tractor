@@ -113,6 +113,11 @@ The public response contains only `data` and `issues`. Missing values produce
 `null`; competing scalar candidates are returned together with `ambiguous_value`. The SDK imports no ML libraries; `just setup-sdk`
 installs its development dependencies without the model stack.
 
+An experimental, separately started profile (`tractor serve --api clairic`)
+serves the same core behind Cloudflare's Workers AI route for Clairic, as a
+documented subset without uncertainty outputs. See
+[the local Clairic profile](docs/clairic-local.md).
+
 ## Evaluation and limits
 
 The selected model improves generalist coverage, with remaining weaknesses in

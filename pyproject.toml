@@ -37,6 +37,10 @@ train = [
   "beautifulsoup4>=4.12,<5",
   "py7zr>=1,<2",
 ]
+# Official Clairic client, pinned to the revision the local profile was tested against.
+clairic-conformance = [
+  "langchain-cloudflare @ git+https://github.com/cloudflare/langchain-cloudflare@85a0e443d618beac451335a3fcc423da211ae5c5#subdirectory=libs/langchain-cloudflare",
+]
 dev = ["pytest>=8,<10", "pytest-cov>=5,<8", "hypothesis>=6,<7", "ruff>=0.6,<1", "mypy>=1.10,<3"]
 
 [tool.hatch.build.targets.wheel]

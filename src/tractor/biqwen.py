@@ -138,7 +138,8 @@ def decode_multiple(self, meta, pools, queries, global_anchor, options):
         raise ValueError("Tractor supports extraction only")
     fields = meta["schema"]["fields"]
     indexed = {f["id"]: i for i, f in enumerate(fields)}
-    result = {"fields": {}, "tables": {}}
+    # Raw signals of selected occurrences, from this same decode; diagnostics only.
+    result = {"fields": {}, "tables": {}, "signals": []}
 
     def probabilities(pool, temperature="source"):
         return torch.sigmoid(pool["source_logits"].float() / self._temperature(temperature))
@@ -152,10 +153,31 @@ def decode_multiple(self, meta, pools, queries, global_anchor, options):
             raise TractorError(422, "output_capacity", "Field candidate capacity reached")
         return indices
 
+    def signal(field_id, index, anchor=None, margin=None, kind="source"):
+        logit = float(pools[field_id]["source_logits"][index])
+        entry = {"field": field_id, "span": span(field_id, index), "anchor": anchor,
+                 "raw_source_logit": logit, "source_temperature": float(self._temperature(kind)),
+                 "source_score": float(probabilities(pools[field_id], kind)[index])}
+        if margin is not None:
+            entry["assignment_margin"] = margin
+        result["signals"].append(entry)
+
     for field in fields:
         if "table_id" not in field:
             fid = field["id"]
-            result["fields"][fid] = [span(fid, i) for i in selected(pools[fid], self.config.source_threshold)]
+            indices = selected(pools[fid], self.config.source_threshold)
+            result["fields"][fid] = [span(fid, i) for i in indices]
+            for i in indices:
+                signal(fid, i)
+    heads = getattr(self, "uncertainty_heads", None)
+    if heads is not None and heads.released:
+        # Optional released heads read this pass's field queries; never a new backbone call.
+        result["field_signals"] = []
+        for field in fields:
+            if "table_id" not in field:
+                fid = field["id"]
+                logits = heads(queries[indexed[fid]], pools[fid]["source_logits"])
+                result["field_signals"].append({"field": fid, **{k: float(v.detach()) for k, v in logits.items()}})
     for table in meta["schema"]["tables"]:
         aid = table["anchor_field_id"]
         anchor_pool = pools[aid]
@@ -163,6 +185,8 @@ def decode_multiple(self, meta, pools, queries, global_anchor, options):
         if len(indices) > self.config.max_records:
             raise TractorError(422, "output_capacity", "Record capacity exceeded")
         rows = [{"anchor": span(aid, i), "fields": {}} for i in indices]
+        for i in indices:
+            signal(aid, i, span(aid, i), kind="anchor")
         for fid in table["field_ids"]:
             pool = pools[fid]
             source = probabilities(pool).tolist()
@@ -172,8 +196,11 @@ def decode_multiple(self, meta, pools, queries, global_anchor, options):
             for index in indices:
                 logits = self._assignment_logits(anchor_pool["states"][index], queries[indexed[fid]], pool).float()
                 margins.append((logits[1:] - logits[0]).tolist())
-            for row, owned in zip(rows, assign_occurrences(margins, source, self.config.source_threshold), strict=True):
+            owners = assign_occurrences(margins, source, self.config.source_threshold)
+            for position, (row, owned) in enumerate(zip(rows, owners, strict=True)):
                 row["fields"][fid] = [span(fid, i) for i in owned]
+                for i in owned:
+                    signal(fid, i, row["anchor"], margins[position][i])
         result["tables"][table["id"]] = rows
     return result
 
@@ -210,6 +237,14 @@ class BiQwenExtractor:
         return self.model.backbone_forward_calls
 
     def candidates(self, request):
+        return self.candidates_with_signals(request)[0]
+
+    def candidates_with_signals(self, request):
+        """Candidates and their raw scores from one backbone pass.
+
+        Signals are keyed by (record anchor offsets or None, public field name,
+        start, end). They are uncalibrated; absence of a signal stays absent.
+        """
         import torch
 
         started = time.perf_counter()
@@ -242,4 +277,15 @@ class BiQwenExtractor:
                         raise RuntimeError("Invalid BiQwen evidence offsets")
                     record[name].append({"text": request.text[start:end], "start": start, "end": end})
             records.append(record)
-        return records
+        names = {fid: name for name, fid in ids.items()}
+        signals = {}
+        for entry in raw.get("signals", []):
+            start, end = entry["span"]
+            anchor = tuple(entry["anchor"]) if entry.get("anchor") is not None else None
+            signals[(anchor, names[entry["field"]], start, end)] = {
+                k: entry[k] for k in ("raw_source_logit", "source_score", "source_temperature",
+                                      "assignment_margin") if k in entry}
+        for entry in raw.get("field_signals", []):
+            signals[(None, names[entry["field"]], None, None)] = {
+                k: v for k, v in entry.items() if k != "field"}
+        return records, signals

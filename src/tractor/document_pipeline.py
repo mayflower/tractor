@@ -45,8 +45,12 @@ def unique(values, kind=None):
     return list(result.values())
 
 
-def resolve_document(request, raw):
-    """No gold, source identity or hidden document context enters processing."""
+def resolve_document(request, raw, collector=None):
+    """No gold, source identity or hidden document context enters processing.
+
+    An optional request-scoped collector observes accepted and rejected
+    occurrences; it never changes the selected values or issues.
+    """
     from .normalize import normalize
     from .service import valid_span
 
@@ -67,6 +71,8 @@ def resolve_document(request, raw):
                 if any(not isinstance(s, dict) or not valid_span(request.text, s) for s in values):
                     invalid.add(key)
                     values = []
+                    if collector:
+                        collector.rejected(task.id, index, key, None, "invalid_span")
                     issues.append(
                         {"task": task.id, "index": index, "field": key, "code": "invalid_span"}
                     )
@@ -108,6 +114,8 @@ def resolve_document(request, raw):
                             if component is not None:
                                 value.append(component)
                                 used.append(span)
+                                if collector:
+                                    collector.accepted(task.id, index, key, component, span)
                     if len(unique(value, rule.kind if rule else None)) > 1:
                         value = []
                         issues.append(
@@ -141,16 +149,24 @@ def resolve_document(request, raw):
                                         "code": parsed.issue,
                                     }
                                 )
+                                if collector:
+                                    collector.rejected(task.id, index, key, span, parsed.issue)
                                 continue
-                            value.append(parsed.value)
+                            produced = [parsed.value]
                         elif rule:
                             try:
-                                value.extend(normalize_value(span["text"], rule, request.locale))
+                                produced = normalize_value(span["text"], rule, request.locale)
                             except Unresolved as exc:
                                 issues.append({"task": task.id, "index": index, "field": key, "code": str(exc)})
+                                if collector:
+                                    collector.rejected(task.id, index, key, span, str(exc))
                                 continue
                         else:
-                            value.append(span["text"])
+                            produced = [span["text"]]
+                        value.extend(produced)
+                        if collector:
+                            for item in produced:
+                                collector.accepted(task.id, index, key, item, span)
                         used.append(span)
                 cardinality = rule.cardinality if rule else task.cardinalities.get(key, "unique_list")
                 if cardinality in {"required_one", "optional_one"} and len(unique(value, rule.kind if rule else None)) > 1:

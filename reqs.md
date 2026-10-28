@@ -37,6 +37,9 @@ für einen tatsächlich fehlenden Wert.
   auch aus bereits transkribierten PDF-/OCR-Texten. Keine entsprechende Trainings- oder Freigabeanforderung.
 - Coding-Agent-Hilfsextraktion, beispielsweise Dateipfade aus Kommandoausgaben.
 - Berechnungen, Weltwissen, erschlossene Ursachen, nicht genannte Tatsachen und explizites Reasoning.
+  Ausnahme nur im lokalen Clairic-Profil: ausdrücklich freigeschaltete, dokumentierte
+  deterministische Rechenformen über extrahierte Operanden (`--enable-compute`).
+  Sie sind kein Trainings-, Auswahl- oder Freigabeziel des Extraktionsmodells.
 
 Ein im Text vorhandener Code darf unverändert extrahiert werden. Ein Code darf
 nicht aus einer Beschreibung hergeleitet werden. Ein gedruckter Gesamtbetrag darf
@@ -60,6 +63,11 @@ Keine verdeckte Wiederaufnahme von Relations- oder QA-Aufgaben durch Umbenennung
   tractor erhält keine Bildaufgabe; der Adapter darf keine Gold-Labels in den Text einbauen.
 - Ziel: gemäß Feldtyp normalisierte Werte; öffentliche Antwort ausschließlich `data` und `issues`.
   Keine Evidenzoption und keine freie Antwortgenerierung.
+  Beauftragte Erweiterung (28.10.2026): Pro Serverprozess wird genau ein API-Profil
+  gewählt. Das lokale Clairic-Profil projiziert denselben Produktionskern auf das
+  Workers-AI-Schema einschließlich dort definierter Spans; zusätzliche
+  Modellfähigkeiten (Wahrscheinlichkeiten, Verteilungen, Bilder) benötigen eigene
+  versionierte Artefakte. Siehe `docs/clairic-compatibility.md`.
 - Kopffelder und ausdrücklich im Text beschriebene Datensätze können gemeinsam abgebildet werden. Flache Record-Listen
   sind zunächst ausreichend; beliebig rekursives JSON ist keine behauptete Fähigkeit.
 - Deutsch und Englisch sind die primären Sprachen. Andere Sprachen separat ausweisen;

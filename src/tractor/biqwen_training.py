@@ -313,9 +313,6 @@ def save_checkpoint(root, backend, optimizer, state, plan, config):
 
 
 def load_checkpoint(path, device='cpu', precision='fp32', trainable=False):
-    from peft import PeftModel
-    from safetensors.torch import load_file
-
     path = Path(path)
     metadata = loads((path / 'checkpoint.json').read_text())
     if metadata['format'] not in {LEGACY_RECIPE, RECIPE, BIDIRECTIONAL_RECIPE, FAST_RECIPE}:
@@ -328,37 +325,60 @@ def load_checkpoint(path, device='cpu', precision='fp32', trainable=False):
     for name, digest in metadata['files'].items():
         if sha(path / name) != digest:
             raise ValueError(f'Checkpoint artifact changed: {name}')
+    if metadata['format'] == FAST_RECIPE:
+        validate_config(metadata['config'])
     backend = BiQwenExtractor(metadata['base_model'], device, precision)
     if backend.model_revision != metadata['base_revision'] or backend.weights_hashes != metadata['base_weights']:
         raise ValueError('Checkpoint requires its exact merged BiQwen base, not original Qwen weights')
-    model = backend.model
-    if metadata['format'] in {RECIPE, BIDIRECTIONAL_RECIPE, FAST_RECIPE}:
-        model = install_architecture(backend, metadata['architecture'])
-    else:
-        backend.schema_version = LEGACY_SCHEMA
-    model.backbone = PeftModel.from_pretrained(model.backbone, path / 'adapter', is_trainable=trainable)
-    if metadata['format'] == FAST_RECIPE:
-        validate_config(metadata['config'])
-        mode = metadata['config']['attention_mode']
-        if device == 'cuda':
-            from .biqwen_acceleration import select_gdn
-            select_gdn(backend, metadata['config']['runtime']['gdn_backend'])
-    else:
-        mode = BIDIRECTIONAL if metadata['format'] == BIDIRECTIONAL_RECIPE else CAUSAL
-    if metadata['config'].get('attention_mode', CAUSAL) != mode:
-        raise ValueError('Checkpoint recipe and attention configuration disagree')
-    install_attention(model.backbone, mode)
-    if metadata.get('attention', {'mode': CAUSAL}) != attention_contract(model.backbone):
-        raise ValueError('Checkpoint attention contract differs from the runtime')
-    heads = load_file(str(path / 'heads.safetensors'))
-    if set(heads) != {k for k in model.state_dict() if not k.startswith('backbone.')}:
-        raise ValueError('Extraction heads do not match the runtime')
-    model.load_state_dict(heads, strict=False)
-    model.temperatures = metadata['temperatures']
+    apply_checkpoint(backend, inference_contract(metadata), path / 'adapter', path / 'heads.safetensors',
+                     device, trainable)
     if not trainable:
         backend.model_revision = 'local:' + sha(path / 'checkpoint.json')
         backend.weights_hashes = {**backend.weights_hashes,
                                   **{k: v for k, v in metadata['files'].items() if k.endswith('.safetensors')}}
+    return backend
+
+
+def inference_contract(metadata):
+    """The checkpoint facts inference needs; no data paths or optimizer state."""
+    config = metadata['config']
+    return {'format': metadata['format'], 'architecture': metadata.get('architecture'),
+            'schema_version': metadata.get('schema_version'),
+            'attention_mode': config.get('attention_mode', CAUSAL),
+            'gdn_backend': config.get('runtime', {}).get('gdn_backend'),
+            'attention': metadata.get('attention', {'mode': CAUSAL}),
+            'temperatures': metadata['temperatures']}
+
+
+def apply_checkpoint(backend, contract, adapter, heads_file, device, trainable=False):
+    """Install adapter, heads and attention of one verified checkpoint on its exact base."""
+    from peft import PeftModel
+    from safetensors.torch import load_file
+
+    model = backend.model
+    if contract['format'] in {RECIPE, BIDIRECTIONAL_RECIPE, FAST_RECIPE}:
+        model = install_architecture(backend, contract['architecture'])
+    else:
+        backend.schema_version = LEGACY_SCHEMA
+    model.backbone = PeftModel.from_pretrained(model.backbone, adapter, is_trainable=trainable)
+    if contract['format'] == FAST_RECIPE:
+        mode = contract['attention_mode']
+        if device == 'cuda':
+            from .biqwen_acceleration import select_gdn
+            select_gdn(backend, contract['gdn_backend'])
+    else:
+        mode = BIDIRECTIONAL if contract['format'] == BIDIRECTIONAL_RECIPE else CAUSAL
+    if contract['attention_mode'] != mode:
+        raise ValueError('Checkpoint recipe and attention configuration disagree')
+    install_attention(model.backbone, mode)
+    if contract['attention'] != attention_contract(model.backbone):
+        raise ValueError('Checkpoint attention contract differs from the runtime')
+    heads = load_file(str(heads_file))
+    if set(heads) != {k for k in model.state_dict() if not k.startswith('backbone.')}:
+        raise ValueError('Extraction heads do not match the runtime')
+    model.load_state_dict(heads, strict=False)
+    model.temperatures = contract['temperatures']
+    if not trainable:
         model.eval()
     return backend
 

@@ -38,6 +38,22 @@ def main():
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--max-pending", type=int, default=1)
     p.add_argument("--wait-timeout", type=float, default=1.0)
+    p.add_argument("--api", choices=["tractor", "clairic"], default="tractor",
+                   help="Exactly one public API profile per process; tractor is the default")
+    p.add_argument("--locale", choices=["de-DE", "en-US", "en-GB"],
+                   help="Clairic profile: local number/date locale policy (no Clairic request key)")
+    p.add_argument("--date-order", choices=["DMY", "MDY", "YMD"],
+                   help="Clairic profile: local numeric date order policy")
+    p.add_argument("--enable-compute", action="store_true",
+                   help="Clairic profile: allow the documented deterministic compute forms")
+    p.add_argument("--uncertainty", action="store_true",
+                   help="Clairic profile: load the bundle's verified, released uncertainty artifact")
+    p = sub.add_parser("export-bundle", help="Write a relocatable BiQwen inference bundle")
+    p.add_argument("--checkpoint", required=True)
+    p.add_argument("--output", required=True)
+    p.add_argument("--commit", required=True, help="Tractor Git commit that produced the export")
+    p = sub.add_parser("verify-bundle", help="Verify every hash of a BiQwen inference bundle")
+    p.add_argument("--model", required=True)
     p = sub.add_parser("data")
     actions = p.add_subparsers(dest="action", required=True)
     g = actions.add_parser("generate")
@@ -141,6 +157,22 @@ def main():
 
         if args.max_pending < 0 or args.wait_timeout <= 0:
             parser.error("Invalid admission limits")
+        policy = None
+        if args.api == "clairic":
+            from .clairic_compiler import Policy
+
+            policy = Policy(locale=args.locale, date_order=args.date_order, compute=args.enable_compute)
+        elif args.locale or args.date_order or args.enable_compute or args.uncertainty:
+            parser.error("--locale, --date-order, --enable-compute and --uncertainty apply to --api clairic only")
+        uncertainty = None
+        if args.uncertainty:
+            from .uncertainty_artifacts import load_released
+
+            def uncertainty(extractor):
+                provider = load_released(args.model, extractor, args.precision)
+                if provider is None:
+                    raise SystemExit("The bundle declares no uncertainty artifact")
+                return provider
         uvicorn.run(
             create_app(
                 args.model,
@@ -148,11 +180,22 @@ def main():
                 args.precision,
                 max_pending=args.max_pending,
                 wait_timeout=args.wait_timeout,
+                api=args.api,
+                policy=policy,
+                uncertainty=uncertainty,
             ),
             host=args.host,
             port=args.port,
             workers=1,
         )
+    elif args.command == "export-bundle":
+        from .inference_bundle import export_bundle
+
+        print(dumps(export_bundle(args.checkpoint, args.output, args.commit), indent=2))
+    elif args.command == "verify-bundle":
+        from .inference_bundle import verify_inference_bundle
+
+        print(dumps(verify_inference_bundle(args.model), indent=2))
     elif args.command == "data":
         from . import data
 

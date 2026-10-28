@@ -84,6 +84,15 @@ DE/EN evaluation evidence. Source removal must keep native/identity rows aligned
   Do not introduce parallel document/task endpoints or optional processing maps.
   Keep the public response to data and issues. Do not add include_details,
   source-evidence, score or offset options; evidence is internal diagnostics only.
+  Commissioned exception (owner, 2026-10-28): a server process may instead run
+  the local Clairic-compatible profile (`tractor serve --api clairic`), never both
+  profiles in one process; tractor stays the default. It is a projection of the
+  same production service, normalizers and ambiguity handling, not a second
+  pipeline. Its schema-defined spans, usage and optional p_null/confidence exist
+  in that profile only; /v1/extract keeps data and issues without evidence options.
+  Probabilities, estimates, forecasts and images need their own versioned,
+  verified and released artifacts; deterministic compute exists only there, behind
+  --enable-compute, in documented forms. See docs/clairic-compatibility.md.
   Contact types select their normalizers automatically. Names preserve spelling
   and qualifiers; phone/postal context must be explicit, never guessed.
   HTTP, SDK, checkpoint selection and evaluation must use the same typed request

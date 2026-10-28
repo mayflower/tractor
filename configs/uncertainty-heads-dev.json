@@ -1,0 +1,39 @@
+{
+  "recipe": "tractor-uncertainty-heads-v1",
+  "status": "prepared_not_started",
+  "base_bundle": "models/tractor-biqwen-inference",
+  "dataset": [
+    "data/uncertainty-heads-v1/train.episodes.jsonl",
+    "data/uncertainty-heads-v1/dev.episodes.jsonl",
+    "data/uncertainty-heads-v1/calibration.episodes.jsonl"
+  ],
+  "outcome_predictions": "data/uncertainty-heads-v1/out-of-fold-predictions.jsonl",
+  "output": "runs/uncertainty-heads-v1",
+  "heads_lr": 0.0003,
+  "weight_decay": 0.01,
+  "epochs": 3,
+  "seed": 42,
+  "train_adapter": false,
+  "loss_weights": {
+    "source_presence": 1.0,
+    "typed_answerability": 1.0
+  },
+  "selection": {
+    "split": "dev",
+    "metric": "full_pipeline_answerability_log_loss",
+    "regression_gates": "full_pipeline"
+  },
+  "calibration": {
+    "split": "calibration",
+    "method": "platt",
+    "partitions": {"fit": 0.6, "select": 0.2, "validate": 0.2},
+    "threshold_scope": [0.5]
+  },
+  "resources": {
+    "device": "cuda",
+    "precision": "bf16",
+    "backbone_frozen": true,
+    "note": "Requires an explicit GPU authorization; never started next to an active training run"
+  },
+  "resume": "checkpoint every epoch under output; resume from the newest complete checkpoint"
+}
