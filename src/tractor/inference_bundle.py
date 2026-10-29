@@ -36,9 +36,6 @@ def lock():
 
 def export_bundle(checkpoint, output, commit):
     """Copy the explicit inference selection of one verified checkpoint."""
-    from .biqwen import DECODER_VERSION, verify_bundle
-    from .biqwen_training import inference_contract
-
     checkpoint, output = Path(checkpoint).resolve(), Path(output)
     if output.exists():
         raise FileExistsError(f"Refusing to overwrite {output}")
@@ -47,7 +44,8 @@ def export_bundle(checkpoint, output, commit):
         if sha(checkpoint / name) != digest:
             raise ValueError(f"Checkpoint artifact changed: {name}")
     base = Path(metadata["base_model"])
-    pinned = verify_bundle(base)
+    # The copies are hashed once below and compared with this lock during verification.
+    pinned = lock()
     if metadata["base_revision"] != pinned["revision"]:
         raise ValueError("Checkpoint base differs from the pinned BiQwen revision")
     selected = [name for name in metadata["files"]
@@ -55,7 +53,23 @@ def export_bundle(checkpoint, output, commit):
     if "heads.safetensors" not in selected or not any(n.startswith("adapter/") for n in selected):
         raise ValueError("Checkpoint lacks adapter or heads")
     temporary = output.with_name(output.name + ".writing")
+    if temporary.exists():
+        raise FileExistsError(f"{temporary} exists: another export is running or an old one must be removed")
     temporary.mkdir(parents=True)
+    try:
+        _write_bundle(temporary, base, checkpoint, metadata, pinned, selected, commit)
+        temporary.rename(output)
+    except BaseException:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+    return {"bundle": str(output), "manifest_sha256": sha(output / MANIFEST),
+            "files": len(loads((output / MANIFEST).read_text())["files"])}
+
+
+def _write_bundle(temporary, base, checkpoint, metadata, pinned, selected, commit):
+    from .biqwen import DECODER_VERSION
+    from .biqwen_training import inference_contract
+
     for name in pinned["files"]:
         target = temporary / "base" / name
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -80,14 +94,15 @@ def export_bundle(checkpoint, output, commit):
         "uncertainty": None,
     }
     (temporary / MANIFEST).write_text(dumps(manifest, indent=2, sort_keys=True) + "\n")
-    verify_inference_bundle(temporary)
-    temporary.rename(output)
-    return {"bundle": str(output), "manifest_sha256": sha(output / MANIFEST),
-            "files": len(manifest["files"])}
+    # The listed hashes were just computed from these copies; check the structure and lock.
+    verify_inference_bundle(temporary, rehash=False)
 
 
-def verify_inference_bundle(path):
-    """Every file hashed, nothing unlisted, base equal to the package lock."""
+def verify_inference_bundle(path, rehash=True):
+    """Every file hashed, nothing unlisted, base equal to the package lock.
+
+    rehash=False is only for hashes computed from these exact files moments ago.
+    """
     path = Path(path)
     manifest = loads((path / MANIFEST).read_text())
     if manifest.get("format") != FORMAT:
@@ -105,7 +120,7 @@ def verify_inference_bundle(path):
     if present != set(listed):
         raise ValueError(f"Bundle files differ from manifest: {sorted(present ^ set(listed))[:5]}")
     for name, digest in listed.items():
-        if Path(name).is_absolute() or ".." in Path(name).parts or sha(path / name) != digest:
+        if Path(name).is_absolute() or ".." in Path(name).parts or (rehash and sha(path / name) != digest):
             raise ValueError(f"Bundle artifact changed: {name}")
     uncertainty = manifest.get("uncertainty")
     if uncertainty is not None:
@@ -124,7 +139,8 @@ def load_inference_bundle(path, device="cpu", precision="fp32"):
     path = Path(path).resolve()
     summary = verify_inference_bundle(path)
     manifest = loads((path / MANIFEST).read_text())
-    backend = BiQwenExtractor(path / "base", device, precision)
+    # The base was hashed against the lock just now; do not read it a second time.
+    backend = BiQwenExtractor(path / "base", device, precision, verified_lock=lock())
     apply_checkpoint(backend, manifest["contract"], path / "checkpoint/adapter",
                      path / "checkpoint/heads.safetensors", device)
     backend.model_revision = "bundle:" + summary["manifest_sha256"]

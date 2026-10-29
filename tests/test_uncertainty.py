@@ -147,7 +147,7 @@ def test_released_heads_emit_signals_in_the_same_decode_without_changing_extract
     req = ExtractRequest(text="Alpha 12 cm", fields={"n": {"type": "text", "description": "Name"}})
     pools = {"f0": {"pairs": [(0, 5), (6, 11)], "source_logits": torch.tensor([3., -3.])}}
     model = SimpleNamespace(config=SimpleNamespace(source_threshold=.5, candidate_top_k=48),
-                            _temperature=lambda _: 1.)
+                            _temperature=lambda _: 1., trace_signals=True)
     meta = {"text": req.text, "offsets": [], "schema": schema_for(req)}
     baseline = decode_multiple(model, meta, pools, torch.zeros(1, 16), None, None)
     heads = initialize_for_training(16, 0)
@@ -233,3 +233,43 @@ def test_artifacts_bind_to_the_exact_model_state():
     assert all(c.executable for c in provider.capabilities)
     assert not any(c.executable for c in ReleasedUncertainty(released_artifact(released=False),
                                                              manifest(), "fp32").capabilities)
+
+
+def scored(artifact_changes=(), signals=None, **spec):
+    from decimal import Decimal
+
+    from tractor.uncertainty_artifacts import ReleasedUncertainty
+
+    provider = ReleasedUncertainty(released_artifact(**dict(artifact_changes)), manifest(), "fp32")
+    threshold = spec.pop("null_threshold", None)
+    field_spec = SimpleNamespace(type=spec.pop("type", "text"), explicit=frozenset(spec.pop("explicit", ())),
+                                 threshold=Decimal(str(threshold)) if threshold is not None else Decimal("0.5"))
+    field = SimpleNamespace(name="x", internal_id="f0", operation="supported_source_only", spec=field_spec)
+    evidence = SimpleNamespace(candidates=(), values=(), rejected=(), issues=(),
+                               field_signals={"answerability_logit": 2.0} if signals is None else signals)
+    return provider.score(SimpleNamespace(fields=[field]), SimpleNamespace(field=lambda _: evidence))
+
+
+def test_released_provider_scores_only_with_real_signals():
+    from tractor.uncertainty import FieldUncertainty
+
+    [(name, score)] = scored().items()
+    assert name == "x" and score.p_null == pytest.approx(1 - 1 / (1 + 2.718281828 ** -2.0))
+    assert score.confidence is not None
+    # A missing answerability signal is never replaced by a placeholder.
+    assert scored(signals={}) == {"x": FieldUncertainty(None, None)}
+
+
+def test_unreleased_artifacts_produce_no_public_probabilities():
+    assert scored([("released", False)]) == {}
+
+
+def test_threshold_scope_applies_only_to_requested_null_decisions():
+    from tractor.capabilities import CapabilityUnavailable
+
+    scope = [("threshold_scope", [0.3])]
+    assert scored(scope) == {}  # Default threshold outside the scope: nothing claimed, no error.
+    assert set(scored(scope, type="list")) == {"x"}  # Lists never use a null decision.
+    assert set(scored(scope, null_threshold=0.3, explicit=["null_threshold"])) == {"x"}
+    with pytest.raises(CapabilityUnavailable):
+        scored(scope, null_threshold=0.5, explicit=["null_threshold"])

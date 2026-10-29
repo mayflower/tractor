@@ -59,8 +59,9 @@ Clairic implementation nor equal model quality is claimed or shown.
   precision rules, list values plus occurrence spans, errors for invalid or
   ambiguous evidence, honest usage, `truncated: false` only because nothing is
   truncated.
-- Threshold rule `value is null ⇔ p_null > threshold` with explicit
-  inconsistency error, active only with a released provider.
+- Threshold rule `value is null ⇔ p_null > threshold`, active only with a
+  released provider; a field whose head and span selection disagree withholds
+  its probabilities with a `tractor.uncertainty_withheld` message.
 - Deterministic compute (sum, difference, product, date + constant) behind
   `--enable-compute`, one extraction pass for all operands.
 - Relocatable inference bundle: explicit file selection, full hashes, no
@@ -83,11 +84,11 @@ libpostal was stubbed locally for import only.
 
 | Check | Result |
 |---|---|
-| New tests (`test_clairic_*`, `test_inference_bundle`, `test_uncertainty`, `test_numeric_distribution`) | 185 passed, 1 skipped (level B, unsupported by design) |
+| New tests (`test_clairic_*`, `test_inference_bundle`, `test_uncertainty`, `test_numeric_distribution`) | 195 passed, 1 skipped (level B, unsupported by design) |
 | Official client level A: sync and async over a real loopback uvicorn server with external connections blocked | passed |
 | Official helper level B on the subset | unsupported (fails on missing `confidence`/`p_null`, as expected) |
 | Level B projection invariants with fixture probabilities | passed; fixture only, not calibration |
-| Full existing suite, before vs after, same environment | before 751 passed / 76 failed; after 939 passed / 73 failed; **no test newly failing**. Remaining failures and 3 collection errors need transformers, gliner2 or libpostal data that this environment lacks |
+| Full existing suite, before vs after, same environment | before 751 passed / 76 failed; after 949 passed / 73 failed; **no test newly failing**. Remaining failures and 3 collection errors need transformers, gliner2 or libpostal data that this environment lacks |
 | `ruff check src scripts tests examples` | clean |
 | `scripts/check-docs.py`, `tests/fixtures/check_fixtures.py`, `uv lock --check` | passed |
 
@@ -136,7 +137,8 @@ libpostal was stubbed locally for import only.
 - `reference_date` is rejected with temporal fields instead of completing years.
 - The uncertainty threshold scope is checked inside the provider (after
   inference) rather than at compile time; it still never returns probabilities
-  outside the calibrated scope.
+  outside the calibrated scope. Only an explicit out-of-scope threshold is an
+  error; the uncalibrated default withholds that field's probabilities.
 - The estimate head reads a supplied field representation; wiring it into the
   BiQwen decoder is left until a trained head exists.
 - The level-B check vendors the official assertion helpers (MIT) because they

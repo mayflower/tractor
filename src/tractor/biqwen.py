@@ -139,10 +139,20 @@ def decode_multiple(self, meta, pools, queries, global_anchor, options):
     fields = meta["schema"]["fields"]
     indexed = {f["id"]: i for i, f in enumerate(fields)}
     # Raw signals of selected occurrences, from this same decode; diagnostics only.
+    trace = getattr(self, "trace_signals", False)
     result = {"fields": {}, "tables": {}, "signals": []}
+    cached = {}
 
     def probabilities(pool, temperature="source"):
         return torch.sigmoid(pool["source_logits"].float() / self._temperature(temperature))
+
+    def host_scores(field_id, kind):
+        # One transfer per pool and temperature, not one per selected occurrence.
+        if (field_id, kind) not in cached:
+            pool = pools[field_id]
+            cached[field_id, kind] = (pool["source_logits"].float().tolist(),
+                                      probabilities(pool, kind).tolist(), float(self._temperature(kind)))
+        return cached[field_id, kind]
 
     def span(field_id, index):
         return list(token_span_to_chars(meta["text"], meta["offsets"], pools[field_id]["pairs"][index]))
@@ -154,10 +164,12 @@ def decode_multiple(self, meta, pools, queries, global_anchor, options):
         return indices
 
     def signal(field_id, index, anchor=None, margin=None, kind="source"):
-        logit = float(pools[field_id]["source_logits"][index])
+        if not trace:
+            return
+        logits, scores, temperature = host_scores(field_id, kind)
         entry = {"field": field_id, "span": span(field_id, index), "anchor": anchor,
-                 "raw_source_logit": logit, "source_temperature": float(self._temperature(kind)),
-                 "source_score": float(probabilities(pools[field_id], kind)[index])}
+                 "raw_source_logit": logits[index], "source_temperature": temperature,
+                 "source_score": scores[index]}
         if margin is not None:
             entry["assignment_margin"] = margin
         result["signals"].append(entry)
@@ -170,7 +182,7 @@ def decode_multiple(self, meta, pools, queries, global_anchor, options):
             for i in indices:
                 signal(fid, i)
     heads = getattr(self, "uncertainty_heads", None)
-    if heads is not None and heads.released:
+    if trace and heads is not None and heads.released:
         # Optional released heads read this pass's field queries; never a new backbone call.
         result["field_signals"] = []
         for field in fields:
@@ -209,7 +221,7 @@ class BiQwenExtractor:
     backend = DECODER_VERSION
     schema_version = LEGACY_SCHEMA
 
-    def __init__(self, path, device="cpu", precision="fp32"):
+    def __init__(self, path, device="cpu", precision="fp32", verified_lock=None):
         import torch
 
         if precision not in {"fp32", "bf16"}:
@@ -217,7 +229,8 @@ class BiQwenExtractor:
         if precision == "bf16" and (device != "cuda" or not torch.cuda.is_bf16_supported()):
             raise ValueError("BF16 requires supported CUDA hardware")
         self.path = Path(path).resolve()
-        lock = verify_bundle(self.path)
+        # verified_lock: the caller hashed exactly these base files against the lock.
+        lock = verified_lock or verify_bundle(self.path)
         self.model_revision = lock["revision"]
         self.weights_hashes = {k: v for k, v in lock["files"].items() if k.endswith(".safetensors")}
         bootstrap, runtime, self.encoding = load_runtime(self.path)
@@ -237,7 +250,7 @@ class BiQwenExtractor:
         return self.model.backbone_forward_calls
 
     def candidates(self, request):
-        return self.candidates_with_signals(request)[0]
+        return self._decode(request, trace=False)[0]
 
     def candidates_with_signals(self, request):
         """Candidates and their raw scores from one backbone pass.
@@ -245,6 +258,9 @@ class BiQwenExtractor:
         Signals are keyed by (record anchor offsets or None, public field name,
         start, end). They are uncalibrated; absence of a signal stays absent.
         """
+        return self._decode(request, trace=True)
+
+    def _decode(self, request, trace):
         import torch
 
         started = time.perf_counter()
@@ -258,6 +274,7 @@ class BiQwenExtractor:
         self.last_tokens = len(encoded["input_ids"])
         preprocessed = time.perf_counter()
         before = self.encoder_calls
+        self.model.trace_signals = trace
         with torch.inference_mode():
             raw = self.model(self.encoding.collate([encoded], self.model.tokenizer.pad_token_id))["predictions"][0]
         if self.encoder_calls != before + 1:

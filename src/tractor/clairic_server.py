@@ -36,8 +36,8 @@ NATIVE_CODES = {
 }
 
 
-def envelope(result=None, errors=()):
-    return {"result": result, "success": not errors, "errors": list(errors), "messages": []}
+def envelope(result=None, errors=(), messages=()):
+    return {"result": result, "success": not errors, "errors": list(errors), "messages": list(messages)}
 
 
 def install_clairic(app, worker, body_limit, policy=None):
@@ -64,12 +64,14 @@ def install_clairic(app, worker, body_limit, policy=None):
             # Compiled before admission: unsupported requests never reach the model.
             plan = compile_request(parsed, app.state.capabilities, policy)
 
+            messages = []
+
             def function(extractor):
                 result, trace = extract_traced(extractor, plan.extract_request)
-                return project(plan, result, trace, uncertainty=app.state.uncertainty)
+                return project(plan, result, trace, uncertainty=app.state.uncertainty, messages=messages)
 
             payload, _ = await worker.submit(function, reject_if_busy=parsed.options.reject_if_busy)
-            return JSONResponse(envelope(payload))
+            return JSONResponse(envelope(payload, messages=messages))
         except ClairicError as exc:
             return failure(exc.status, exc.describe())
         except TractorError as exc:

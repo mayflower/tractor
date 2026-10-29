@@ -5,6 +5,7 @@ import shutil
 import pytest
 
 from tractor import biqwen, inference_bundle
+from tractor.capabilities import IncompatibleArtifact
 from tractor.inference_bundle import (
     MANIFEST,
     export_bundle,
@@ -99,7 +100,8 @@ def test_loader_uses_only_bundle_artifacts(checkpoint, tmp_path, monkeypatch):
     class Base:
         model_revision, weights_hashes = "rev1", {}
 
-        def __init__(self, path, device, precision):
+        def __init__(self, path, device, precision, verified_lock):
+            assert verified_lock["revision"] == "rev1"
             calls.append(("base", path))
 
     monkeypatch.setattr(biqwen, "BiQwenExtractor", Base)
@@ -123,3 +125,76 @@ def test_incomplete_biqwen_layouts_never_fall_back_to_gliner(tmp_path, monkeypat
     (tmp_path / "heads.safetensors").write_bytes(b"x")
     with pytest.raises(ValueError, match="Incomplete BiQwen"):
         load_extractor(tmp_path)
+
+
+def test_failed_export_leaves_nothing_and_can_be_retried(checkpoint, tmp_path, monkeypatch):
+    output = tmp_path / "bundle"
+    original = shutil.copyfile
+    copied = []
+
+    def full_disk(source, target):
+        if copied:
+            raise OSError(28, "No space left on device")
+        copied.append(target)
+        return original(source, target)
+
+    monkeypatch.setattr(shutil, "copyfile", full_disk)
+    with pytest.raises(OSError):
+        export_bundle(checkpoint, output, "abc123")
+    assert not output.exists() and not output.with_name("bundle.writing").exists()
+    monkeypatch.setattr(shutil, "copyfile", original)
+    assert export_bundle(checkpoint, output, "abc123")["files"] == 6
+    verify_inference_bundle(output)
+
+
+def test_export_rejects_a_base_that_differs_from_the_lock(checkpoint, tmp_path):
+    (tmp_path / "train-host/base/bootstrap.py").write_bytes(b"# changed")
+    with pytest.raises(ValueError, match="bootstrap.py"):
+        export_bundle(checkpoint, tmp_path / "bundle", "abc123")
+    assert not (tmp_path / "bundle").exists() and not (tmp_path / "bundle.writing").exists()
+
+
+def calibrated_for(bundle, heads_sha):
+    from tractor.uncertainty_artifacts import FORMAT, binding_for
+
+    entry = {"method": "platt", "params": {"a": 1.0, "b": 0.0}, "sha256": "p"}
+    return {"format": FORMAT, "fixture": False, "released": True,
+            "binding": binding_for(loads((bundle / MANIFEST).read_text()), "fp32"),
+            "heads": {"file": "uncertainty-heads.safetensors", "sha256": heads_sha},
+            "provenance": {"run": "r1"}, "threshold_scope": [0.5],
+            "outcome_scorer": {"weights": [0.0] * 6, "bias": 0.0},
+            "calibration": {"typed_answerability": entry}}
+
+
+def test_calibrated_uncertainty_is_added_to_the_bundle_it_was_fitted_on(checkpoint, tmp_path):
+    from tractor.uncertainty_artifacts import add_to_bundle
+
+    bundle = tmp_path / "bundle"
+    export_bundle(checkpoint, bundle, "abc123")
+    heads = tmp_path / "uncertainty-heads.safetensors"
+    heads.write_bytes(b"uncertainty heads")
+    summary = add_to_bundle(bundle, calibrated_for(bundle, digest(b"uncertainty heads")), heads)
+    assert "typed_answerability" in summary["capabilities"]
+    manifest = loads((bundle / MANIFEST).read_text())
+    assert manifest["uncertainty"]["heads"]["file"] == "uncertainty/uncertainty-heads.safetensors"
+    assert verify_inference_bundle(bundle)["files"] == len(manifest["files"])
+
+
+@pytest.mark.parametrize("damage", ["heads", "binding"])
+def test_rejected_uncertainty_leaves_the_bundle_unchanged(checkpoint, tmp_path, damage):
+    from tractor.uncertainty_artifacts import add_to_bundle
+
+    bundle = tmp_path / "bundle"
+    export_bundle(checkpoint, bundle, "abc123")
+    before = (bundle / MANIFEST).read_text()
+    heads = tmp_path / "uncertainty-heads.safetensors"
+    heads.write_bytes(b"uncertainty heads")
+    made = calibrated_for(bundle, digest(b"uncertainty heads"))
+    if damage == "heads":
+        made["heads"]["sha256"] = digest(b"other")
+    else:
+        made["binding"]["base_revision"] = "rev0"
+    with pytest.raises((ValueError, IncompatibleArtifact)):
+        add_to_bundle(bundle, made, heads)
+    assert (bundle / MANIFEST).read_text() == before and not (bundle / "uncertainty").exists()
+    add_to_bundle(bundle, calibrated_for(bundle, digest(b"uncertainty heads")), heads)

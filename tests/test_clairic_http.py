@@ -187,15 +187,28 @@ def test_null_threshold_with_a_real_capability(p_null, threshold, value, guess):
     assert answer["p_null"] == Decimal(str(p_null)) and answer["confidence"] == Decimal("0.7")
 
 
-def test_low_p_null_without_a_value_is_an_explicit_inconsistency():
-    with client(DescriptionBackend({}), uncertainty=FixtureUncertainty(0.1)) as http:
-        response = http.post(ROUTE, json=body({"po_number": {"type": "text"}}))
-        assert response.status_code == 500
-        assert response.json()["errors"][0]["code"] == "tractor.projection_inconsistency"
+def test_low_p_null_without_a_value_withholds_probabilities_for_that_field_only():
+    backend = DescriptionBackend({"invoice number": ["INV-2291"]})
+    fields = {"po_number": {"type": "text"}, "invoice_number": {"type": "text"}}
+    with client(backend, uncertainty=FixtureUncertainty(0.1, 0.7)) as http:
+        response = http.post(ROUTE, json=body(fields))
         assert http.get("/readyz").status_code == 200
+    envelope = loads(response.content)
+    assert response.status_code == 200 and envelope["success"]
+    assert envelope["result"]["answers"]["po_number"] == {"type": "text", "value": None}
+    assert envelope["result"]["answers"]["invoice_number"]["p_null"] == Decimal("0.1")
+    assert envelope["messages"] == [{"code": "tractor.uncertainty_withheld", "field": "po_number",
+                                     "message": "p_null is at or below the threshold but no value exists"}]
     with client(DescriptionBackend({}), uncertainty=FixtureUncertainty(0.9)) as http:
         answer = http.post(ROUTE, json=body({"po_number": {"type": "text"}})).json()["result"]["answers"]
     assert answer["po_number"] == {"type": "text", "value": None, "p_null": 0.9}
+
+
+def test_a_null_decision_drops_the_source_span():
+    backend = DescriptionBackend({"invoice number": ["INV-2291"]})
+    with client(backend, uncertainty=FixtureUncertainty(0.8)) as http:
+        answer = http.post(ROUTE, json=body({"invoice_number": {"type": "text"}})).json()["result"]["answers"]
+    assert answer["invoice_number"] == {"type": "text", "value": None, "p_null": 0.8, "guess": "INV-2291"}
 
 
 def test_compute_runs_only_when_enabled_and_uses_one_pass():

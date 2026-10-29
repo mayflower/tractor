@@ -117,9 +117,12 @@ def test_biqwen_decoder_returns_raw_signals_of_selected_occurrences(monkeypatch)
     pools = {"f0": {"pairs": [(0, 5), (6, 11)], "source_logits": torch.tensor([3., -3.])}}
     model = SimpleNamespace(config=SimpleNamespace(source_threshold=.5, candidate_top_k=48),
                             _temperature=lambda _: 2.)
-    prediction = decode_multiple(model, {"text": req.text, "offsets": [], "schema": schema_for(req)},
-                                 pools, torch.zeros(1), None, None)
-    assert prediction["fields"]["f0"] == [[0, 5]]
+    meta = {"text": req.text, "offsets": [], "schema": schema_for(req)}
+    untraced = decode_multiple(model, meta, pools, torch.zeros(1), None, None)
+    assert untraced["signals"] == []  # /v1/extract pays nothing for signals.
+    model.trace_signals = True
+    prediction = decode_multiple(model, meta, pools, torch.zeros(1), None, None)
+    assert prediction["fields"] == untraced["fields"] == {"f0": [[0, 5]]}
     [signal] = prediction["signals"]
     assert signal["raw_source_logit"] == 3.0 and signal["source_temperature"] == 2.0
     assert signal["source_score"] == pytest.approx(float(torch.sigmoid(torch.tensor(1.5))))
@@ -151,3 +154,12 @@ def test_biqwen_signals_map_to_public_fields_in_the_same_pass():
     assert result["data"] == {"n": "Alpha"}
     assert trace.backbone_calls == 1 and trace.input_tokens == 3
     assert trace.field("n").values[0].occurrences[0].signals["raw_source_logit"] == 3.0
+
+
+def test_anchored_request_without_records_traces_not_found():
+    req = ExtractRequest(text="No people here.", many=True, anchor="name", fields={
+        "name": {"type": "text", "description": "Name"},
+        "w": {"type": "quantity", "description": "W", "unit": "mm"}})
+    result, trace = extract_traced(DescriptionBackend({}), req)
+    assert result == extract(DescriptionBackend({}), req)
+    assert trace.field("w").values == () and trace.field("w").field_signals == {}

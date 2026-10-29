@@ -135,8 +135,10 @@ def project_compute_field(plan_field, result):
     return {"type": spec.type, "value": value}, value
 
 
-def project(plan, result, trace, *, uncertainty=None):
+def project(plan, result, trace, *, uncertainty=None, messages=None):
+    """The Clairic payload; field-level notices are appended to `messages`."""
     request = plan.request
+    messages = [] if messages is None else messages
     if trace.input_tokens is None:
         raise UsageUnavailable("The backend did not report its input token count")
     scores = uncertainty.score(plan, trace) if uncertainty is not None else {}
@@ -152,12 +154,18 @@ def project(plan, result, trace, *, uncertainty=None):
                 try:
                     kept, guess = null_decision(value, score.p_null, plan_field.spec.threshold)
                 except NullDecisionInconsistent as exc:
-                    raise ProjectionError(str(exc), field=plan_field.name) from None
+                    # Answerability and span selection disagree for this field only:
+                    # keep its extraction result and claim no probability for it.
+                    messages.append({"code": "tractor.uncertainty_withheld", "message": str(exc),
+                                     "field": plan_field.name})
+                    answers[plan_field.name] = answer
+                    continue
                 answer["p_null"] = score.p_null
                 if guess is not None:
                     answer["guess"] = guess
                 if kept is None:
                     answer["value"] = None
+                    answer.pop("span", None)  # A null answer carries no source evidence.
         if score is not None and score.confidence is not None:
             answer["confidence"] = score.confidence
         answers[plan_field.name] = answer

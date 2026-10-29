@@ -98,8 +98,14 @@ Conformance levels are reported separately: **A** route, schema and SDK
 transport; **B** the official uncertainty invariants. The subset meets A and
 reports B as `unsupported`. With released artifacts, the projection applies
 `value is null ⇔ p_null > null_threshold` (equality does not exceed; default
-0.5) and fails with `tractor.projection_inconsistency` if `p_null` is at or
-below the threshold but no valid value exists.
+0.5); a nulled answer keeps `guess` but drops its `span`. If `p_null` is at or
+below the threshold but no valid value exists, the answerability head and span
+selection disagree: that field returns its plain extraction result without
+`p_null`, `guess` or `confidence`, and the envelope's `messages` carry
+`tractor.uncertainty_withheld` with the field name. Other fields are unaffected.
+An explicit `null_threshold` outside the artifact's calibrated scope is
+rejected; when only the default 0.5 lies outside it, the field claims no
+probabilities. Unreleased artifacts never produce probabilities.
 
 ## 6. Local decisions (`clairic-local-decisions-v1`)
 
@@ -162,7 +168,8 @@ below the threshold but no valid value exists.
     `tractor.invalid_request` 400, `tractor.unsupported_operation` 422,
     `tractor.capability_unavailable` 422, `tractor.unresolved_field` 422,
     `tractor.capacity_exceeded` 413/422, `tractor.overloaded` 503,
-    `tractor.not_ready` 503, `tractor.projection_inconsistency` 500,
+    `tractor.not_ready` 503, `tractor.projection_inconsistency` 500 (invalid
+    projected evidence, an internal invariant),
     `tractor.internal_error` 500. These are not Cloudflare error numbers.
 13. **Capacity.** **[CF]** metadata says 65,536 context; the schema says fields
     are split across 8,192-token passes. **[local]** No splitting: one pass, at most

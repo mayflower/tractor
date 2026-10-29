@@ -120,6 +120,7 @@ class EvidenceCollector:
                     candidates=tuple(occurrence(index, key, s) for s in record.get(key, [])),
                     values=tuple(ValueEvidence(v, tuple(o)) for v, o in grouped.values()),
                     rejected=rejected, issues=issues,
-                    field_signals=MappingProxyType(dict(signals.get((anchors[index], key, None, None), {}))))
+                    # Field-level signals are per request field, keyed without an anchor.
+                    field_signals=MappingProxyType(dict(signals.get((None, key, None, None), {}))))
         return Trace(fields=MappingProxyType(fields), input_tokens=input_tokens,
                      backbone_calls=backbone_calls, timings=MappingProxyType(dict(timings or {})))
